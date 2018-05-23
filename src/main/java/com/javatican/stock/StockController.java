@@ -20,11 +20,11 @@ public class StockController {
 	@Autowired
 	private StockService stockService;
 
-	@GetMapping
-	public ResponseMessage updateTradingDate() {
+	@GetMapping("/updateData")
+	public ResponseMessage updateDate() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockService.storeTradingDate();
+			stockService.updateTradingDateAndValue();
 			mes.setCategory("Success");
 			mes.setText("Trading date information has been updated.");
 		} catch (Exception ex) {
@@ -35,6 +35,20 @@ public class StockController {
 		return mes;
 		
 	}
-
+	@GetMapping("/prepareData")
+	public ResponseMessage prepareData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Trading date information has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Trading date information fails to be updated.");
+		}
+		return mes;
+		
+	}
 }
   

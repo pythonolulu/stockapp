@@ -14,11 +14,11 @@ import java.util.Optional;
 import org.jsoup.nodes.Document;
 
 public class StockUtils {
- 
+
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 	private static final SimpleDateFormat format2 = new SimpleDateFormat("yyyy/MM/dd");
+
 	public static String todayDateString() {
-		
 		Calendar cal = Calendar.getInstance();
 		return format.format(cal.getTime());
 	}
@@ -26,21 +26,31 @@ public class StockUtils {
 	public static Optional<Date> stringToDate(String date) {
 		try {
 			return Optional.of(format2.parse(date));
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			return Optional.empty();
 		}
 	}
+	public static String dateToSimpleString(Date date) {
+		return format.format(date);
+	}
 
+	public static String dateToStringSeparatedBySlash(Date date) {
+		return format2.format(date);
+	}
 	public static void writeDocumentToFile(Document doc, String filename) {
-		try(BufferedWriter htmlWriter = new BufferedWriter(
-			new OutputStreamWriter(new FileOutputStream("test.html"), "UTF-8"));){
+		try (BufferedWriter htmlWriter = new BufferedWriter(
+				new OutputStreamWriter(new FileOutputStream("test.html"), "UTF-8"));) {
 			htmlWriter.write(doc.toString());
-		} catch (UnsupportedEncodingException | FileNotFoundException e) {		 
+		} catch (UnsupportedEncodingException | FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static String removeCommaInNumber(String number) {
+		return number.replace(",", "");
 	}
 
 }

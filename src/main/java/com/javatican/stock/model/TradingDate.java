@@ -1,4 +1,5 @@
 package com.javatican.stock.model;
+
 import java.util.Date;
 
 import javax.persistence.*;
@@ -6,13 +7,13 @@ import javax.persistence.*;
 import com.javatican.stock.util.StockUtils;
 
 @Entity
-@Table(name="trading_date")
+@Table(name = "trading_date")
 public class TradingDate {
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	@Column(name="date", nullable=false)
+
+	@Column(name = "date", nullable = false, unique = true)
 	private Date date;
 
 	public TradingDate() {
@@ -26,7 +27,7 @@ public class TradingDate {
 	public void setDate(Date date) {
 		this.date = date;
 	}
-	
+
 	public void setDateAsString(String date) {
 		this.date = StockUtils.stringToDate(date).get();
 	}
@@ -34,5 +35,5 @@ public class TradingDate {
 	public Long getId() {
 		return id;
 	}
-	
+
 }

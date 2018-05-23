@@ -1,7 +1,9 @@
 package com.javatican.stock.model;
+
 import java.util.Date;
 
 import javax.persistence.*;
+
 /*
  * 1. DailyTrading : 
  * http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=20180501
@@ -10,45 +12,45 @@ import javax.persistence.*;
  * 
  */
 @Entity
-@Table(name="trading_value")
+@Table(name = "trading_value")
 public class TradingValue {
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	@Column(name="trading_date", nullable=false)
+
+	@Column(name = "trading_date", nullable = false, unique = true)
 	private Date tradingDate;
-	
-	@Column(name="total_value", nullable=false)
-	private Double totalValue;
-	
-	@Column(name="dealer_buy", nullable=false)
-	private Double dealerBuy;
-	@Column(name="dealer_sell", nullable=false)
-	private Double dealerSell;
-	@Column(name="dealer_diff", nullable=false)
-	private Double dealerDiff;
 
-	@Column(name="dealer_hedge_buy", nullable=false)
-	private Double dealerHedgeBuy;
-	@Column(name="dealer_hedge_sell", nullable=false)
-	private Double dealerHedgeSell;
-	@Column(name="dealer_hedge_diff", nullable=false)
-	private Double dealerHedgeDiff;
+	@Column(name = "total_value", nullable = false)
+	private Double totalValue = 0.0;
 
-	@Column(name="trust_buy", nullable=false)
-	private Double trustBuy;
-	@Column(name="trust_sell", nullable=false)
-	private Double trustSell;
-	@Column(name="trust_diff", nullable=false)
-	private Double trustDiff;
+	@Column(name = "dealer_buy", nullable = false)
+	private Double dealerBuy = 0.0;
+	@Column(name = "dealer_sell", nullable = false)
+	private Double dealerSell = 0.0;
+	@Column(name = "dealer_diff", nullable = false)
+	private Double dealerDiff = 0.0;
 
-	@Column(name="foreign_buy", nullable=false)
-	private Double foreignBuy;
-	@Column(name="foreign_sell", nullable=false)
-	private Double foreignSell;
-	@Column(name="foreign_diff", nullable=false)
-	private Double foreignDiff;
+	@Column(name = "dealer_hedge_buy", nullable = false)
+	private Double dealerHedgeBuy = 0.0;
+	@Column(name = "dealer_hedge_sell", nullable = false)
+	private Double dealerHedgeSell = 0.0;
+	@Column(name = "dealer_hedge_diff", nullable = false)
+	private Double dealerHedgeDiff = 0.0;
+
+	@Column(name = "trust_buy", nullable = false)
+	private Double trustBuy = 0.0;
+	@Column(name = "trust_sell", nullable = false)
+	private Double trustSell = 0.0;
+	@Column(name = "trust_diff", nullable = false)
+	private Double trustDiff = 0.0;
+
+	@Column(name = "foreign_buy", nullable = false)
+	private Double foreignBuy = 0.0;
+	@Column(name = "foreign_sell", nullable = false)
+	private Double foreignSell = 0.0;
+	@Column(name = "foreign_diff", nullable = false)
+	private Double foreignDiff = 0.0;
 
 	public TradingValue() {
 		super();
