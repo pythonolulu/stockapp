@@ -23,18 +23,21 @@ import com.javatican.stock.util.StockUtils;
 @Service("stockService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class StockService {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static final String TWSE_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
-	private static final String TWSE_TRADING_VALUE_FOREIGN_URL_GET = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
-	
+	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
+
 	@Autowired
 	TradingDateDAO tradingDateDAO;
 	@Autowired
 	TradingValueDAO tradingValueDAO;
 
 	/*
-	 * method to update trading dates and total trading values
+	 * update trading dates and total trading values
+	 * and trading values for foreign and other investors.
+	 * The download contains the data for the current month,
+	 * so duplicates are checked 
 	 */
 	public void updateTradingDateAndValue() throws StockException {
 		try {
@@ -44,8 +47,9 @@ public class StockService {
 			for (Element tr : trs) {
 				Element td = tr.selectFirst("td");
 				Date date = StockUtils.stringToDate(td.text()).get();
+				//check duplicates
 				if (tradingDateDAO.existsByDate(date)) {
-					logger.info("skipping updating trading date and values for date:" + date);
+					logger.info("Data exist. Skipping updating trading date and values for date:" + date);
 					continue;
 				} else {
 					TradingDate tDate = new TradingDate();
@@ -70,6 +74,24 @@ public class StockService {
 		}
 	}
 
+	/*
+	 * download and store the trading dates and total trading values 
+	 * and trading values for foreign and other investors
+	 * for the past 6 month period
+	 */
+	public void prepareData() throws StockException {
+		// List<String> dateList = Arrays.asList("20180201", "20180301", "20180401",
+		// "20180501");
+		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
+		for (String dateString : dateList) {
+			initialTradingDateAndValue(dateString);
+		}
+	}
+
+	/*
+	 * download and store the trading date and total trading values for a specific month.
+	 * It calls setForeignAndOtherInvestorsTradingValue() 
+	 */
 	private void initialTradingDateAndValue(String dateString) throws StockException {
 		try {
 			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
@@ -96,22 +118,14 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
-
 	/*
-	 * method to download and store in DB the trading dates and total trading values
+	 * download and parse Trading values for Foreign and other investors for a specific trading date
 	 */
-	public void prepareData() throws StockException {
-		List<String> dateList = Arrays.asList("20180201", "20180301", "20180401", "20180501");
-		for (String dateString : dateList) {
-			initialTradingDateAndValue(dateString);
-		}
-	}
-
 	private void setForeignAndOtherInvestorsTradingValue(String dateString, TradingValue tradingValue)
 			throws StockException {
 		try {
-			Document doc = Jsoup.connect(String.format(TWSE_TRADING_VALUE_FOREIGN_URL_GET, dateString)).get();
-			//StockUtils.writeDocumentToFile(doc, "TWSE_TRADING_VALUE_FOREIGN.html");
+			Document doc = Jsoup.connect(String.format(TWSE_TRADING_VALUE_FOREIGN_GET_URL, dateString)).get();
+			// StockUtils.writeDocumentToFile(doc, "TWSE_TRADING_VALUE_FOREIGN.html");
 			Elements trs = doc.select("table > tbody > tr");
 			Elements tds;
 			// 1st tr Dealers (Proprietary)

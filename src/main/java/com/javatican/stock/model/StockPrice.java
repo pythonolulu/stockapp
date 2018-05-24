@@ -2,7 +2,13 @@ package com.javatican.stock.model;
 
 import java.util.Date;
 
-public class StockPrice {
+import com.javatican.stock.util.StockUtils;
+
+/*
+ * Individual stock daily trading value/volume/price: 
+ * http://www.tse.com.tw/en/exchangeReport/STOCK_DAY?response=html&date=20180501&stockNo=2454
+ */
+public class StockPrice implements Comparable<StockPrice> {
 
 	public StockPrice() {
 		super();
@@ -36,6 +42,10 @@ public class StockPrice {
 
 	public void setTradingDate(Date tradingDate) {
 		this.tradingDate = tradingDate;
+	}
+
+	public void setTradingDateAsString(String date) {
+		this.tradingDate = StockUtils.stringToDate(date).get();
 	}
 
 	public Double getTradeVolume() {
@@ -93,5 +103,15 @@ public class StockPrice {
 	public void setTransaction(Double transaction) {
 		this.transaction = transaction;
 	}
-	
+
+	/*
+	 * (non-Javadoc) define natural order by the tradingDate field ascending.
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(StockPrice o) {
+		return this.getTradingDate().compareTo(o.getTradingDate());
+	}
+
 }
