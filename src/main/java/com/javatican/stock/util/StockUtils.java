@@ -39,7 +39,7 @@ public class StockUtils {
 	}
 	public static void writeDocumentToFile(Document doc, String filename) {
 		try (BufferedWriter htmlWriter = new BufferedWriter(
-				new OutputStreamWriter(new FileOutputStream("test.html"), "UTF-8"));) {
+				new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"));) {
 			htmlWriter.write(doc.toString());
 		} catch (UnsupportedEncodingException | FileNotFoundException e) {
 			e.printStackTrace();

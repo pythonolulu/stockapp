@@ -23,9 +23,11 @@ import com.javatican.stock.util.StockUtils;
 @Service("stockService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class StockService {
+	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static final String TWSE_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
 	private static final String TWSE_TRADING_VALUE_FOREIGN_URL_GET = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
+	
 	@Autowired
 	TradingDateDAO tradingDateDAO;
 	@Autowired
@@ -54,7 +56,13 @@ public class StockService {
 					TradingValue tValue = new TradingValue();
 					tValue.setTradingDate(date);
 					tValue.setTotalValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+					// set trading values for foreign and other investors
+					setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
 					tradingValueDAO.saveTradingValue(tValue);
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException ex) {
+					}
 				}
 			}
 		} catch (IOException ex) {
@@ -65,7 +73,7 @@ public class StockService {
 	private void initialTradingDateAndValue(String dateString) throws StockException {
 		try {
 			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
-			// StockUtils.writeDocumentToFile(doc, "test.html");
+			// StockUtils.writeDocumentToFile(doc, "TWSE_DAILY_TRADING.html");
 			Elements trs = doc.select("table > tbody > tr");
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
@@ -81,7 +89,7 @@ public class StockService {
 				tradingValueDAO.saveTradingValue(tValue);
 				try {
 					Thread.sleep(5000);
-				}catch(InterruptedException ex) {				
+				} catch (InterruptedException ex) {
 				}
 			}
 		} catch (IOException ex) {
@@ -93,16 +101,17 @@ public class StockService {
 	 * method to download and store in DB the trading dates and total trading values
 	 */
 	public void prepareData() throws StockException {
-		List<String> dateList = Arrays.asList("20180201","20180301","20180401","20180501");
+		List<String> dateList = Arrays.asList("20180201", "20180301", "20180401", "20180501");
 		for (String dateString : dateList) {
 			initialTradingDateAndValue(dateString);
 		}
 	}
 
-	private void setForeignAndOtherInvestorsTradingValue(String dateString, TradingValue tradingValue) throws StockException{
+	private void setForeignAndOtherInvestorsTradingValue(String dateString, TradingValue tradingValue)
+			throws StockException {
 		try {
 			Document doc = Jsoup.connect(String.format(TWSE_TRADING_VALUE_FOREIGN_URL_GET, dateString)).get();
-			StockUtils.writeDocumentToFile(doc, "test2.html");
+			//StockUtils.writeDocumentToFile(doc, "TWSE_TRADING_VALUE_FOREIGN.html");
 			Elements trs = doc.select("table > tbody > tr");
 			Elements tds;
 			// 1st tr Dealers (Proprietary)
