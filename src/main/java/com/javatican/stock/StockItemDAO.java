@@ -16,4 +16,7 @@ public class StockItemDAO {
 	public void saveStockItem(StockItem si){
 		stockItemRepository.save(si);
 	} 
+	public StockItem findBySymbol(String symbol) {
+		return stockItemRepository.findBySymbol(symbol);
+	}
 }

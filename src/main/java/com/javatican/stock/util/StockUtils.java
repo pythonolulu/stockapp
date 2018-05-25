@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.javatuples.Pair;
 import org.jsoup.nodes.Document;
 
 public class StockUtils {
@@ -76,6 +77,23 @@ public class StockUtils {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.DAY_OF_MONTH, 1);
 		return format.format(cal.getTime());
+	}
+	/*
+	 * calculate the first day and last day of the last month
+	 */
+	public static Pair<Date, Date> getFirstAndLastDayOfLastMonth(){
+		Calendar cal = Calendar.getInstance(); 
+		int currentYear = cal.get(Calendar.YEAR);
+		int currentMonth = cal.get(Calendar.MONTH);
+		//first day of this month
+		cal.set(currentYear, currentMonth, 1);
+		//last day of previous month
+		cal.add(Calendar.DAY_OF_MONTH, -1);
+		Date second = cal.getTime();
+		//first day of previous month
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		Date first = cal.getTime();
+		return Pair.with(first, second);
 	}
 	/*
 	 * calculate the date strings for the first day of each month within past 6 months period.

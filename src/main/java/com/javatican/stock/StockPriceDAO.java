@@ -5,9 +5,11 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javatican.stock.model.StockPrice;
+
 /*
  * StockPrice data is store in json file. 
  */
@@ -54,28 +57,53 @@ public class StockPriceDAO {
 			return spList;
 		} catch (Exception ex) {
 			throw new StockException(ex);
-		} 
+		}
+	}
+
+	public List<StockPrice> loadBetweenDate(String stockSymbol, Date start, Date end) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format("file:./download/%s.json", stockSymbol));
+		try (InputStream st = resource.getInputStream();) {
+			List<StockPrice> spList = objectMapper.readValue(st, new TypeReference<List<StockPrice>>() {
+			});
+			//filtered by tradingDate
+			/*
+			Iterator<StockPrice> i = spList.iterator();
+			while (i.hasNext()) {
+				StockPrice sp = i.next();
+				if (sp.getTradingDate().compareTo(start) >= 0 && sp.getTradingDate().compareTo(end) <= 0) {
+					i.remove();
+				}
+			}
+			return spList;
+			*/
+			return spList.stream()
+					.filter(sp -> sp.getTradingDate().compareTo(start) >= 0 && sp.getTradingDate().compareTo(end) <= 0)
+					.collect(Collectors.toList());
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
 	}
 
 	private Map<Date, StockPrice> loadAsMap(String stockSymbol) throws StockException {
 		Map<Date, StockPrice> spMap = new TreeMap<>();
-		List<StockPrice>  spList = load(stockSymbol);
-		for (StockPrice sp: spList) {
+		List<StockPrice> spList = load(stockSymbol);
+		for (StockPrice sp : spList) {
 			spMap.put(sp.getTradingDate(), sp);
 		}
 		return spMap;
 	}
+
 	/*
 	 * add new StockPrice data into the json file. Duplicate items will be excluded.
 	 */
-	public void addStockPriceList(String stockSymbol, List<StockPrice> spList) throws StockException{
-		List<StockPrice>  cList = load(stockSymbol);
-		Date d = cList.get(cList.size()-1).getTradingDate();
-		for(StockPrice sp: spList) {
-			//only new data will be added into the list
-			if(sp.getTradingDate().after(d)) {
+	public void addStockPriceList(String stockSymbol, List<StockPrice> spList) throws StockException {
+		List<StockPrice> cList = load(stockSymbol);
+		Date d = cList.get(cList.size() - 1).getTradingDate();
+		for (StockPrice sp : spList) {
+			// only new data will be added into the list
+			if (sp.getTradingDate().after(d)) {
 				cList.add(sp);
-				logger.info("Add stock price for "+stockSymbol+" @"+sp.getTradingDate());
+				logger.info("Add stock price for " + stockSymbol + " @" + sp.getTradingDate());
 			}
 		}
 		save(stockSymbol, cList);

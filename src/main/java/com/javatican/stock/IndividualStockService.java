@@ -2,12 +2,14 @@ package com.javatican.stock;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.javatuples.Pair;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Method;
@@ -40,7 +42,10 @@ public class IndividualStockService {
 	StockPriceDAO stockPriceDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
-
+	/*
+	 * create a new stock item 
+	 * the price field is not yet updated.
+	 */
 	public void createStockItem(String stockSymbol) throws StockException {
 		Pattern cnameP = Pattern.compile("\\((\\S+)\\)\\s(\\S+)");
 		Pattern capitalP = Pattern.compile("\\s*([\\d,-]+)元");
@@ -90,7 +95,22 @@ public class IndividualStockService {
 			throw new StockException(ex);
 		}
 	}
-
+	/* 
+	 * Calculate the average closing price for the last month for the stock
+	 */
+	public void updateStockItemPriceField(String stockSymbol) throws StockException{
+		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
+		Date start = tuple.getValue0();
+		Date end = tuple.getValue1();
+		List<StockPrice> spList = stockPriceDAO.loadBetweenDate(stockSymbol, start, end);
+		spList.stream().forEach(sp->logger.info(sp.toString()));
+		//calculate the average.
+		double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
+		logger.info("average close price="+average);
+		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
+		si.setPrice(average);
+		stockItemDAO.saveStockItem(si);
+	}
 	/*
 	 * Update stock daily trading value/volume and prices for a stock The data
 	 * downloaded include records for the whole month, some may have been downloaded

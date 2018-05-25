@@ -1,1 +1,3 @@
 curl  http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=20180522 
+sudo mysqldbexport --bulk-insert --server=root:uz06a04qi@localhost:3326 --export=data --output-file=/home/ryannieh/stockdbBackup/data.sql stockdb
+sudo mysqldbimport --server=root:uz06a04qi@localhost:3326 --import=data  /home/ryannieh/stockdbBackup/data.sql

@@ -34,7 +34,7 @@ public class StockItem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "symbol", nullable = false)
+	@Column(name = "symbol", nullable = false, unique = true)
 	private String symbol;
 
 	@Column(name = "name", nullable = true)
