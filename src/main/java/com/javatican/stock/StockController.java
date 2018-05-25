@@ -19,6 +19,21 @@ public class StockController {
 	@Autowired
 	private IndividualStockService individualStockService;
 
+
+	@GetMapping("/{stockSymbol}/createProfile")
+	public ResponseMessage createStockProfile(@PathVariable String stockSymbol) {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			individualStockService.createStockItem(stockSymbol);
+			mes.setCategory("Success");
+			mes.setText("Profile for stock "+stockSymbol+" has been created.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Profile for stock "+stockSymbol+" fails to be created.");
+		}
+		return mes; 
+	}
 	@GetMapping("/updateData")
 	public ResponseMessage updateDate() {
 		ResponseMessage mes = new ResponseMessage();
