@@ -335,3 +335,138 @@
 2018-05-26 00:56:38.402  INFO 9045 --- [RMI TCP Connection(2)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
 2018-05-26 00:56:38.403  INFO 9045 --- [RMI TCP Connection(2)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
 2018-05-26 00:56:38.407  INFO 9045 --- [RMI TCP Connection(2)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2018-05-26 09:00:59.729  INFO 12608 --- [main] com.javatican.stock.StockApplication     : Starting StockApplication on ryannieh-Inspiron-5559 with PID 12608 (/home/ryannieh/eclipse_sts_workspace/stock/target/classes started by ryannieh in /home/ryannieh/eclipse_sts_workspace/stock)
+2018-05-26 09:00:59.733  INFO 12608 --- [main] com.javatican.stock.StockApplication     : No active profile set, falling back to default profiles: default
+2018-05-26 09:00:59.772  INFO 12608 --- [main] ConfigServletWebServerApplicationContext : Refreshing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2145b572: startup date [Sat May 26 09:00:59 CST 2018]; root of context hierarchy
+2018-05-26 09:01:01.049  INFO 12608 --- [main] ptablePropertiesBeanFactoryPostProcessor : Post-processing PropertySource instances
+2018-05-26 09:01:01.107  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource configurationProperties [org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertySource] to AOP Proxy
+2018-05-26 09:01:01.109  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource commandLineArgs [org.springframework.core.env.SimpleCommandLinePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2018-05-26 09:01:01.110  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletConfigInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2018-05-26 09:01:01.110  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletContextInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2018-05-26 09:01:01.111  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemProperties [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2018-05-26 09:01:01.111  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemEnvironment [org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor$OriginAwareSystemEnvironmentPropertySource] to EncryptableMapPropertySourceWrapper
+2018-05-26 09:01:01.111  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource random [org.springframework.boot.env.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2018-05-26 09:01:01.112  INFO 12608 --- [main] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource applicationConfig: [classpath:/application.properties] [org.springframework.boot.env.OriginTrackedMapPropertySource] to EncryptableMapPropertySourceWrapper
+2018-05-26 09:01:01.287  INFO 12608 --- [main] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration' of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration$$EnhancerBySpringCGLIB$$df85cf04] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2018-05-26 09:01:01.583  INFO 12608 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2018-05-26 09:01:01.601  INFO 12608 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2018-05-26 09:01:01.602  INFO 12608 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet Engine: Apache Tomcat/8.5.28
+2018-05-26 09:01:01.606  INFO 12608 --- [localhost-startStop-1] o.a.catalina.core.AprLifecycleListener   : The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: [/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib]
+2018-05-26 09:01:01.664  INFO 12608 --- [localhost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2018-05-26 09:01:01.665  INFO 12608 --- [localhost-startStop-1] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 1893 ms
+2018-05-26 09:01:01.948  INFO 12608 --- [localhost-startStop-1] c.u.j.r.DefaultLazyPropertyResolver      : Property Resolver custom Bean not found with name 'encryptablePropertyResolver'. Initializing Default Property Resolver
+2018-05-26 09:01:01.950  INFO 12608 --- [localhost-startStop-1] c.u.j.d.DefaultLazyPropertyDetector      : Property Detector custom Bean not found with name 'encryptablePropertyDetector'. Initializing Default Property Detector
+2018-05-26 09:01:01.951  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : String Encryptor custom Bean not found with name 'jasyptStringEncryptor'. Initializing Default String Encryptor
+2018-05-26 09:01:01.956  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.algorithm, using default value: PBEWithMD5AndDES
+2018-05-26 09:01:01.956  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.keyObtentionIterations, using default value: 1000
+2018-05-26 09:01:01.956  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.poolSize, using default value: 1
+2018-05-26 09:01:01.956  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.providerName, using default value: null
+2018-05-26 09:01:01.956  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.providerClassName, using default value: null
+2018-05-26 09:01:01.957  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.saltGeneratorClassname, using default value: org.jasypt.salt.RandomSaltGenerator
+2018-05-26 09:01:01.957  INFO 12608 --- [localhost-startStop-1] c.u.j.encryptor.DefaultLazyEncryptor     : Encryptor config not found for property jasypt.encryptor.stringOutputType, using default value: base64
+2018-05-26 09:01:02.515  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.ServletRegistrationBean  : Servlet dispatcherServlet mapped to [/]
+2018-05-26 09:01:02.520  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'characterEncodingFilter' to: [/*]
+2018-05-26 09:01:02.520  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
+2018-05-26 09:01:02.521  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'httpPutFormContentFilter' to: [/*]
+2018-05-26 09:01:02.521  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'requestContextFilter' to: [/*]
+2018-05-26 09:01:02.521  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'httpTraceFilter' to: [/*]
+2018-05-26 09:01:02.521  INFO 12608 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'webMvcMetricsFilter' to: [/*]
+2018-05-26 09:01:02.601  INFO 12608 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2018-05-26 09:01:02.791  INFO 12608 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2018-05-26 09:01:02.832  INFO 12608 --- [main] j.LocalContainerEntityManagerFactoryBean : Building JPA container EntityManagerFactory for persistence unit 'default'
+2018-05-26 09:01:02.845  INFO 12608 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [
+	name: default
+	...]
+2018-05-26 09:01:02.907  INFO 12608 --- [main] org.hibernate.Version                    : HHH000412: Hibernate Core {5.2.14.Final}
+2018-05-26 09:01:02.908  INFO 12608 --- [main] org.hibernate.cfg.Environment            : HHH000206: hibernate.properties not found
+2018-05-26 09:01:02.958  INFO 12608 --- [main] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.0.1.Final}
+2018-05-26 09:01:03.068  INFO 12608 --- [main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+2018-05-26 09:01:03.502  INFO 12608 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2018-05-26 09:01:04.379  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerAdapter : Looking for @ControllerAdvice: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2145b572: startup date [Sat May 26 09:00:59 CST 2018]; root of context hierarchy
+2018-05-26 09:01:04.407  WARN 12608 --- [main] aWebConfiguration$JpaWebMvcConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2018-05-26 09:01:04.438  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/{stockSymbol}/createProfile],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.createStockProfile(java.lang.String)
+2018-05-26 09:01:04.439  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/{stockSymbol}/updatePrice],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.updateStockItemPrice(java.lang.String)
+2018-05-26 09:01:04.440  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/updateData],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.updateDate()
+2018-05-26 09:01:04.440  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/{stockSymbol}/prepareData],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.prepareStockData(java.lang.String)
+2018-05-26 09:01:04.441  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/{stockSymbol}/updateData],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.updateStockData(java.lang.String)
+2018-05-26 09:01:04.441  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/stock/prepareData],methods=[GET]}" onto public com.javatican.stock.util.ResponseMessage com.javatican.stock.StockController.prepareData()
+2018-05-26 09:01:04.445  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/error],produces=[text/html]}" onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+2018-05-26 09:01:04.446  INFO 12608 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/error]}" onto public org.springframework.http.ResponseEntity<java.util.Map<java.lang.String, java.lang.Object>> org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController.error(javax.servlet.http.HttpServletRequest)
+2018-05-26 09:01:04.482  INFO 12608 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-05-26 09:01:04.482  INFO 12608 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-05-26 09:01:04.518  INFO 12608 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-05-26 09:01:04.552  WARN 12608 --- [main] ion$DefaultTemplateResolverConfiguration : Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2018-05-26 09:01:04.883  INFO 12608 --- [main] s.b.a.e.w.s.WebMvcEndpointHandlerMapping : Mapped "{[/actuator/health],methods=[GET],produces=[application/vnd.spring-boot.actuator.v2+json || application/json]}" onto public java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(javax.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)
+2018-05-26 09:01:04.884  INFO 12608 --- [main] s.b.a.e.w.s.WebMvcEndpointHandlerMapping : Mapped "{[/actuator/info],methods=[GET],produces=[application/vnd.spring-boot.actuator.v2+json || application/json]}" onto public java.lang.Object org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping$OperationHandler.handle(javax.servlet.http.HttpServletRequest,java.util.Map<java.lang.String, java.lang.String>)
+2018-05-26 09:01:04.885  INFO 12608 --- [main] s.b.a.e.w.s.WebMvcEndpointHandlerMapping : Mapped "{[/actuator],methods=[GET],produces=[application/vnd.spring-boot.actuator.v2+json || application/json]}" onto protected java.util.Map<java.lang.String, java.util.Map<java.lang.String, org.springframework.boot.actuate.endpoint.web.Link>> org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping.links(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+2018-05-26 09:01:04.977  INFO 12608 --- [main] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup
+2018-05-26 09:01:04.979  INFO 12608 --- [main] o.s.j.e.a.AnnotationMBeanExporter        : Bean with name 'dataSource' has been autodetected for JMX exposure
+2018-05-26 09:01:04.986  INFO 12608 --- [main] o.s.j.e.a.AnnotationMBeanExporter        : Located MBean 'dataSource': registering with JMX server as MBean [com.zaxxer.hikari:name=dataSource,type=HikariDataSource]
+2018-05-26 09:01:05.017  INFO 12608 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2018-05-26 09:01:05.019  INFO 12608 --- [main] com.javatican.stock.StockApplication     : Started StockApplication in 5.571 seconds (JVM running for 6.054)
+2018-05-26 09:01:48.008  INFO 12608 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring FrameworkServlet 'dispatcherServlet'
+2018-05-26 09:01:48.009  INFO 12608 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization started
+2018-05-26 09:01:48.030  INFO 12608 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization completed in 21 ms
+2018-05-26 09:03:12.220  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20171201
+2018-05-26 09:03:17.507  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20180101
+2018-05-26 09:03:22.651  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20180201
+2018-05-26 09:03:27.789  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20180301
+2018-05-26 09:03:32.932  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20180401
+2018-05-26 09:03:38.063  INFO 12608 --- [http-nio-8080-exec-4] c.j.stock.IndividualStockService         : prepare data for date:20180501
+2018-05-26 09:03:43.293  INFO 12608 --- [http-nio-8080-exec-4] com.javatican.stock.StockPriceDAO        : Finish save stock prices for stock:2498
+2018-05-26 09:03:51.024  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 02 00:00:00 CST 2018, close=67.3
+2018-05-26 09:03:51.025  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 03 00:00:00 CST 2018, close=67.6
+2018-05-26 09:03:51.025  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 09 00:00:00 CST 2018, close=66.5
+2018-05-26 09:03:51.025  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 10 00:00:00 CST 2018, close=64.5
+2018-05-26 09:03:51.025  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 11 00:00:00 CST 2018, close=63.7
+2018-05-26 09:03:51.026  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 12 00:00:00 CST 2018, close=63.6
+2018-05-26 09:03:51.026  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 13 00:00:00 CST 2018, close=63.0
+2018-05-26 09:03:51.027  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 16 00:00:00 CST 2018, close=62.1
+2018-05-26 09:03:51.027  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 17 00:00:00 CST 2018, close=61.8
+2018-05-26 09:03:51.028  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 18 00:00:00 CST 2018, close=61.8
+2018-05-26 09:03:51.028  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 19 00:00:00 CST 2018, close=61.5
+2018-05-26 09:03:51.029  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 20 00:00:00 CST 2018, close=62.5
+2018-05-26 09:03:51.029  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 23 00:00:00 CST 2018, close=61.2
+2018-05-26 09:03:51.030  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 24 00:00:00 CST 2018, close=60.0
+2018-05-26 09:03:51.030  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 25 00:00:00 CST 2018, close=60.7
+2018-05-26 09:03:51.030  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 26 00:00:00 CST 2018, close=57.4
+2018-05-26 09:03:51.030  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 27 00:00:00 CST 2018, close=55.0
+2018-05-26 09:03:51.030  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 30 00:00:00 CST 2018, close=60.5
+2018-05-26 09:03:51.034  INFO 12608 --- [http-nio-8080-exec-6] c.j.stock.IndividualStockService         : average close price=62.26111111111111
+2018-05-26 09:03:51.059  INFO 12608 --- [http-nio-8080-exec-6] o.h.h.i.QueryTranslatorFactoryInitiator  : HHH000397: Using ASTQueryTranslatorFactory
+2018-05-26 09:03:51.420 DEBUG 12608 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : select stockitem0_.id as id1_0_, stockitem0_.capital as capital2_0_, stockitem0_.category as category3_0_, stockitem0_.name as name4_0_, stockitem0_.price as price5_0_, stockitem0_.symbol as symbol6_0_ from stock_item stockitem0_ where stockitem0_.symbol=?
+2018-05-26 09:03:51.432 TRACE 12608 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [2498]
+2018-05-26 09:05:05.383 DEBUG 12608 --- [http-nio-8080-exec-9] org.hibernate.SQL                        : insert into stock_item (capital, category, name, price, symbol) values (?, ?, ?, ?, ?)
+2018-05-26 09:05:05.384 TRACE 12608 --- [http-nio-8080-exec-9] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [DOUBLE] - [8.20809855E9]
+2018-05-26 09:05:05.385 TRACE 12608 --- [http-nio-8080-exec-9] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [VARCHAR] - [上市公司]
+2018-05-26 09:05:05.385 TRACE 12608 --- [http-nio-8080-exec-9] o.h.type.descriptor.sql.BasicBinder      : binding parameter [3] as [VARCHAR] - [宏達電]
+2018-05-26 09:05:05.385 TRACE 12608 --- [http-nio-8080-exec-9] o.h.type.descriptor.sql.BasicBinder      : binding parameter [4] as [DOUBLE] - [0.0]
+2018-05-26 09:05:05.385 TRACE 12608 --- [http-nio-8080-exec-9] o.h.type.descriptor.sql.BasicBinder      : binding parameter [5] as [VARCHAR] - [2498]
+2018-05-26 09:05:18.808  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 02 00:00:00 CST 2018, close=67.3
+2018-05-26 09:05:18.808  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 03 00:00:00 CST 2018, close=67.6
+2018-05-26 09:05:18.808  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 09 00:00:00 CST 2018, close=66.5
+2018-05-26 09:05:18.808  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 10 00:00:00 CST 2018, close=64.5
+2018-05-26 09:05:18.808  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 11 00:00:00 CST 2018, close=63.7
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 12 00:00:00 CST 2018, close=63.6
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 13 00:00:00 CST 2018, close=63.0
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 16 00:00:00 CST 2018, close=62.1
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 17 00:00:00 CST 2018, close=61.8
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 18 00:00:00 CST 2018, close=61.8
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 19 00:00:00 CST 2018, close=61.5
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 20 00:00:00 CST 2018, close=62.5
+2018-05-26 09:05:18.809  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 23 00:00:00 CST 2018, close=61.2
+2018-05-26 09:05:18.810  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Tue Apr 24 00:00:00 CST 2018, close=60.0
+2018-05-26 09:05:18.810  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Wed Apr 25 00:00:00 CST 2018, close=60.7
+2018-05-26 09:05:18.810  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Thu Apr 26 00:00:00 CST 2018, close=57.4
+2018-05-26 09:05:18.810  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Fri Apr 27 00:00:00 CST 2018, close=55.0
+2018-05-26 09:05:18.810  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : tradingDate=Mon Apr 30 00:00:00 CST 2018, close=60.5
+2018-05-26 09:05:18.812  INFO 12608 --- [http-nio-8080-exec-1] c.j.stock.IndividualStockService         : average close price=62.26111111111111
+2018-05-26 09:05:18.814 DEBUG 12608 --- [http-nio-8080-exec-1] org.hibernate.SQL                        : select stockitem0_.id as id1_0_, stockitem0_.capital as capital2_0_, stockitem0_.category as category3_0_, stockitem0_.name as name4_0_, stockitem0_.price as price5_0_, stockitem0_.symbol as symbol6_0_ from stock_item stockitem0_ where stockitem0_.symbol=?
+2018-05-26 09:05:18.815 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [2498]
+2018-05-26 09:05:18.837 DEBUG 12608 --- [http-nio-8080-exec-1] org.hibernate.SQL                        : update stock_item set capital=?, category=?, name=?, price=?, symbol=? where id=?
+2018-05-26 09:05:18.838 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [DOUBLE] - [8.20809855E9]
+2018-05-26 09:05:18.839 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [VARCHAR] - [上市公司]
+2018-05-26 09:05:18.839 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [3] as [VARCHAR] - [宏達電]
+2018-05-26 09:05:18.840 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [4] as [DOUBLE] - [62.26111111111111]
+2018-05-26 09:05:18.840 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [5] as [VARCHAR] - [2498]
+2018-05-26 09:05:18.841 TRACE 12608 --- [http-nio-8080-exec-1] o.h.type.descriptor.sql.BasicBinder      : binding parameter [6] as [BIGINT] - [5]
