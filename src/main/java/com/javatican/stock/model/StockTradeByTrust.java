@@ -8,9 +8,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
+import javax.persistence.UniqueConstraint;
+/*
+ * http://www.tse.com.tw/fund/TWT44U?response=html&date=20180525
+ */
 @Entity
-@Table(name = "stock_trade_by_trust")
+@Table(name = "stock_trade_by_trust", uniqueConstraints={
+	    @UniqueConstraint(columnNames = {"trading_date", "stock_symbol"})
+	})
 public class StockTradeByTrust {
 
 	@Id
@@ -34,6 +39,10 @@ public class StockTradeByTrust {
 
 	public StockTradeByTrust() {
 		super();
+	}
+	public StockTradeByTrust(Date tradingDate) {
+		super();
+		this.tradingDate=tradingDate;
 	}
 
 	public StockTradeByTrust(Date tradingDate, String stockSymbol, Double buy, Double sell, Double diff) {

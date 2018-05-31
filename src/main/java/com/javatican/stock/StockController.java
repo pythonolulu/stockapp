@@ -15,34 +15,66 @@ public class StockController {
 	@Autowired
 	private StockService stockService;
 	@Autowired
-	private IndividualStockService individualStockService;
-
-	@GetMapping("/{stockSymbol}/createProfile")
-	public ResponseMessage createStockProfile(@PathVariable String stockSymbol) {
+	private StockItemService stockItemService;
+	@Autowired
+	private StockTradeByTrustService stockTradeByTrustService;
+	
+	
+	@GetMapping("/prepareTrustData")
+	public ResponseMessage prepareTrustData() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			individualStockService.createStockItem(stockSymbol);
+			stockTradeByTrustService.prepareData();
 			mes.setCategory("Success");
-			mes.setText("Profile for stock " + stockSymbol + " has been created.");
+			mes.setText("Stock Trade Data by Trust have been created.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Profile for stock " + stockSymbol + " fails to be created.");
+			mes.setText(" Stock Trade Data by Trust fail to be created.");
+		}
+		return mes;
+	}
+	@GetMapping("/updateTrustData")
+	public ResponseMessage updateTrustData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockTradeByTrustService.updateData();
+			mes.setCategory("Success");
+			mes.setText("Stock Trade Data by Trust have been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText(" Stock Trade Data by Trust fail to be updated.");
 		}
 		return mes;
 	}
 
-	@GetMapping("/{stockSymbol}/updatePrice")
-	public ResponseMessage updateStockItemPrice(@PathVariable String stockSymbol) {
+	@GetMapping("/createStockProfiles")
+	public ResponseMessage createStockProfiles() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			individualStockService.updateStockItemPriceField(stockSymbol);
+			stockItemService.downloadAndSaveStockItems();;
 			mes.setCategory("Success");
-			mes.setText("Stock price field for stock " + stockSymbol + " has been created.");
+			mes.setText("download and save all stock profiles.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Stock price field for stock " + stockSymbol + " fails to be created.");
+			mes.setText("Fails to download and save all stock profiles.");
+		}
+		return mes;
+	}
+	
+	@GetMapping("/createStockPrices")
+	public ResponseMessage createStockPrices() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.downloadAndSaveStockPrices();;
+			mes.setCategory("Success");
+			mes.setText("download and save all stock prices.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Fails to download and save all stock prices.");
 		}
 		return mes;
 	}
@@ -78,26 +110,26 @@ public class StockController {
 		return mes;
 	}
 
-	@GetMapping("/{stockSymbol}/prepareData")
-	public ResponseMessage prepareStockData(@PathVariable String stockSymbol) {
+	@GetMapping("/updatePriceDataForAll")
+	public ResponseMessage updatePriceDataForAllSymbols() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			individualStockService.prepareData(stockSymbol);
+			stockItemService.updatePriceDataForAllExistSymbols();
 			mes.setCategory("Success");
-			mes.setText("Trading data for stock " + stockSymbol + " has been set");
+			mes.setText("Price data for all stocks have been updated.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Trading data for stock " + stockSymbol + " fail to be set.");
+			mes.setText("Price data for all stocks fail to be updated.");
 		}
 		return mes;
 	}
-
-	@GetMapping("/{stockSymbol}/updateData")
-	public ResponseMessage updateStockData(@PathVariable String stockSymbol) {
+	
+	@GetMapping("/{stockSymbol}/updatePriceData")
+	public ResponseMessage updateStockPriceData(@PathVariable String stockSymbol) {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			individualStockService.updateData(stockSymbol);
+			stockItemService.updatePriceDataForSymbol(stockSymbol);
 			mes.setCategory("Success");
 			mes.setText("Trading data for stock " + stockSymbol + " has been updated.");
 		} catch (Exception ex) {

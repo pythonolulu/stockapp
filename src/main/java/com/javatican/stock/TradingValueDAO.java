@@ -19,7 +19,7 @@ public class TradingValueDAO {
 	public boolean existsByTradingDate(Date tradingDate) {
 		return tradingValueRepository.existsByTradingDate(tradingDate);
 	}
-	public void saveTradingValue(TradingValue tradingValue) {
+	public void save(TradingValue tradingValue) {
 		tradingValueRepository.save(tradingValue);
 	}
 	

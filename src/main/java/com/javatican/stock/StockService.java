@@ -1,7 +1,6 @@
 package com.javatican.stock;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +19,9 @@ import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.model.TradingValue;
 import com.javatican.stock.util.StockUtils;
 
+/* this service deals with downloading and saving trading date and total trading values
+ * and trading values for three big investors
+ */
 @Service("stockService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class StockService {
@@ -34,35 +36,59 @@ public class StockService {
 	TradingValueDAO tradingValueDAO;
 
 	/*
-	 * update trading dates and total trading values
-	 * and trading values for foreign and other investors.
-	 * The download contains the data for the current month,
-	 * so duplicates are checked 
+	 * update trading dates and total trading values and trading values for 3 big
+	 * investors. The download contains the data for the current month, so
+	 * duplicates are checked before save into db
+	 * 
+	 * This shall be run after every trading date.
 	 */
 	public void updateTradingDateAndValue() throws StockException {
+		String dateString = StockUtils.todayDateString();
+		downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
+	}
+
+	/*
+	 * download and store the trading dates and total trading values and trading
+	 * values for 3 big investors for the past 6 month period
+	 * 
+	 * need to run only once
+	 */
+	public void prepareData() throws StockException {
+		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
+		for (String dateString : dateList) {
+			downloadAndSaveTradingDateAndValueForTheMonth(dateString, false);
+		}
+	}
+
+	/*
+	 * download and store the trading date and total trading values for a specific
+	 * month. It calls setForeignAndOtherInvestorsTradingValue()
+	 */
+	private void downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate)
+			throws StockException {
 		try {
-			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, StockUtils.todayDateString())).get();
-			// StockUtils.writeDocumentToFile(doc, "test.html");
+			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
 			Elements trs = doc.select("table > tbody > tr");
 			for (Element tr : trs) {
 				Element td = tr.selectFirst("td");
 				Date date = StockUtils.stringToDate(td.text()).get();
-				//check duplicates
-				if (tradingDateDAO.existsByDate(date)) {
+				// check duplicates
+				if (checkDuplicate && tradingDateDAO.existsByDate(date)) {
 					logger.info("Data exist. Skipping updating trading date and values for date:" + date);
 					continue;
 				} else {
 					TradingDate tDate = new TradingDate();
 					tDate.setDate(date);
-					tradingDateDAO.saveTradingDate(tDate);
-					//
+					tradingDateDAO.save(tDate);
+
 					Elements tds = tr.select("td");
+					//
 					TradingValue tValue = new TradingValue();
 					tValue.setTradingDate(date);
 					tValue.setTotalValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
 					// set trading values for foreign and other investors
 					setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
-					tradingValueDAO.saveTradingValue(tValue);
+					tradingValueDAO.save(tValue);
 					try {
 						Thread.sleep(5000);
 					} catch (InterruptedException ex) {
@@ -75,51 +101,8 @@ public class StockService {
 	}
 
 	/*
-	 * download and store the trading dates and total trading values 
-	 * and trading values for foreign and other investors
-	 * for the past 6 month period
-	 */
-	public void prepareData() throws StockException {
-		// List<String> dateList = Arrays.asList("20180201", "20180301", "20180401",
-		// "20180501");
-		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
-		for (String dateString : dateList) {
-			initialTradingDateAndValue(dateString);
-		}
-	}
-
-	/*
-	 * download and store the trading date and total trading values for a specific month.
-	 * It calls setForeignAndOtherInvestorsTradingValue() 
-	 */
-	private void initialTradingDateAndValue(String dateString) throws StockException {
-		try {
-			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
-			// StockUtils.writeDocumentToFile(doc, "TWSE_DAILY_TRADING.html");
-			Elements trs = doc.select("table > tbody > tr");
-			for (Element tr : trs) {
-				Elements tds = tr.select("td");
-				TradingDate tDate = new TradingDate();
-				tDate.setDateAsString(tds.get(0).text());
-				tradingDateDAO.saveTradingDate(tDate);
-				//
-				TradingValue tValue = new TradingValue();
-				tValue.setTradingDate(tDate.getDate());
-				tValue.setTotalValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
-				// set trading values for foreign and other investors
-				setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
-				tradingValueDAO.saveTradingValue(tValue);
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException ex) {
-				}
-			}
-		} catch (IOException ex) {
-			throw new StockException(ex);
-		}
-	}
-	/*
-	 * download and parse Trading values for Foreign and other investors for a specific trading date
+	 * download and parse Trading values for Foreign and other investors for a
+	 * specific trading date
 	 */
 	private void setForeignAndOtherInvestorsTradingValue(String dateString, TradingValue tradingValue)
 			throws StockException {

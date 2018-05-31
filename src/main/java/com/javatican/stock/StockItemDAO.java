@@ -1,5 +1,7 @@
 package com.javatican.stock;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -13,10 +15,19 @@ public class StockItemDAO {
 	@Autowired
 	StockItemRepository stockItemRepository;
 		
-	public void saveStockItem(StockItem si){
+	public void save(StockItem si){
 		stockItemRepository.save(si);
+	} 
+	public void saveAll(List<StockItem> siList){
+		stockItemRepository.saveAll(siList);
 	} 
 	public StockItem findBySymbol(String symbol) {
 		return stockItemRepository.findBySymbol(symbol);
+	}
+	public boolean existsBySymbol(String symbol) {
+		return stockItemRepository.existsBySymbol(symbol);
+	}
+	public List<String> getAllSymbols(){
+		return stockItemRepository.getAllSymbols();
 	}
 }
