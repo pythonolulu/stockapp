@@ -44,7 +44,7 @@ public class StockPriceDAO {
 		objectMapper.setDateFormat(df);
 	}
 
-	public List<String> existSymbols() throws StockException{
+	public List<String> existingSymbols() throws StockException{
 		try {
 			Resource[] resources = resourcePatternResolver.getResources("file:./download/*.json");
 			List<String> symbols = new ArrayList<>();

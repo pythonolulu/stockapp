@@ -30,4 +30,11 @@ public class StockItemDAO {
 	public List<String> getAllSymbols(){
 		return stockItemRepository.getAllSymbols();
 	}
+	public List<StockItem> findAll(){
+		return stockItemRepository.findAll();
+	}
+
+	public List<StockItem> findBySymbolIn(List<String> symbols){
+		return stockItemRepository.findBySymbolIn(symbols);
+	}
 }

@@ -53,7 +53,10 @@ public class StockTradeByTrust {
 		this.sell = sell;
 		this.diff = diff;
 	}
-
+	@Override
+	public String toString() {
+		return String.format("Symbol:%s, buy:%f, sell:%f", this.stockSymbol, this.buy, this.sell);
+	}
 	public Date getTradingDate() {
 		return tradingDate;
 	}

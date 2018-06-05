@@ -1,12 +1,21 @@
 package com.javatican.stock;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
+import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.util.ResponseMessage;
+import com.javatican.stock.util.StockUtils;
 
 @RestController
 @RequestMapping("stock/*")
@@ -138,5 +147,30 @@ public class StockController {
 			mes.setText("Trading data for stock " + stockSymbol + " fails to be updated.");
 		}
 		return mes;
+	}
+	@GetMapping("/updatePriceFieldForAll")
+	public ResponseMessage updateStockItemPriceFieldForAll() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.updateStockItemPriceFieldForAllSymbols();
+			mes.setCategory("Success");
+			mes.setText("Stock price fields for all stocks have been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Stock price fields for all stocks fail  to be udpated.");
+		}
+		return mes;
+	}
+	@GetMapping("/{tradingDate}/top30ByTrust")
+	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
+		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
+		List<StockTradeByTrust> stbtList =  stockService.getTop30StockTradeByTrust(date);
+		List<String> symbols = stbtList.stream().map(StockTradeByTrust::getStockSymbol).collect(Collectors.toList());
+		Map<String, StockItem> siMap = stockItemService.findBySymbolIn(symbols);
+		ModelAndView mav = new ModelAndView("stock/top30ByTrust");	
+		mav.addObject("stbtItems", stbtList);
+		mav.addObject("siMap", siMap);
+		return mav;
 	}
 }

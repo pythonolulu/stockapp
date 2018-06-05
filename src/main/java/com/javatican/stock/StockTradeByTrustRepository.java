@@ -12,6 +12,9 @@ public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByT
 	
 	@Query("select max(s.tradingDate) from StockTradeByTrust s")
 	Date getLatestTradingDate();
+	
 	@Query("select distinct(s.stockSymbol) from StockTradeByTrust s")
 	List<String> getDistinctStockSymbol();
+	
+	List<StockTradeByTrust> findByTradingDate(Date tradingDate);
 }

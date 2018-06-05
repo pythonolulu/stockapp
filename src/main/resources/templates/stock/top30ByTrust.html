@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>Top 30 stocks buy/sell by Trust</title>
+    <link rel="stylesheet" th:href="@{/style.css}"></link>
+  </head>
+
+  <body>
+    <h2>Top stocks list</h2>
+    <div th:unless="${#lists.isEmpty(stbtItems)}">
+      <dl th:each="item : ${stbtItems}">
+        <dt class="bookHeadline">
+          <span th:text="${item.stockSymbol}">Symbol</span>
+          <span th:text="${siMap[item.stockSymbol].name}">Name</span>
+          <span th:text="${siMap[item.stockSymbol].price}">price</span>
+        </dt>
+        <dd class="bookDescription">
+          <span th:text="${item.buy}">buy</span>
+          <span th:text="${item.sell}">sell</span>
+          <span th:text="${item.diff}">diff</span>
+        </dd>
+      </dl>
+    </div>
+    <div th:if="${#lists.isEmpty(stbtItems)}">
+      <p>No records</p>
+    </div>
+
+     
+    
+  </body>
+</html>

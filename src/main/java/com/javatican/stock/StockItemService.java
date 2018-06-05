@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -144,6 +145,31 @@ public class StockItemService {
 		}
 	}
 
+	public void updateStockItemPriceFieldForAllSymbols() throws StockException{
+		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
+		Date start = tuple.getValue0();
+		Date end = tuple.getValue1();
+		List<String> symbols = stockPriceDAO.existingSymbols();
+		List<StockPrice> spList = null;
+		List<StockItem> siList = new ArrayList<>();
+		double average=0.0;
+		StockItem si;
+		for(String stockSymbol: symbols) {
+			logger.info("update price data for symbol: "+ stockSymbol);
+			spList = stockPriceDAO.loadBetweenDate(stockSymbol, start, end);
+			// calculate the average.
+			try {
+				average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
+			} catch(Exception ex) {
+				logger.info("skipping symbol : "+stockSymbol);
+				continue;
+			}
+			si = stockItemDAO.findBySymbol(stockSymbol);
+			si.setPrice(average);
+			siList.add(si);
+		}
+		stockItemDAO.saveAll(siList);
+	}
 	/*
 	 * Calculate the average closing price for the last month for the stock
 	 */
@@ -152,10 +178,10 @@ public class StockItemService {
 		Date start = tuple.getValue0();
 		Date end = tuple.getValue1();
 		List<StockPrice> spList = stockPriceDAO.loadBetweenDate(stockSymbol, start, end);
-		spList.stream().forEach(sp -> logger.info(sp.toString()));
+		//spList.stream().forEach(sp -> logger.info(sp.toString()));
 		// calculate the average.
 		double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
-		logger.info("average close price=" + average);
+		//logger.info("average close price=" + average);
 		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
 		si.setPrice(average);
 		stockItemDAO.save(si);
@@ -177,7 +203,7 @@ public class StockItemService {
 	
 	public void updatePriceDataForAllExistSymbols() throws StockException{
 		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
-		List<String> symbols = stockPriceDAO.existSymbols();
+		List<String> symbols = stockPriceDAO.existingSymbols();
 		List<StockPrice> spList;
 		for(String symbol: symbols) {
 			logger.info("update price data for symbol: "+ symbol);
@@ -244,4 +270,9 @@ public class StockItemService {
 		}
 	}
 
+	public Map<String, StockItem> findBySymbolIn(List<String> symbols) {
+		Map<String, StockItem> map = new TreeMap<>();
+		stockItemDAO.findBySymbolIn(symbols).stream().forEach(si-> map.put(si.getSymbol(),si));
+		return map;
+	}
 }

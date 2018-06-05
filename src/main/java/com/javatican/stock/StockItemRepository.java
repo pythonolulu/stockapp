@@ -12,4 +12,5 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 	boolean existsBySymbol(String symbol);
 	@Query("select s.symbol from StockItem s")
 	List<String> getAllSymbols();
+	List<StockItem> findBySymbolIn(List<String> symbols);
 }

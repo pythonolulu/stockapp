@@ -38,6 +38,16 @@ public class StockUtils {
 		}
 	}
 	/*
+	 * parse a date string of '20180101' format
+	 */
+	public static Optional<Date> stringSimpleToDate(String date) {
+		try {
+			return Optional.of(format.parse(date));
+		} catch (Exception ex) {
+			return Optional.empty();
+		}
+	}
+	/*
 	 * format a date object as '20180101' -like string
 	 */
 	public static String dateToSimpleString(Date date) {

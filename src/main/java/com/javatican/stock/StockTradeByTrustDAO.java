@@ -25,6 +25,8 @@ public class StockTradeByTrustDAO {
 	public List<String> getDistinctStockSymbol(){
 		return stockTradeByTrustRepository.getDistinctStockSymbol();
 	}
+	public List<StockTradeByTrust> getByTradingDate(Date tradingDate){
+		return stockTradeByTrustRepository.findByTradingDate(tradingDate);
+	}
 	
-
 }

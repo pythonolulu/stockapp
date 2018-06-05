@@ -3,6 +3,9 @@ package com.javatican.stock;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.model.TradingValue;
 import com.javatican.stock.util.StockUtils;
@@ -34,7 +39,10 @@ public class StockService {
 	TradingDateDAO tradingDateDAO;
 	@Autowired
 	TradingValueDAO tradingValueDAO;
-
+	@Autowired
+	StockTradeByTrustDAO stockTradeByTrustDAO;
+	@Autowired
+	StockItemDAO stockItemDAO;
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
 	 * investors. The download contains the data for the current month, so
@@ -148,5 +156,21 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
-
+	
+	public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate){
+		//load all stock items and store in the map with symbol as key and the object as value
+		List<StockItem> siList = stockItemDAO.findAll();
+		Map<String, StockItem> siMap = new TreeMap<>();
+		siList.stream().forEach(si->siMap.put(si.getSymbol(), si));
+		List<StockTradeByTrust> stbtList =  stockTradeByTrustDAO.getByTradingDate(tradingDate);
+		stbtList = stbtList.stream().sorted((stbt1, stbt2) -> {
+			double  price1= siMap.get(stbt1.getStockSymbol()).getPrice();
+			double  price2= siMap.get(stbt2.getStockSymbol()).getPrice();
+			double amt1 = price1*(stbt1.getBuy()+stbt1.getSell());
+			double amt2 = price2*(stbt2.getBuy()+stbt2.getSell());
+			return -1*Double.compare(amt1, amt2);
+		}).limit(30).collect(Collectors.toList());
+		return stbtList;
+	}
+		
 }
