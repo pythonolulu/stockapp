@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.util.StockUtils;
@@ -32,7 +34,12 @@ public class StockTradeByTrustService {
 
 	@Autowired
 	TradingDateDAO tradingDateDAO;
-
+	
+	@Autowired
+	StockItemDAO stockItemDAO;
+	
+	@Autowired
+	StockItemService stockItemService;
 	/*
 	 * update stock trade data for Trust (dynamic download and save the new available data)
 	 */
@@ -55,6 +62,7 @@ public class StockTradeByTrustService {
 	 * download and save the stock trade data by Trust for a list of TradingDate instances.
 	 */
 	private void downloadAndSave(List<TradingDate> tdList) throws StockException{
+		Map<String, StockItem> siMap = stockItemDAO.findAllAsMap(); 
 		List<StockTradeByTrust> result = new ArrayList<>();
 		try {
 			for (TradingDate td : tdList) {
@@ -63,6 +71,7 @@ public class StockTradeByTrustService {
 				Document doc = Jsoup.connect(String.format(TWSE_STOCK_TRADE_BY_TRUST_GET_URL, dateString)).get();
 				Elements trs = doc.select("table > tbody > tr");
 				StockTradeByTrust stbt;
+				StockItem si = null;
 				for (Element tr : trs) {
 					Elements tds = tr.select("td");
 					stbt = new StockTradeByTrust(td.getDate());
@@ -70,6 +79,12 @@ public class StockTradeByTrustService {
 					stbt.setBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
 					stbt.setSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
 					stbt.setDiff(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+					si = siMap.get(stbt.getStockSymbol());
+					if(si==null) {
+						si = stockItemService.createStockItem(stbt.getStockSymbol());
+						siMap.put(stbt.getStockSymbol(), si);
+					}
+					stbt.setStockItem(si);
 					result.add(stbt);
 				}
 				try {

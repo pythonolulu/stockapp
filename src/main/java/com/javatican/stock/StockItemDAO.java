@@ -1,29 +1,41 @@
 package com.javatican.stock;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockPrice;
 
 @Repository("stockItemDAO")
 public class StockItemDAO {
 	public StockItemDAO() {
-		// TODO Auto-generated constructor stub
 	}
 	@Autowired
 	StockItemRepository stockItemRepository;
 		
-	public void save(StockItem si){
-		stockItemRepository.save(si);
+	public StockItem save(StockItem si){
+		return stockItemRepository.save(si);
 	} 
-	public void saveAll(List<StockItem> siList){
-		stockItemRepository.saveAll(siList);
+	public Iterable<StockItem> saveAll(List<StockItem> siList){
+		return stockItemRepository.saveAll(siList);
 	} 
 	public StockItem findBySymbol(String symbol) {
 		return stockItemRepository.findBySymbol(symbol);
 	}
+
+	/* 
+	 * use entity graph
+	 * load stbt relationship
+	 */
+	public StockItem getBySymbol(String symbol) {
+		return stockItemRepository.getBySymbol(symbol);
+	}
+	
 	public boolean existsBySymbol(String symbol) {
 		return stockItemRepository.existsBySymbol(symbol);
 	}
@@ -36,5 +48,16 @@ public class StockItemDAO {
 
 	public List<StockItem> findBySymbolIn(List<String> symbols){
 		return stockItemRepository.findBySymbolIn(symbols);
+	}
+
+	public List<StockItem> findByPrice(Double price){
+		return stockItemRepository.findByPrice(price);
+	}
+	
+	public Map<String, StockItem> findAllAsMap()  {
+		Map<String, StockItem> siMap = new TreeMap<>();
+		List<StockItem> siList = findAll();
+		siList.stream().forEach(si-> siMap.put(si.getSymbol(), si));
+		return siMap;
 	}
 }

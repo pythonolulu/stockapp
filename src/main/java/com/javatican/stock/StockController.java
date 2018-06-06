@@ -28,7 +28,9 @@ public class StockController {
 	@Autowired
 	private StockTradeByTrustService stockTradeByTrustService;
 	
-	
+	/*
+	 * only call once during initial setup
+	 */
 	@GetMapping("/prepareTrustData")
 	public ResponseMessage prepareTrustData() {
 		ResponseMessage mes = new ResponseMessage();
@@ -43,6 +45,9 @@ public class StockController {
 		}
 		return mes;
 	}
+	/*
+	 * 2. handler for download and save any new stock trading data by Trust
+	 */
 	@GetMapping("/updateTrustData")
 	public ResponseMessage updateTrustData() {
 		ResponseMessage mes = new ResponseMessage();
@@ -58,21 +63,9 @@ public class StockController {
 		return mes;
 	}
 
-	@GetMapping("/createStockProfiles")
-	public ResponseMessage createStockProfiles() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			stockItemService.downloadAndSaveStockItems();;
-			mes.setCategory("Success");
-			mes.setText("download and save all stock profiles.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("Fails to download and save all stock profiles.");
-		}
-		return mes;
-	}
-	
+	/*
+	 * 3. handler for download and save stock prices for any new stock items
+	 */
 	@GetMapping("/createStockPrices")
 	public ResponseMessage createStockPrices() {
 		ResponseMessage mes = new ResponseMessage();
@@ -87,18 +80,20 @@ public class StockController {
 		}
 		return mes;
 	}
-
+	/*
+	 * 1. handler for download and save any new trading date and trading values data
+	 */
 	@GetMapping("/updateData")
-	public ResponseMessage updateDate() {
+	public ResponseMessage updateData() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
 			stockService.updateTradingDateAndValue();
 			mes.setCategory("Success");
-			mes.setText("Trading date information has been updated.");
+			mes.setText("Trading date and value information has been updated.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Trading date information fails to be updated.");
+			mes.setText("Trading date and value information fails to be updated.");
 		}
 		return mes;
 
@@ -148,6 +143,25 @@ public class StockController {
 		}
 		return mes;
 	}
+	/*
+	 * 4. handler for calculate average price for last month for missing price field stock items.
+	 */
+	@GetMapping("/updateMissingPriceField")
+	public ResponseMessage updateMissingStockItemPriceField() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.updateMissingStockItemPriceField();
+			mes.setCategory("Success");
+			mes.setText("Stock price fields have been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Stock price fields fail to be udpated.");
+		}
+		return mes;
+	}
+	
+	
 	@GetMapping("/updatePriceFieldForAll")
 	public ResponseMessage updateStockItemPriceFieldForAll() {
 		ResponseMessage mes = new ResponseMessage();
@@ -162,15 +176,15 @@ public class StockController {
 		}
 		return mes;
 	}
+	/*
+	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified trading date.
+	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
 	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		List<StockTradeByTrust> stbtList =  stockService.getTop30StockTradeByTrust(date);
-		List<String> symbols = stbtList.stream().map(StockTradeByTrust::getStockSymbol).collect(Collectors.toList());
-		Map<String, StockItem> siMap = stockItemService.findBySymbolIn(symbols);
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");	
 		mav.addObject("stbtItems", stbtList);
-		mav.addObject("siMap", siMap);
 		return mav;
 	}
 }

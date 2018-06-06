@@ -7,6 +7,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedAttributeNode;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 /*
@@ -16,6 +19,7 @@ import javax.persistence.UniqueConstraint;
 @Table(name = "stock_trade_by_trust", uniqueConstraints={
 	    @UniqueConstraint(columnNames = {"trading_date", "stock_symbol"})
 	})
+@NamedEntityGraph(name="StockTradeByTrust.stockItem", attributeNodes=@NamedAttributeNode("stockItem"))
 public class StockTradeByTrust {
 
 	@Id
@@ -24,6 +28,16 @@ public class StockTradeByTrust {
 
 	@Column(name = "trading_date", nullable = false)
 	private Date tradingDate;
+
+	@ManyToOne
+	private StockItem stockItem;
+	
+	public StockItem getStockItem() {
+		return stockItem;
+	}
+	public void setStockItem(StockItem stockItem) {
+		this.stockItem = stockItem;
+	}
 
 	@Column(name = "stock_symbol", nullable = false)
 	private String stockSymbol;

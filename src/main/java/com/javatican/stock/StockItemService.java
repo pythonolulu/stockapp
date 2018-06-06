@@ -2,6 +2,7 @@ package com.javatican.stock;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ public class StockItemService {
 
 	/*
 	 * batch job to download and save any new stock profiles
+	 * no use anymore, since now the StockTradeByTrust instance has FK relationship to StockItem
 	 */
 	public void downloadAndSaveStockItems() throws StockException {
 		Collection<String> existSymbols = stockItemDAO.getAllSymbols();
@@ -71,13 +73,16 @@ public class StockItemService {
 				.collect(Collectors.toList());
 		preparePriceDataForSymbols(toSaveList);
 	}
-
+	
+	public StockItem createStockItem(String symbol) throws StockException{
+		return createStockItems(Arrays.asList(symbol)).iterator().next();
+	}
 	/*
 	 * create new stock items 
 	 * passing a list of new symbols 
 	 * the price field is not yet updated.
 	 */
-	private void createStockItems(Collection<String> symbols) throws StockException {
+	private Iterable<StockItem> createStockItems(Collection<String> symbols) throws StockException {
 		Pattern cnameP = Pattern.compile("\\((\\S+)\\)\\s(\\S+)");
 		Pattern capitalP = Pattern.compile("\\s*([\\d,-]+)元");
 		try {
@@ -139,19 +144,21 @@ public class StockItemService {
 				} catch (InterruptedException ex) {
 				}
 			}
-			stockItemDAO.saveAll(siList);
+			return stockItemDAO.saveAll(siList);
 		} catch (IOException ex) {
 			throw new StockException(ex);
 		}
 	}
-
+/*
+ * update the price field in stockItem
+ * Note: just call its setter method , no need to call save()
+ */
 	public void updateStockItemPriceFieldForAllSymbols() throws StockException{
 		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
 		Date start = tuple.getValue0();
 		Date end = tuple.getValue1();
 		List<String> symbols = stockPriceDAO.existingSymbols();
 		List<StockPrice> spList = null;
-		List<StockItem> siList = new ArrayList<>();
 		double average=0.0;
 		StockItem si;
 		for(String stockSymbol: symbols) {
@@ -166,12 +173,11 @@ public class StockItemService {
 			}
 			si = stockItemDAO.findBySymbol(stockSymbol);
 			si.setPrice(average);
-			siList.add(si);
 		}
-		stockItemDAO.saveAll(siList);
 	}
 	/*
 	 * Calculate the average closing price for the last month for the stock
+	 * Note: just call its setter method , no need to call save()
 	 */
 	public void updateStockItemPriceField(String stockSymbol) throws StockException {
 		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
@@ -184,9 +190,20 @@ public class StockItemService {
 		//logger.info("average close price=" + average);
 		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
 		si.setPrice(average);
-		stockItemDAO.save(si);
 	}
-
+	
+	public void updateMissingStockItemPriceField() throws StockException {
+		List<StockItem> missingFieldItems = stockItemDAO.findByPrice(0.0);
+		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
+		Date start = tuple.getValue0();
+		Date end = tuple.getValue1();
+		for(StockItem si: missingFieldItems) {
+			List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
+			double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
+			//logger.info("average close price=" + average);
+			si.setPrice(average);
+		}
+	}
 	/*
 	 * Update stock daily trading value/volume and prices for a stock 
 	 * The data downloaded include records for the whole month, 
@@ -275,4 +292,7 @@ public class StockItemService {
 		stockItemDAO.findBySymbolIn(symbols).stream().forEach(si-> map.put(si.getSymbol(),si));
 		return map;
 	}
+	
+		 
+	 
 }

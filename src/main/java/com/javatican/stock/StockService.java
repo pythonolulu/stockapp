@@ -158,14 +158,10 @@ public class StockService {
 	}
 	
 	public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate){
-		//load all stock items and store in the map with symbol as key and the object as value
-		List<StockItem> siList = stockItemDAO.findAll();
-		Map<String, StockItem> siMap = new TreeMap<>();
-		siList.stream().forEach(si->siMap.put(si.getSymbol(), si));
 		List<StockTradeByTrust> stbtList =  stockTradeByTrustDAO.getByTradingDate(tradingDate);
 		stbtList = stbtList.stream().sorted((stbt1, stbt2) -> {
-			double  price1= siMap.get(stbt1.getStockSymbol()).getPrice();
-			double  price2= siMap.get(stbt2.getStockSymbol()).getPrice();
+			double  price1= stbt1.getStockItem().getPrice();
+			double  price2= stbt2.getStockItem().getPrice();
 			double amt1 = price1*(stbt1.getBuy()+stbt1.getSell());
 			double amt2 = price2*(stbt2.getBuy()+stbt2.getSell());
 			return -1*Double.compare(amt1, amt2);

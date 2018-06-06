@@ -29,4 +29,8 @@ public class StockTradeByTrustDAO {
 		return stockTradeByTrustRepository.findByTradingDate(tradingDate);
 	}
 	
+	/*public List<StockTradeByTrust> getByStockSymbol(String stockSymbol){
+		return stockTradeByTrustRepository.findByStockSymbol(stockSymbol);
+	}*/
+	
 }

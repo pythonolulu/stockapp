@@ -10,8 +10,8 @@
       <dl th:each="item : ${stbtItems}">
         <dt class="bookHeadline">
           <span th:text="${item.stockSymbol}">Symbol</span>
-          <span th:text="${siMap[item.stockSymbol].name}">Name</span>
-          <span th:text="${siMap[item.stockSymbol].price}">price</span>
+          <span th:text="${item.stockItem.name}">Name</span>
+          <span th:text="${item.stockItem.price}">price</span>
         </dt>
         <dd class="bookDescription">
           <span th:text="${item.buy}">buy</span>
