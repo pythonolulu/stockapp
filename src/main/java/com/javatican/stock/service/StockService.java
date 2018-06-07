@@ -1,4 +1,4 @@
-package com.javatican.stock;
+package com.javatican.stock.service;
 
 import java.io.IOException;
 import java.util.Date;
@@ -18,6 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.javatican.stock.StockConfig;
+import com.javatican.stock.StockException;
+import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockTradeByTrustDAO;
+import com.javatican.stock.dao.TradingDateDAO;
+import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
@@ -36,6 +42,8 @@ public class StockService {
 	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
 
 	@Autowired
+	StockConfig stockConfig;
+	@Autowired
 	TradingDateDAO tradingDateDAO;
 	@Autowired
 	TradingValueDAO tradingValueDAO;
@@ -43,6 +51,7 @@ public class StockService {
 	StockTradeByTrustDAO stockTradeByTrustDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
+
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
 	 * investors. The download contains the data for the current month, so
@@ -65,6 +74,17 @@ public class StockService {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		for (String dateString : dateList) {
 			downloadAndSaveTradingDateAndValueForTheMonth(dateString, false);
+		}
+	}
+
+	/*
+	 * check Date data: this may happen when crossing a new month, so we check the
+	 * missing TradingDate item and do the download and save.
+	 */
+	public void checkData() throws StockException {
+		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
+		for (String dateString : dateList) {
+			downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
 		}
 	}
 
@@ -98,12 +118,12 @@ public class StockService {
 					setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
 					tradingValueDAO.save(tValue);
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(stockConfig.getSleepTime());
 					} catch (InterruptedException ex) {
 					}
 				}
 			}
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
 	}
@@ -156,17 +176,17 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
-	
-	public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate){
-		List<StockTradeByTrust> stbtList =  stockTradeByTrustDAO.getByTradingDate(tradingDate);
+
+	public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate) {
+		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
 		stbtList = stbtList.stream().sorted((stbt1, stbt2) -> {
-			double  price1= stbt1.getStockItem().getPrice();
-			double  price2= stbt2.getStockItem().getPrice();
-			double amt1 = price1*(stbt1.getBuy()+stbt1.getSell());
-			double amt2 = price2*(stbt2.getBuy()+stbt2.getSell());
-			return -1*Double.compare(amt1, amt2);
+			double price1 = stbt1.getStockItem().getPrice();
+			double price2 = stbt2.getStockItem().getPrice();
+			double amt1 = price1 * (stbt1.getBuy() + stbt1.getSell());
+			double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
+			return -1 * Double.compare(amt1, amt2);
 		}).limit(30).collect(Collectors.toList());
 		return stbtList;
 	}
-		
+
 }

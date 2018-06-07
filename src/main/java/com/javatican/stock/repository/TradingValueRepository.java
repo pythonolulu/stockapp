@@ -1,4 +1,4 @@
-package com.javatican.stock;
+package com.javatican.stock.repository;
 
 import java.util.Date;
 

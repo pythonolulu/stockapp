@@ -1,4 +1,4 @@
-package com.javatican.stock;
+package com.javatican.stock.repository;
 
 import java.util.Date;
 import java.util.List;
@@ -20,7 +20,5 @@ public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByT
 	
 	@EntityGraph(value="StockTradeByTrust.stockItem", type=EntityGraphType.LOAD)
 	List<StockTradeByTrust> findByTradingDate(Date tradingDate);
-	
-	//List<StockTradeByTrust> findByStockSymbol(String stockSymbol);
 	
 }

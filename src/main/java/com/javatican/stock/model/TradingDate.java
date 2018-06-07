@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.*;
 
 import com.javatican.stock.util.StockUtils;
+
 /*
 * DailyTrading : 
 * http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=20180501

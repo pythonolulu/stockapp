@@ -1,6 +1,5 @@
-package com.javatican.stock;
+package com.javatican.stock.dao;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -9,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.javatican.stock.model.StockItem;
-import com.javatican.stock.model.StockPrice;
+import com.javatican.stock.repository.StockItemRepository;
 
 @Repository("stockItemDAO")
 public class StockItemDAO {
@@ -44,10 +43,6 @@ public class StockItemDAO {
 	}
 	public List<StockItem> findAll(){
 		return stockItemRepository.findAll();
-	}
-
-	public List<StockItem> findBySymbolIn(List<String> symbols){
-		return stockItemRepository.findBySymbolIn(symbols);
 	}
 
 	public List<StockItem> findByPrice(Double price){

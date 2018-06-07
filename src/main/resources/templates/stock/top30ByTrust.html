@@ -1,30 +1,43 @@
-<html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
   <head>
     <title>Top 30 stocks buy/sell by Trust</title>
-    <link rel="stylesheet" th:href="@{/style.css}"></link>
+    <link th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}" rel="stylesheet"></link>
+    <script th:src="@{/webjars/jquery/1.9.1/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
   </head>
-
   <body>
-    <h2>Top stocks list</h2>
-    <div th:unless="${#lists.isEmpty(stbtItems)}">
-      <dl th:each="item : ${stbtItems}">
-        <dt class="bookHeadline">
-          <span th:text="${item.stockSymbol}">Symbol</span>
-          <span th:text="${item.stockItem.name}">Name</span>
-          <span th:text="${item.stockItem.price}">price</span>
-        </dt>
-        <dd class="bookDescription">
-          <span th:text="${item.buy}">buy</span>
-          <span th:text="${item.sell}">sell</span>
-          <span th:text="${item.diff}">diff</span>
-        </dd>
-      </dl>
-    </div>
-    <div th:if="${#lists.isEmpty(stbtItems)}">
-      <p>No records</p>
-    </div>
-
-     
-    
+	  <div class="container">
+		<h2>Top stocks list for <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span></h2>
+		<div th:unless="${#lists.isEmpty(stbtItems)}">
+		 <table class="table table-striped">
+		  <thead>
+		   <tr>
+		   	<th>No.</th>
+		   	<th>Symbol</th>
+		   	<th>Name</th>
+		   	<th>Price</th>
+		   	<th>Buy</th>
+		   	<th>Sell</th>
+		   	<th>Diff</th>
+		   </tr>   
+		  </thead>
+		  <tbody>
+		  	<tr th:each="item : ${stbtItems}">
+		   	<td th:text="${#ids.seq('#')}">#1</td>
+		   	<td th:text="${item.stockSymbol}">2317</td>
+		   	<td th:text="${item.stockItem.name}">Hong Hai</td>
+		   	<td th:text="${#numbers.formatCurrency(item.stockItem.price)}">NT$90</td>
+		   	<td th:text="${#numbers.formatDecimal(item.buy,1,'COMMA',0,'POINT')}">1000,000</td>
+		   	<td th:text="${#numbers.formatDecimal(item.sell,1,'COMMA',0,'POINT')}">1200,000</td>
+		   	<td th:text="${#numbers.formatDecimal(item.diff,1,'COMMA',0,'POINT')}">-200,000</td>
+		   </tr>   
+		  </tbody>
+		 </table>
+		</div>
+		<div th:if="${#lists.isEmpty(stbtItems)}">
+		  <p>No records</p>
+		</div> 
+	  </div>  
   </body>
 </html>

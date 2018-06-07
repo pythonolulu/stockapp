@@ -35,10 +35,12 @@ public class StockPrice implements Comparable<StockPrice> {
 		this.close = close;
 		this.transaction = transaction;
 	}
+
 	@Override
 	public String toString() {
-		return "tradingDate="+this.getTradingDate()+", close="+this.getClose();
+		return "tradingDate=" + this.getTradingDate() + ", close=" + this.getClose();
 	}
+
 	public Date getTradingDate() {
 		return tradingDate;
 	}

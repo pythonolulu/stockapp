@@ -12,7 +12,7 @@ import javax.persistence.NamedAttributeNode;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-/*
+/* URL for download stock profile 
  * 1. http://mops.twse.com.tw/mops/web/t05st03 GET 
  * 		need to get the cookie: jcsession
  * 2. http://mops.twse.com.tw/mops/web/ajax_t05st03 POST
@@ -31,9 +31,10 @@ import javax.persistence.Table;
 			TYPEK: all
 			co_id: 2317
  */
+
 @Entity
 @Table(name = "stock_item")
-@NamedEntityGraph(name="StockItem.stbt", attributeNodes=@NamedAttributeNode("stbt"))
+@NamedEntityGraph(name = "StockItem.stbt", attributeNodes = @NamedAttributeNode("stbt"))
 public class StockItem {
 
 	@Id
@@ -55,9 +56,9 @@ public class StockItem {
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
 
-	@OneToMany(mappedBy="stockItem")
+	@OneToMany(mappedBy = "stockItem")
 	private Collection<StockTradeByTrust> stbt;
-	
+
 	public StockItem() {
 		super();
 	}
@@ -114,4 +115,9 @@ public class StockItem {
 	public Long getId() {
 		return id;
 	}
+
+	public Collection<StockTradeByTrust> getStbt() {
+		return stbt;
+	}
+
 }

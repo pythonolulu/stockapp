@@ -1,4 +1,4 @@
-package com.javatican.stock;
+package com.javatican.stock.dao;
 
 import java.util.Date;
 
@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.repository.TradingValueRepository;
 
 @Repository("tradingValueDAO")
 public class TradingValueDAO {
@@ -13,7 +14,6 @@ public class TradingValueDAO {
 	TradingValueRepository tradingValueRepository;
 	
 	public TradingValueDAO() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public boolean existsByTradingDate(Date tradingDate) {

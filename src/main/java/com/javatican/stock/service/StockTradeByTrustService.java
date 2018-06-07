@@ -1,6 +1,5 @@
-package com.javatican.stock;
-
-import java.io.IOException;
+package com.javatican.stock.service;
+ 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,6 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.javatican.stock.StockConfig;
+import com.javatican.stock.StockException;
+import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockTradeByTrustDAO;
+import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
@@ -30,44 +34,51 @@ public class StockTradeByTrustService {
 	private static final String TWSE_STOCK_TRADE_BY_TRUST_GET_URL = "http://www.tse.com.tw/fund/TWT44U?response=html&date=%s";
 
 	@Autowired
+	StockConfig stockConfig;
+	
+	@Autowired
 	StockTradeByTrustDAO stockTradeByTrustDAO;
 
 	@Autowired
 	TradingDateDAO tradingDateDAO;
-	
+
 	@Autowired
 	StockItemDAO stockItemDAO;
-	
+
 	@Autowired
 	StockItemService stockItemService;
+
 	/*
-	 * update stock trade data for Trust (dynamic download and save the new available data)
+	 * update stock trade data for Trust (dynamic download and save the new
+	 * available data)
 	 */
-	public void updateData() throws StockException{
-		 Date latest = stockTradeByTrustDAO.getLatestTradingDate();
-		 List<TradingDate> tdList = tradingDateDAO.findAfter(latest);
-		 downloadAndSave(tdList);
+	public void updateData() throws StockException {
+		Date latest = stockTradeByTrustDAO.getLatestTradingDate();
+		List<TradingDate> tdList = tradingDateDAO.findAfter(latest);
+		downloadAndSave(tdList);
 	}
+
 	/*
 	 * manual downloads history stock trade data by Trust (only run once)
 	 */
 	public void prepareData() throws StockException {
-		List<TradingDate> tdList = tradingDateDAO.findBetween(
-				StockUtils.stringToDate("2018/05/01").get(), 
+		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/05/01").get(),
 				StockUtils.stringToDate("2018/05/27").get());
 		downloadAndSave(tdList);
-		
+
 	}
+
 	/*
-	 * download and save the stock trade data by Trust for a list of TradingDate instances.
+	 * download and save the stock trade data by Trust for a list of TradingDate
+	 * instances.
 	 */
-	private void downloadAndSave(List<TradingDate> tdList) throws StockException{
-		Map<String, StockItem> siMap = stockItemDAO.findAllAsMap(); 
+	private void downloadAndSave(List<TradingDate> tdList) throws StockException {
+		Map<String, StockItem> siMap = stockItemDAO.findAllAsMap();
 		List<StockTradeByTrust> result = new ArrayList<>();
 		try {
 			for (TradingDate td : tdList) {
 				String dateString = StockUtils.dateToSimpleString(td.getDate());
-				logger.info("prepare data for date:"+dateString);
+				logger.info("prepare data for date:" + dateString);
 				Document doc = Jsoup.connect(String.format(TWSE_STOCK_TRADE_BY_TRUST_GET_URL, dateString)).get();
 				Elements trs = doc.select("table > tbody > tr");
 				StockTradeByTrust stbt;
@@ -80,21 +91,21 @@ public class StockTradeByTrustService {
 					stbt.setSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
 					stbt.setDiff(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
 					si = siMap.get(stbt.getStockSymbol());
-					if(si==null) {
-						si = stockItemService.createStockItem(stbt.getStockSymbol());
+					if (si == null) {
+						si = stockItemService.downloadAndSaveStockProfile(stbt.getStockSymbol());
 						siMap.put(stbt.getStockSymbol(), si);
 					}
 					stbt.setStockItem(si);
 					result.add(stbt);
 				}
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
 				}
 
 			}
 			stockTradeByTrustDAO.saveAll(result);
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
 	}

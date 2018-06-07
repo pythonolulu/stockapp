@@ -1,4 +1,4 @@
-package com.javatican.stock;
+package com.javatican.stock.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,6 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.javatican.stock.StockConfig;
+import com.javatican.stock.StockException;
+import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockPriceDAO;
+import com.javatican.stock.dao.StockTradeByTrustDAO;
+import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockPrice;
 import com.javatican.stock.util.StockUtils;
@@ -41,48 +46,43 @@ public class StockItemService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	// Url for downloading stock daily trading value/volume and prices(ohlc)
 	private static final String TWSE_INDIVIDUAL_STOCK_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/STOCK_DAY?response=html&date=%s&stockNo=%s";
-	
+
 	// urls for downloading stock profile(name, capital)
 	private static final String TWSE_STOCK_PROFILE_GET_URL = "http://mops.twse.com.tw/mops/web/t05st03";
 	private static final String TWSE_STOCK_PROFILE_POST_URL = "http://mops.twse.com.tw/mops/web/ajax_t05st03";
-	
+	@Autowired
+	StockConfig stockConfig;
 	@Autowired
 	StockPriceDAO stockPriceDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
 	@Autowired
 	StockTradeByTrustDAO stockTradeByTrustDAO;
+	@Autowired
+	TradingDateDAO tradingDateDAO;
 
 	/*
-	 * batch job to download and save any new stock profiles
-	 * no use anymore, since now the StockTradeByTrust instance has FK relationship to StockItem
-	 */
-	public void downloadAndSaveStockItems() throws StockException {
-		Collection<String> existSymbols = stockItemDAO.getAllSymbols();
-		Collection<String> allSymbols = stockTradeByTrustDAO.getDistinctStockSymbol();
-		allSymbols.removeAll(existSymbols);
-		// allSymbols.stream().forEach(str-> logger.info(str));
-		createStockItems(allSymbols);
-	}
-	/*
-	 * batch job to download and save prices for any new stocks
+	 * batch job to download and save prices for any new stock items
 	 */
 	public void downloadAndSaveStockPrices() throws StockException {
 		Collection<String> stockSymbols = stockItemDAO.getAllSymbols();
-		List<String> toSaveList = stockSymbols.stream().filter(sp -> !stockPriceDAO.existsForSymbol(sp))
+		List<String> toSaveList = stockSymbols.stream().filter(symbol -> !stockPriceDAO.existsForSymbol(symbol))
 				.collect(Collectors.toList());
 		preparePriceDataForSymbols(toSaveList);
 	}
-	
-	public StockItem createStockItem(String symbol) throws StockException{
-		return createStockItems(Arrays.asList(symbol)).iterator().next();
-	}
+
 	/*
-	 * create new stock items 
-	 * passing a list of new symbols 
-	 * the price field is not yet updated.
+	 * create a StockItem
 	 */
-	private Iterable<StockItem> createStockItems(Collection<String> symbols) throws StockException {
+	public StockItem downloadAndSaveStockProfile(String symbol) throws StockException {
+		return downloadAndSaveStockProfiles(Arrays.asList(symbol)).iterator().next();
+	}
+
+	/*
+	 * create new stock items passing a list of new symbols the price field is not
+	 * yet updated.
+	 */
+	private Iterable<StockItem> downloadAndSaveStockProfiles(Collection<String> symbols) throws StockException {
 		Pattern cnameP = Pattern.compile("\\((\\S+)\\)\\s(\\S+)");
 		Pattern capitalP = Pattern.compile("\\s*([\\d,-]+)元");
 		try {
@@ -107,13 +107,13 @@ public class StockItemService {
 			for (String symbol : symbols) {
 				logger.info("downloading stock profile for symbol:" + symbol);
 				reqParams.put("co_id", symbol);
-				//connect to 2nd url and pass in the session id 
+				// connect to 2nd url and pass in the session id
 				Document doc = Jsoup.connect(TWSE_STOCK_PROFILE_POST_URL).cookie("jcsession", sessionId).data(reqParams)
 						.timeout(0).post();
 				si = new StockItem();
 				si.setSymbol(symbol);
 				Element compNameElement = doc.selectFirst("table td.compName span");
-				//the url may return nothing for some symbols, such as 0050.
+				// the url may return nothing for some symbols, such as 0050.
 				if (compNameElement != null) {
 					Matcher m = cnameP.matcher(compNameElement.text());
 					if (m.find()) {
@@ -140,7 +140,7 @@ public class StockItemService {
 				}
 				siList.add(si);
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
 				}
 			}
@@ -149,66 +149,60 @@ public class StockItemService {
 			throw new StockException(ex);
 		}
 	}
-/*
- * update the price field in stockItem
- * Note: just call its setter method , no need to call save()
- */
-	public void updateStockItemPriceFieldForAllSymbols() throws StockException{
-		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
-		Date start = tuple.getValue0();
-		Date end = tuple.getValue1();
-		List<String> symbols = stockPriceDAO.existingSymbols();
-		List<StockPrice> spList = null;
-		double average=0.0;
-		StockItem si;
-		for(String stockSymbol: symbols) {
-			logger.info("update price data for symbol: "+ stockSymbol);
-			spList = stockPriceDAO.loadBetweenDate(stockSymbol, start, end);
-			// calculate the average.
-			try {
-				average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
-			} catch(Exception ex) {
-				logger.info("skipping symbol : "+stockSymbol);
-				continue;
-			}
-			si = stockItemDAO.findBySymbol(stockSymbol);
-			si.setPrice(average);
-		}
-	}
+
 	/*
-	 * Calculate the average closing price for the last month for the stock
-	 * Note: just call its setter method , no need to call save()
+	 * update the price field in stockItem for all items. Note: just call its setter
+	 * method , no need to call save()
 	 */
-	public void updateStockItemPriceField(String stockSymbol) throws StockException {
-		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
-		Date start = tuple.getValue0();
-		Date end = tuple.getValue1();
-		List<StockPrice> spList = stockPriceDAO.loadBetweenDate(stockSymbol, start, end);
-		//spList.stream().forEach(sp -> logger.info(sp.toString()));
-		// calculate the average.
-		double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
-		//logger.info("average close price=" + average);
+	public void updateStockItemPriceFieldForAllSymbols() {
+		List<StockItem> siList = stockItemDAO.findAll();
+		updatePriceFieldOfStockItems(siList);
+	}
+
+	/*
+	 * Calculate the average closing price for the last month for the stock item.
+	 * Note: just call its setter method , no need to call save().
+	 */
+	public void updateStockItemPriceField(String stockSymbol) {
 		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
-		si.setPrice(average);
+		updatePriceFieldOfStockItems(Arrays.asList(si));
+	}
+
+	/*
+	 * calculate the average closing price for the last month(price field in
+	 * StockItem) for any stock items which has the empty(equals to 0.0) price
+	 * field.
+	 */
+	public void updateMissingStockItemPriceField() {
+		List<StockItem> missingFieldItems = stockItemDAO.findByPrice(0.0);
+		updatePriceFieldOfStockItems(missingFieldItems);
 	}
 	
-	public void updateMissingStockItemPriceField() throws StockException {
-		List<StockItem> missingFieldItems = stockItemDAO.findByPrice(0.0);
+	/*
+	 * Calculate the average closing price for the last month for the list of stock
+	 * items. Note: just call its setter method , no need to call save().
+	 */
+	private void updatePriceFieldOfStockItems(List<StockItem> siList) {
 		Pair<Date, Date> tuple = StockUtils.getFirstAndLastDayOfLastMonth();
 		Date start = tuple.getValue0();
 		Date end = tuple.getValue1();
-		for(StockItem si: missingFieldItems) {
-			List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
-			double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
-			//logger.info("average close price=" + average);
-			si.setPrice(average);
+		for (StockItem si : siList) {
+			try {
+				List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
+				double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
+				si.setPrice(average);
+			} catch (Exception ex) {
+				logger.warn("Cannot load price data. The price field for the stock item " + si.getSymbol()
+						+ " can not be calculated.");
+			}
 		}
 	}
+
 	/*
-	 * Update stock daily trading value/volume and prices for a stock 
-	 * The data downloaded include records for the whole month, 
-	 * some may have been downloaded before. 
-	 * The duplicate ones will be checked in StockPriceDAO.addStockPriceList() method.
+	 * Update stock daily trading value/volume and prices for a stock. The data
+	 * downloaded include records for the whole month, some may have been downloaded
+	 * before. The duplicate ones will be checked in
+	 * StockPriceDAO.addStockPriceList() method.
 	 * 
 	 * this method shall be run when newest price data is required on-demand
 	 */
@@ -217,22 +211,43 @@ public class StockItemService {
 		List<StockPrice> spList = downloadStockPriceAndVolume(stockSymbol, firstDayOfTheMonth);
 		stockPriceDAO.update(stockSymbol, spList);
 	}
-	
-	public void updatePriceDataForAllExistSymbols() throws StockException{
+
+	/*
+	 * get the latest stock price data for the specified stock item.
+	 * It will try to download any new price data if available.
+	 */
+	public List<StockPrice> getLatestStockPrices(String symbol) throws StockException{
+		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
+		List<StockPrice> existingData = stockPriceDAO.load(symbol);
+		Date latestDateForPriceData = stockPriceDAO.getLatestDateForPriceData(existingData);
+		if(latestTradingDate.after(latestDateForPriceData)) {
+			//new data available, so update prices
+			String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
+			List<StockPrice> newData = downloadStockPriceAndVolume(symbol, firstDayOfTheMonth);
+			return stockPriceDAO.update(symbol, existingData, newData);
+		} else {
+			return existingData;
+		}
+	}
+	/*
+	 * download new price data for all stock items.
+	 * This may be call at the end of month.
+	 */
+	public void updatePriceDataForAllExistSymbols() throws StockException {
 		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
 		List<String> symbols = stockPriceDAO.existingSymbols();
 		List<StockPrice> spList;
-		for(String symbol: symbols) {
-			logger.info("update price data for symbol: "+ symbol);
-			spList= downloadStockPriceAndVolume(symbol, firstDayOfTheMonth);
+		for (String symbol : symbols) {
+			logger.info("update price data for symbol: " + symbol);
+			spList = downloadStockPriceAndVolume(symbol, firstDayOfTheMonth);
 			stockPriceDAO.update(symbol, spList);
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(stockConfig.getSleepTime());
 			} catch (InterruptedException ex) {
 			}
 		}
 	}
-	
+
 	/*
 	 * the method download and save stock prices for a collection of stocks.
 	 */
@@ -240,20 +255,21 @@ public class StockItemService {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		List<StockPrice> spList = null;
 		for (String stockSymbol : stockSymbols) {
-			logger.info("prepare data for symbol:" + stockSymbol);
+			logger.info("prepare price data for symbol:" + stockSymbol);
 			spList = new ArrayList<>();
 			for (String dateString : dateList) {
 				spList.addAll(downloadStockPriceAndVolume(stockSymbol, dateString));
 				try {
-					Thread.sleep(3000);
+					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
 				}
 			}
 			stockPriceDAO.save(stockSymbol, spList);
 		}
 	}
+
 	/*
-	 * This method download and save a list of StockPrice for a stock within a month .
+	 * This method download and save a list of StockPrice for a stock within a month
 	 */
 	private List<StockPrice> downloadStockPriceAndVolume(String stockSymbol, String dateString) throws StockException {
 		try {
@@ -282,17 +298,8 @@ public class StockItemService {
 
 			}
 			return spList;
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
 	}
-
-	public Map<String, StockItem> findBySymbolIn(List<String> symbols) {
-		Map<String, StockItem> map = new TreeMap<>();
-		stockItemDAO.findBySymbolIn(symbols).stream().forEach(si-> map.put(si.getSymbol(),si));
-		return map;
-	}
-	
-		 
-	 
 }

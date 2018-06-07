@@ -2,8 +2,6 @@ package com.javatican.stock;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
+import com.javatican.stock.service.StockItemService;
+import com.javatican.stock.service.StockService;
+import com.javatican.stock.service.StockTradeByTrustService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -184,6 +184,7 @@ public class StockController {
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		List<StockTradeByTrust> stbtList =  stockService.getTop30StockTradeByTrust(date);
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");	
+		mav.addObject("tradingDate", date);
 		mav.addObject("stbtItems", stbtList);
 		return mav;
 	}
