@@ -31,10 +31,11 @@ public class StockItemDAO {
 	 * use entity graph
 	 * load stbt relationship
 	 */
+	/*
 	public StockItem getBySymbol(String symbol) {
 		return stockItemRepository.getBySymbol(symbol);
 	}
-	
+	*/
 	public boolean existsBySymbol(String symbol) {
 		return stockItemRepository.existsBySymbol(symbol);
 	}

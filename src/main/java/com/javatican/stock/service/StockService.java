@@ -2,6 +2,7 @@ package com.javatican.stock.service;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -187,6 +188,44 @@ public class StockService {
 			return -1 * Double.compare(amt1, amt2);
 		}).limit(30).collect(Collectors.toList());
 		return stbtList;
+	}
+
+	
+	public List<Date> getLatestNTradingDate(int dateLength) {
+		return tradingDateDAO.findLatestNTradingDate(dateLength);
+	}
+	
+	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate, int dateLength) {
+		// 1. get the stbt list for the specified date
+		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
+		// 2. sort the stbt list by (buy+sell)*price amount in descending order
+		// and select the top 30 items and collect its stockItem relationship objects
+		// (note that the stockItem object has its 'stbt' relationship retrieved from
+		// DB.)
+		List<StockItem> siList = stbtList.stream().sorted((stbt1, stbt2) -> {
+			double price1 = stbt1.getStockItem().getPrice();
+			double price2 = stbt2.getStockItem().getPrice();
+			double amt1 = price1 * (stbt1.getBuy() + stbt1.getSell());
+			double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
+			return -1 * Double.compare(amt1, amt2);
+		}).limit(30).map(stbt -> stbt.getStockItem()).collect(Collectors.toList());
+		// 3. query the latest 10 trading dates
+		List<Date> dList = tradingDateDAO.findLatestNTradingDate(dateLength);
+		// 4. map object to return to caller
+		// key is the stockItem
+		// value is a sub-map object with key of trading date and value of
+		// StockTradeByTrust object
+		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = new LinkedHashMap<>();
+		// 5. filter the 'stbt' collection using latest 10 trading dates list.
+		// and create the sub-map object
+		siList.stream().forEach(si -> {
+			Map<String, StockTradeByTrust> map = new TreeMap<>();
+			si.getStbt().stream().filter(stbt -> dList.contains(stbt.getTradingDate()))
+					.forEach(stbt -> map.put(StockUtils.dateToStringSeparatedBySlash(stbt.getTradingDate()), stbt));
+			//map.values().stream().forEach(stbt->logger.info(stbt.toString()));
+			dataMap.put(si, map);
+		});
+		return dataMap;
 	}
 
 }

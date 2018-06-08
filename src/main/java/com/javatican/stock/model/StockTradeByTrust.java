@@ -9,17 +9,21 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
 /*
  * http://www.tse.com.tw/fund/TWT44U?response=html&date=20180525
  */
 @Entity
-@Table(name = "stock_trade_by_trust", uniqueConstraints={
-	    @UniqueConstraint(columnNames = {"trading_date", "stock_symbol"})
-	})
-@NamedEntityGraph(name="StockTradeByTrust.stockItem", attributeNodes=@NamedAttributeNode("stockItem"))
+@Table(name = "stock_trade_by_trust", uniqueConstraints = {
+		@UniqueConstraint(columnNames = { "trading_date", "stock_symbol" }) })
+@NamedEntityGraphs({
+		@NamedEntityGraph(name = "StockTradeByTrust.stockItem", attributeNodes = @NamedAttributeNode("stockItem")),
+		@NamedEntityGraph(name = "StockTradeByTrust.stockItem.stbt", attributeNodes = @NamedAttributeNode(value = "stockItem", subgraph = "stockItem.stbt"), subgraphs = @NamedSubgraph(name = "stockItem.stbt", attributeNodes = @NamedAttributeNode(value = "stbt"))) })
 public class StockTradeByTrust {
 
 	@Id
@@ -31,10 +35,11 @@ public class StockTradeByTrust {
 
 	@ManyToOne
 	private StockItem stockItem;
-	
+
 	public StockItem getStockItem() {
 		return stockItem;
 	}
+
 	public void setStockItem(StockItem stockItem) {
 		this.stockItem = stockItem;
 	}
@@ -54,9 +59,10 @@ public class StockTradeByTrust {
 	public StockTradeByTrust() {
 		super();
 	}
+
 	public StockTradeByTrust(Date tradingDate) {
 		super();
-		this.tradingDate=tradingDate;
+		this.tradingDate = tradingDate;
 	}
 
 	public StockTradeByTrust(Date tradingDate, String stockSymbol, Double buy, Double sell, Double diff) {
@@ -67,10 +73,12 @@ public class StockTradeByTrust {
 		this.sell = sell;
 		this.diff = diff;
 	}
+
 	@Override
 	public String toString() {
 		return String.format("Symbol:%s, buy:%f, sell:%f", this.stockSymbol, this.buy, this.sell);
 	}
+
 	public Date getTradingDate() {
 		return tradingDate;
 	}

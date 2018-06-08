@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.javatican.stock.model.TradingDate;
@@ -39,5 +41,11 @@ public class TradingDateDAO {
 	public Date getLatestTradingDate() {
 		return tradingDateRepository.findTopByOrderByDateDesc().getDate();
 	}
-
+	
+	public List<Date> findLatestNTradingDate(int length){
+		Pageable pageable = PageRequest.of(0, length);
+		return tradingDateRepository.findLatestNTradingDate(pageable);
+		
+	}
+ 
 }

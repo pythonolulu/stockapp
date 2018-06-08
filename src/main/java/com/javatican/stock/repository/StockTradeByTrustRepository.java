@@ -18,7 +18,7 @@ public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByT
 	@Query("select distinct(s.stockSymbol) from StockTradeByTrust s")
 	List<String> getDistinctStockSymbol();
 	
-	@EntityGraph(value="StockTradeByTrust.stockItem", type=EntityGraphType.LOAD)
+	@EntityGraph(value="StockTradeByTrust.stockItem.stbt", type=EntityGraphType.LOAD)
 	List<StockTradeByTrust> findByTradingDate(Date tradingDate);
 	
 }

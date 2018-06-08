@@ -1,5 +1,6 @@
 package com.javatican.stock.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -18,7 +19,16 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
 	@Query("select s.symbol from StockItem s")
 	List<String> getAllSymbols();
-
+	/*
 	@EntityGraph(value = "StockItem.stbt", type = EntityGraphType.LOAD)
 	StockItem getBySymbol(String symbol);
+
+	@EntityGraph(value = "StockItem.stbt", type = EntityGraphType.LOAD)
+	StockItem findByIdIn(List<Long> ids);
+	
+
+	@EntityGraph(value = "StockItem.stbt", type = EntityGraphType.LOAD)
+	@Query("select s from StockItem s join s.stbt t on t.tradingDate = ?1")
+	List<StockItem> findByStbtTradingDate(Date date);	
+	*/
 }

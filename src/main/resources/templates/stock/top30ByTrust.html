@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <title>Top 30 stocks buy/sell by Trust</title>
-    <link th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}" rel="stylesheet"></link>
-    <script th:src="@{/webjars/jquery/1.9.1/jquery.min.js}"></script>
-    <script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
-  </head>
-  <body>
-	  <div class="container">
-		<h2>Top stocks list for <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span></h2>
-		<div th:unless="${#lists.isEmpty(stbtItems)}">
-		 <table class="table table-striped">
-		  <thead>
-		   <tr>
-		   	<th>No.</th>
-		   	<th>Symbol</th>
-		   	<th>Name</th>
-		   	<th>Price</th>
-		   	<th>Buy</th>
-		   	<th>Sell</th>
-		   	<th>Diff</th>
-		   </tr>   
-		  </thead>
-		  <tbody>
-		  	<tr th:each="item : ${stbtItems}">
-		   	<td th:text="${#ids.seq('#')}">#1</td>
-		   	<td th:text="${item.stockSymbol}">2317</td>
-		   	<td th:text="${item.stockItem.name}">Hong Hai</td>
-		   	<td th:text="${#numbers.formatCurrency(item.stockItem.price)}">NT$90</td>
-		   	<td th:text="${#numbers.formatDecimal(item.buy,1,'COMMA',0,'POINT')}">1000,000</td>
-		   	<td th:text="${#numbers.formatDecimal(item.sell,1,'COMMA',0,'POINT')}">1200,000</td>
-		   	<td th:text="${#numbers.formatDecimal(item.diff,1,'COMMA',0,'POINT')}">-200,000</td>
-		   </tr>   
-		  </tbody>
-		 </table>
+<head>
+<title>Top 30 stocks buy/sell by Trust</title>
+<link th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
+	rel="stylesheet"></link>
+<script th:src="@{/webjars/jquery/1.9.1/jquery.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<div class="container">
+		<h2>
+			Top stocks list for <span
+				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+		</h2>
+		<div th:unless="${#maps.isEmpty(dataMap)}">
+			<table th:each="item : ${dataMap}" class="table table-striped">
+				 <tr>
+				 	<td th:text="|${#ids.seq('#')} ${item.key.symbol} ${item.key.name} ${#numbers.formatCurrency(item.key.price)}|" colspan="11">#1 2317 Hong Hai NT$90</td>
+				 </tr>
+				 <tr>
+				 	<th>Date:</th>
+				 	<td th:each="tDate : ${dateList}" th:text="${tDate}">2018/06/06</td>
+				 </tr>	
+				 <tr>
+				 	<th>Buy:</th>
+				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).buy,1,'COMMA',0,'POINT')}:'0'">1000,000</td>
+				 </tr>	
+				<tr>
+				 	<th>Sell:</th>
+				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).sell,1,'COMMA',0,'POINT')}:'0'">1200,000</td>
+				 </tr>
+				 <tr>
+				 	<th>Diff:</th>
+				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).diff,1,'COMMA',0,'POINT')}:'0'"
+				 		th:class="${item.value.get(tDate)!=null && item.value.get(tDate).diff>0}?'text-success':'text-danger'">-200,000</td>
+				 </tr>	 
+			</table>
 		</div>
-		<div th:if="${#lists.isEmpty(stbtItems)}">
-		  <p>No records</p>
-		</div> 
-	  </div>  
-  </body>
+		<div th:if="${#maps.isEmpty(dataMap)}">
+			<p>No records</p>
+		</div>
+	</div>
+</body>
 </html>

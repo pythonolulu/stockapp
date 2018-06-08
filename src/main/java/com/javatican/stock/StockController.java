@@ -2,7 +2,11 @@ package com.javatican.stock;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -21,13 +26,14 @@ import com.javatican.stock.util.StockUtils;
 @RequestMapping("stock/*")
 public class StockController {
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private StockService stockService;
 	@Autowired
 	private StockItemService stockItemService;
 	@Autowired
 	private StockTradeByTrustService stockTradeByTrustService;
-	
+
 	/*
 	 * only call once during initial setup
 	 */
@@ -45,6 +51,7 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	/*
 	 * 2. handler for download and save any new stock trading data by Trust
 	 */
@@ -70,7 +77,8 @@ public class StockController {
 	public ResponseMessage createStockPrices() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockItemService.downloadAndSaveStockPrices();;
+			stockItemService.downloadAndSaveStockPrices();
+			;
 			mes.setCategory("Success");
 			mes.setText("download and save all stock prices.");
 		} catch (Exception ex) {
@@ -80,6 +88,7 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	/*
 	 * 1. handler for download and save any new trading date and trading values data
 	 */
@@ -128,7 +137,7 @@ public class StockController {
 		}
 		return mes;
 	}
-	
+
 	@GetMapping("/{stockSymbol}/updatePriceData")
 	public ResponseMessage updateStockPriceData(@PathVariable String stockSymbol) {
 		ResponseMessage mes = new ResponseMessage();
@@ -143,8 +152,10 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	/*
-	 * 4. handler for calculate average price for last month for missing price field stock items.
+	 * 4. handler for calculate average price for last month for missing price field
+	 * stock items.
 	 */
 	@GetMapping("/updateMissingPriceField")
 	public ResponseMessage updateMissingStockItemPriceField() {
@@ -160,8 +171,7 @@ public class StockController {
 		}
 		return mes;
 	}
-	
-	
+
 	@GetMapping("/updatePriceFieldForAll")
 	public ResponseMessage updateStockItemPriceFieldForAll() {
 		ResponseMessage mes = new ResponseMessage();
@@ -176,16 +186,43 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	/*
-	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified trading date.
+	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified
+	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
 	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
-		List<StockTradeByTrust> stbtList =  stockService.getTop30StockTradeByTrust(date);
-		ModelAndView mav = new ModelAndView("stock/top30ByTrust");	
+		List<StockTradeByTrust> stbtList = stockService.getTop30StockTradeByTrust(date);
+		//
+
+		// TODO also return trading date list
+		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
 		mav.addObject("tradingDate", date);
 		mav.addObject("stbtItems", stbtList);
+		return mav;
+	}
+
+	/*
+	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified
+	 * trading date.
+	 */
+	@GetMapping("/{tradingDate}/top30ByTrust2")
+	public ModelAndView getTop30ByTrust2(@PathVariable String tradingDate) {
+		int dateLength = 10;
+		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
+		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
+				dateLength);
+		// also return trading date list
+		List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
+				.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
+		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
+		mav.addObject("tradingDate", date);
+		mav.addObject("dateList", dList);
+		mav.addObject("dataMap", dataMap);
+		//dataMap.values().stream().forEach(stbt->logger.info(stbt.toString()));
+		//dList.stream().forEach(dstr->logger.info(dstr));
 		return mav;
 	}
 }
