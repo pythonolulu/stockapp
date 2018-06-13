@@ -16,25 +16,72 @@
 		<div th:unless="${#maps.isEmpty(dataMap)}">
 			<table th:each="item : ${dataMap}" class="table table-striped">
 				 <tr>
-				 	<td th:text="|${#ids.seq('#')} ${item.key.symbol} ${item.key.name} ${#numbers.formatCurrency(item.key.price)}|" colspan="11">#1 2317 Hong Hai NT$90</td>
+				 	<td colspan="11">
+					 	<span th:text="${#ids.seq('#')}">#1</span>
+					 	<a target='_blank' href="http://tw.stock.yahoo.com/q/ta?s=2317" 
+					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key.symbol})}" th:text="${item.key.symbol}">2317</a>
+					 	<a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
+					 	th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key.symbol})}" th:text="${item.key.name}">Hong Hai</a>
+					 	<span th:text="${#numbers.formatCurrency(item.key.price)}">NT$90</span>
+				 	</td>
 				 </tr>
 				 <tr>
 				 	<th>Date:</th>
 				 	<td th:each="tDate : ${dateList}" th:text="${tDate}">2018/06/06</td>
+				 </tr>				 
+				 <tr>
+				 	<th>Buy(张):</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${item.value.get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.buy/1000,1,'COMMA',0,'POINT')}:'0'">1000,000</td>
 				 </tr>	
 				 <tr>
-				 	<th>Buy:</th>
-				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).buy,1,'COMMA',0,'POINT')}:'0'">1000,000</td>
-				 </tr>	
-				<tr>
-				 	<th>Sell:</th>
-				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).sell,1,'COMMA',0,'POINT')}:'0'">1200,000</td>
+				 	<th>Sell(张):</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${item.value.get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sell/1000,1,'COMMA',0,'POINT')}:'0'">1200,000</td>
 				 </tr>
 				 <tr>
-				 	<th>Diff:</th>
-				 	<td th:each="tDate : ${dateList}" th:text="${item.value.get(tDate)!=null}?${#numbers.formatDecimal(item.value.get(tDate).diff,1,'COMMA',0,'POINT')}:'0'"
-				 		th:class="${item.value.get(tDate)!=null && item.value.get(tDate).diff>0}?'text-success':'text-danger'">-200,000</td>
-				 </tr>	 
+				 	<th>Diff(张):</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${item.value.get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.diff/1000,1,'COMMA',0,'POINT')}:'0'"
+				 		th:class="${#object!=null && #object.diff>0}?'text-danger':'text-success'">-200,000</td>
+				 </tr>		
+				 <tr>
+				 	<th>K:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.k,1,'COMMA',2,'POINT')}:'0'"
+				 		th:class="${#object!=null && #object.k>50}?'text-info':'text-muted'">50.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>D:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.d,1,'COMMA',2,'POINT')}:'0'"
+				 		th:class="${#object!=null && #object.d>50}?'text-info':'text-muted'">40.0</td>
+				 </tr>
+				 <tr>
+				 	<th>Close price:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.close,1,'COMMA',2,'POINT')}:'0'"
+				 		>109.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>Volume(张):</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.tradeVolume/1000,1,'COMMA',0,'POINT')}:'0'"
+				 		>100,000</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA5:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma5,1,'COMMA',2,'POINT')}:'0'"
+				 		>110.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA10:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma10,1,'COMMA',2,'POINT')}:'0'"
+				 		>120.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA20:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma20,1,'COMMA',2,'POINT')}:'0'"
+				 		>100.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA60:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma60,1,'COMMA',2,'POINT')}:'0'"
+				 		>105.0</td>
+				 </tr>					  
 			</table>
 		</div>
 		<div th:if="${#maps.isEmpty(dataMap)}">

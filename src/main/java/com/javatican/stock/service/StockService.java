@@ -22,10 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.model.TradingValue;
@@ -52,6 +54,8 @@ public class StockService {
 	StockTradeByTrustDAO stockTradeByTrustDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
+	@Autowired
+	StockItemDataDAO stockItemDataDAO;
 
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
@@ -71,7 +75,7 @@ public class StockService {
 	 * 
 	 * need to run only once
 	 */
-	public void prepareData() throws StockException {
+	private void prepareData() throws StockException {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		for (String dateString : dateList) {
 			downloadAndSaveTradingDateAndValueForTheMonth(dateString, false);
@@ -177,25 +181,24 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
+	/*
+	 * public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate) {
+	 * List<StockTradeByTrust> stbtList =
+	 * stockTradeByTrustDAO.getByTradingDate(tradingDate); stbtList =
+	 * stbtList.stream().sorted((stbt1, stbt2) -> { double price1 =
+	 * stbt1.getStockItem().getPrice(); double price2 =
+	 * stbt2.getStockItem().getPrice(); double amt1 = price1 * (stbt1.getBuy() +
+	 * stbt1.getSell()); double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
+	 * return -1 * Double.compare(amt1, amt2);
+	 * }).limit(30).collect(Collectors.toList()); return stbtList; }
+	 */
 
-	public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate) {
-		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
-		stbtList = stbtList.stream().sorted((stbt1, stbt2) -> {
-			double price1 = stbt1.getStockItem().getPrice();
-			double price2 = stbt2.getStockItem().getPrice();
-			double amt1 = price1 * (stbt1.getBuy() + stbt1.getSell());
-			double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
-			return -1 * Double.compare(amt1, amt2);
-		}).limit(30).collect(Collectors.toList());
-		return stbtList;
-	}
-
-	
 	public List<Date> getLatestNTradingDate(int dateLength) {
 		return tradingDateDAO.findLatestNTradingDate(dateLength);
 	}
-	
-	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate, int dateLength) {
+
+	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
+			int dateLength) {
 		// 1. get the stbt list for the specified date
 		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
 		// 2. sort the stbt list by (buy+sell)*price amount in descending order
@@ -222,10 +225,28 @@ public class StockService {
 			Map<String, StockTradeByTrust> map = new TreeMap<>();
 			si.getStbt().stream().filter(stbt -> dList.contains(stbt.getTradingDate()))
 					.forEach(stbt -> map.put(StockUtils.dateToStringSeparatedBySlash(stbt.getTradingDate()), stbt));
-			//map.values().stream().forEach(stbt->logger.info(stbt.toString()));
+			// map.values().stream().forEach(stbt->logger.info(stbt.toString()));
 			dataMap.put(si, map);
 		});
 		return dataMap;
+	}
+
+	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList, int dateLength) {
+		List<Date> dList = tradingDateDAO.findLatestNTradingDate(dateLength);
+		Map<StockItem, Map<String, StockItemData>> statsMap = new LinkedHashMap<>();
+		siList.stream().forEach(si -> {
+			try {
+				List<StockItemData> sidList = stockItemDataDAO.load(si.getSymbol());
+				Map<String, StockItemData> map = new TreeMap<>();
+				sidList.stream().filter(sid -> dList.contains(sid.getTradingDate()))
+						.forEach(sid -> map.put(StockUtils.dateToStringSeparatedBySlash(sid.getTradingDate()), sid));
+				statsMap.put(si, map);
+			} catch (StockException ex) {
+				logger.warn("Can not load the stats data for stock symbol: " + si.getSymbol());
+			}
+
+		});
+		return statsMap;
 	}
 
 }

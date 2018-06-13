@@ -1,5 +1,6 @@
 package com.javatican.stock;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -37,6 +39,7 @@ public class StockController {
 	/*
 	 * only call once during initial setup
 	 */
+	/*
 	@GetMapping("/prepareTrustData")
 	public ResponseMessage prepareTrustData() {
 		ResponseMessage mes = new ResponseMessage();
@@ -51,7 +54,26 @@ public class StockController {
 		}
 		return mes;
 	}
+	 */
 
+	/*
+	 * 1. handler for download and save any new trading date and trading values data
+	 */
+	@GetMapping("/updateData")
+	public ResponseMessage updateData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockService.updateTradingDateAndValue();
+			mes.setCategory("Success");
+			mes.setText("Trading date and value information has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Trading date and value information fails to be updated.");
+		}
+		return mes;
+
+	}
 	/*
 	 * 2. handler for download and save any new stock trading data by Trust
 	 */
@@ -90,24 +112,28 @@ public class StockController {
 	}
 
 	/*
-	 * 1. handler for download and save any new trading date and trading values data
+	 * 4. handler for calculate average price for last month for missing price field
+	 * stock items.
 	 */
-	@GetMapping("/updateData")
-	public ResponseMessage updateData() {
+	@GetMapping("/updateMissingPriceField")
+	public ResponseMessage updateMissingStockItemPriceField() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockService.updateTradingDateAndValue();
+			stockItemService.updateMissingStockItemPriceField();
 			mes.setCategory("Success");
-			mes.setText("Trading date and value information has been updated.");
+			mes.setText("Stock price fields have been updated.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Trading date and value information fails to be updated.");
+			mes.setText("Stock price fields fail to be udpated.");
 		}
 		return mes;
-
 	}
 
+/* 
+ * only run once
+ */
+/*
 	@GetMapping("/prepareData")
 	public ResponseMessage prepareData() {
 		ResponseMessage mes = new ResponseMessage();
@@ -122,12 +148,12 @@ public class StockController {
 		}
 		return mes;
 	}
-
+*/
 	@GetMapping("/updatePriceDataForAll")
-	public ResponseMessage updatePriceDataForAllSymbols() {
+	public ResponseMessage updatePriceDataForAll() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockItemService.updatePriceDataForAllExistSymbols();
+			stockItemService.updatePriceDataForAll();
 			mes.setCategory("Success");
 			mes.setText("Price data for all stocks have been updated.");
 		} catch (Exception ex) {
@@ -152,31 +178,14 @@ public class StockController {
 		}
 		return mes;
 	}
-
-	/*
-	 * 4. handler for calculate average price for last month for missing price field
-	 * stock items.
-	 */
-	@GetMapping("/updateMissingPriceField")
-	public ResponseMessage updateMissingStockItemPriceField() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			stockItemService.updateMissingStockItemPriceField();
-			mes.setCategory("Success");
-			mes.setText("Stock price fields have been updated.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("Stock price fields fail to be udpated.");
-		}
-		return mes;
-	}
-
+/*
+ * only run at the beginning of new month.
+ */
 	@GetMapping("/updatePriceFieldForAll")
 	public ResponseMessage updateStockItemPriceFieldForAll() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockItemService.updateStockItemPriceFieldForAllSymbols();
+			stockItemService.updateStockItemPriceFieldForAll();
 			mes.setCategory("Success");
 			mes.setText("Stock price fields for all stocks have been updated.");
 		} catch (Exception ex) {
@@ -192,23 +201,6 @@ public class StockController {
 	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
-	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
-		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
-		List<StockTradeByTrust> stbtList = stockService.getTop30StockTradeByTrust(date);
-		//
-
-		// TODO also return trading date list
-		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
-		mav.addObject("tradingDate", date);
-		mav.addObject("stbtItems", stbtList);
-		return mav;
-	}
-
-	/*
-	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified
-	 * trading date.
-	 */
-	@GetMapping("/{tradingDate}/top30ByTrust2")
 	public ModelAndView getTop30ByTrust2(@PathVariable String tradingDate) {
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
@@ -218,11 +210,29 @@ public class StockController {
 		List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
 				.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
+		//prepare K/D values
+		Map<StockItem, Map<String, StockItemData>> statsMap = 
+				stockService.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateLength);
+		
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);
-		//dataMap.values().stream().forEach(stbt->logger.info(stbt.toString()));
-		//dList.stream().forEach(dstr->logger.info(dstr));
+		mav.addObject("statsMap", statsMap);
 		return mav;
+	}
+
+	@GetMapping("/calculateAndSaveKDForAll")
+	public ResponseMessage calculateAndSaveKDForAll() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.calculateAndSaveKDForAll();
+			mes.setCategory("Success");
+			mes.setText("Stats data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Stats data fails to be updated.");
+		}
+		return mes;
 	}
 }

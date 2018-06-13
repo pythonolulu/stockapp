@@ -33,7 +33,7 @@ public class StockPriceDAO {
 	private static final Logger logger = LoggerFactory.getLogger(StockPriceDAO.class);
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-	private static final String RESOURCE_FILE_PATH = "file:./download/%s.json";
+	private static final String RESOURCE_FILE_PATH = "file:./download/price/%s.json";
 	@Autowired
 	private ResourceLoader resourceLoader;
 
@@ -92,12 +92,7 @@ public class StockPriceDAO {
 		try (InputStream st = resource.getInputStream();) {
 			List<StockPrice> spList = objectMapper.readValue(st, new TypeReference<List<StockPrice>>() {
 			});
-			// filtered by tradingDate
-			/*
-			 * Iterator<StockPrice> i = spList.iterator(); while (i.hasNext()) { StockPrice
-			 * sp = i.next(); if (sp.getTradingDate().compareTo(start) >= 0 &&
-			 * sp.getTradingDate().compareTo(end) <= 0) { i.remove(); } } return spList;
-			 */
+			
 			return spList.stream()
 					.filter(sp -> sp.getTradingDate().compareTo(start) >= 0 && sp.getTradingDate().compareTo(end) <= 0)
 					.collect(Collectors.toList());
@@ -155,10 +150,11 @@ public class StockPriceDAO {
 			throw new StockException("No price data in the resource file for symbol:" + stockSymbol);
 		}
 	}
+
 	/*
 	 * get the latest date for the stock price data
 	 */
-	public Date getLatestDateForPriceData(List<StockPrice> spList) throws StockException { 
+	public Date getLatestDateForPriceData(List<StockPrice> spList) throws StockException {
 		// assuming the price data is sorted by date ascending
 		// get the last trading date of price data
 		if (spList.size() > 0) {

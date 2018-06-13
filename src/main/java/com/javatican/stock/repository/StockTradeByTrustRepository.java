@@ -10,15 +10,19 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.javatican.stock.model.StockTradeByTrust;
 
-public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByTrust, Long> { 
-	
+public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByTrust, Long> {
+
 	@Query("select max(s.tradingDate) from StockTradeByTrust s")
 	Date getLatestTradingDate();
-	
+
 	@Query("select distinct(s.stockSymbol) from StockTradeByTrust s")
 	List<String> getDistinctStockSymbol();
-	
-	@EntityGraph(value="StockTradeByTrust.stockItem.stbt", type=EntityGraphType.LOAD)
+
+	/*
+	 * below will select StockTradeByTrust records on the specified date with
+	 * stockItem relationship and stockItem.stbt relationship pre-selected.
+	 */
+	@EntityGraph(value = "StockTradeByTrust.stockItem.stbt", type = EntityGraphType.LOAD)
 	List<StockTradeByTrust> findByTradingDate(Date tradingDate);
-	
+
 }

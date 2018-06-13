@@ -1,5 +1,6 @@
 package com.javatican.stock.dao;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,46 +15,74 @@ import com.javatican.stock.repository.StockItemRepository;
 public class StockItemDAO {
 	public StockItemDAO() {
 	}
+
 	@Autowired
 	StockItemRepository stockItemRepository;
-		
-	public StockItem save(StockItem si){
+
+	public StockItem save(StockItem si) {
 		return stockItemRepository.save(si);
-	} 
-	public Iterable<StockItem> saveAll(List<StockItem> siList){
+	}
+
+	public Iterable<StockItem> saveAll(List<StockItem> siList) {
 		return stockItemRepository.saveAll(siList);
-	} 
+	}
+
 	public StockItem findBySymbol(String symbol) {
 		return stockItemRepository.findBySymbol(symbol);
 	}
 
-	/* 
-	 * use entity graph
-	 * load stbt relationship
+	/*
+	 * use entity graph load stbt relationship
 	 */
 	/*
-	public StockItem getBySymbol(String symbol) {
-		return stockItemRepository.getBySymbol(symbol);
-	}
-	*/
+	 * public StockItem getBySymbol(String symbol) { return
+	 * stockItemRepository.getBySymbol(symbol); }
+	 */
 	public boolean existsBySymbol(String symbol) {
 		return stockItemRepository.existsBySymbol(symbol);
 	}
-	public List<String> getAllSymbols(){
+
+	public List<String> getAllSymbols() {
 		return stockItemRepository.getAllSymbols();
 	}
-	public List<StockItem> findAll(){
+
+	public List<StockItem> findAll() {
 		return stockItemRepository.findAll();
 	}
 
-	public List<StockItem> findByPrice(Double price){
-		return stockItemRepository.findByPrice(price);
+	
+	public List<StockItem> findByPriceDateBeforeOrIsNull(Date targetDate) {
+		return stockItemRepository.findByPriceDateBeforeOrIsNull(targetDate);
 	}
 	
-	public Map<String, StockItem> findAllAsMap()  {
+	public List<StockItem> findByStatsDateBeforeOrIsNull(Date targetDate) {
+		return stockItemRepository.findByStatsDateBeforeOrIsNull(targetDate);
+	}
+	/*
+	public List<StockItem> findByPriceDateBefore(Date targetDate) {
+		return stockItemRepository.findByPriceDateBefore(targetDate);
+	}
+
+	public List<StockItem> findByStatsDateIsNull() {
+		return stockItemRepository.findByStatsDateIsNull();
+	}
+
+	public List<StockItem> findByStatsDateBefore(Date targetDate) {
+		return stockItemRepository.findByStatsDateBefore(targetDate);
+	}
+	*/
+
+	/*
+	 * below is used for selecting price field value of 0.0
+	 */
+	public List<StockItem> findByPrice(Double price) {
+		return stockItemRepository.findByPrice(price);
+	}
+
+	public Map<String, StockItem> findAllAsMap() {
 		Map<String, StockItem> siMap = new TreeMap<>();
 		List<StockItem> siList = findAll();
-		siList.stream().forEach(si-> siMap.put(si.getSymbol(), si));
+		siList.stream().forEach(si -> siMap.put(si.getSymbol(), si));
 		return siMap;
 	}
 }

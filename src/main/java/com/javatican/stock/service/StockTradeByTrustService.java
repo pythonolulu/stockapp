@@ -61,7 +61,7 @@ public class StockTradeByTrustService {
 	/*
 	 * manual downloads history stock trade data by Trust (only run once)
 	 */
-	public void prepareData() throws StockException {
+	private void prepareData() throws StockException {
 		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/05/01").get(),
 				StockUtils.stringToDate("2018/05/27").get());
 		downloadAndSave(tdList);

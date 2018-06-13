@@ -43,6 +43,7 @@ public class TradingDateDAO {
 	}
 	
 	public List<Date> findLatestNTradingDate(int length){
+		//PageRequest constructor has been deprecated, and use of() method.
 		Pageable pageable = PageRequest.of(0, length);
 		return tradingDateRepository.findLatestNTradingDate(pageable);
 		

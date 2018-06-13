@@ -10,9 +10,11 @@ import javax.persistence.*;
  * 2. TradingValueForeignAndOtherInvestors : 
  * http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=20180518&type=day
  * 
+ * Note: the corresponding table name was renamed to 'trading_data' , at some stages, 
+ * MySQL import tool has problems dealing with table name with 'value' word in it.
  */
 @Entity
-@Table(name = "trading_value")
+@Table(name = "trading_data")
 public class TradingValue {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package com.javatican.stock.model;
 
 import java.util.Collection;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,8 +54,40 @@ public class StockItem {
 	@Column(name = "capital", nullable = true)
 	private Double capital = 0.0;
 
+	/*
+	 * price: the average price (calculated from price data from last trading month). 
+	 * It is mainly used for some calculations that require approximate price information.
+	 */
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
+
+	/*
+	 * price_date: the date of the latest record in price data for the stock item
+	 */
+	@Column(name = "price_date", nullable = true)
+	private Date priceDate;
+
+	/*
+	 * stats_date: the date of the latest record in calculated stats data(such as KD, SMA) for the stock item
+	 */
+	@Column(name = "stats_date", nullable = true)
+	private Date statsDate;
+	
+	public Date getPriceDate() {
+		return priceDate;
+	}
+
+	public void setPriceDate(Date priceDate) {
+		this.priceDate = priceDate;
+	}
+
+	public Date getStatsDate() {
+		return statsDate;
+	}
+
+	public void setStatsDate(Date statsDate) {
+		this.statsDate = statsDate;
+	}
 
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<StockTradeByTrust> stbt;
