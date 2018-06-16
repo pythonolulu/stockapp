@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title th:text="|涨幅前50名 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">涨幅前50名</title>
+<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
+	rel="stylesheet"></link>
+<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
+<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<div class="container">
+		<h2>
+			涨幅前50名 -<span
+				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+		</h2>
+		<div th:unless="${#lists.isEmpty(spcList)}">
+			<table th:each="item : ${spcList}" class="table table-striped">
+				 <tr>
+				 	<td colspan="11">
+					 	<span th:text="${#ids.seq('#')}">#1</span>
+					 	<span th:class="text-danger" th:text="${#numbers.formatDecimal(item.changePercent*100,1,'COMMA',2,'POINT')}+'%'">10%</span>
+					 	<a target='_blank' href="http://tw.stock.yahoo.com/q/ta?s=2317" 
+					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.symbol})}" th:text="${item.symbol}">2317</a>
+					 	<a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
+					 	th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.symbol})}" th:text="${item.name}">Hong Hai</a>
+					 	<a target='_blank' th:with="imgUrl='https://stock.wearn.com/finance_chart.asp'" th:href="@{${imgUrl}(stockid=${item.symbol},timekind=0,timeblock=120,volume=0,indicator1='SStoch',indicator2='MACD',indicator3='Vol')}">
+					 		<img th:src="@{${imgUrl}(stockid=${item.symbol},timekind=0,timeblock=120,volume=0)}" th:alt="${item.symbol}+' graph'" height="64" width="64"/>
+				 		</a>
+				 	</td>
+				 </tr>
+				 <tr>
+				 	<th>Date:</th>
+				 	<td th:each="tDate : ${dateList}" th:text="${tDate}">2018/06/06</td>
+				 </tr>				 
+				 <tr>
+				 	<th>K:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.k,1,'COMMA',2,'POINT')}:'0'"
+				 		th:class="${#object!=null && #object.k>50}?'text-info':'text-muted'">50.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>D:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.d,1,'COMMA',2,'POINT')}:'0'"
+				 		th:class="${#object!=null && #object.d>50}?'text-info':'text-muted'">40.0</td>
+				 </tr>
+				 <tr>
+				 	<th>Close price:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.close,1,'COMMA',2,'POINT')}:'0'"
+				 		>109.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>Volume(张):</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.tradeVolume/1000,1,'COMMA',0,'POINT')}:'0'"
+				 		>100,000</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA5:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma5,1,'COMMA',2,'POINT')}:'0'"
+				 		>110.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA10:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma10,1,'COMMA',2,'POINT')}:'0'"
+				 		>120.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA20:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma20,1,'COMMA',2,'POINT')}:'0'"
+				 		>100.0</td>
+				 </tr>	
+				 <tr>
+				 	<th>SMA60:</th>
+				 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.stockItem).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma60,1,'COMMA',2,'POINT')}:'0'"
+				 		>105.0</td>
+				 </tr>					  
+			</table>
+		</div>
+		<div th:if="${#lists.isEmpty(spcList)}">
+			<p>No records</p>
+		</div>
+	</div>
+</body>
+</html>

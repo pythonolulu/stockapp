@@ -100,6 +100,7 @@ public class StockItemService {
 				}
 			}
 			stockPriceDAO.save(stockSymbol, spList);
+			stockItemHelper.updatePriceDateForItem(stockSymbol, spList.get(spList.size()-1).getTradingDate());
 		}
 	}
 
@@ -136,6 +137,14 @@ public class StockItemService {
 		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
+	}
+
+	public StockItem getOrCreate(String symbol) throws StockException {
+		StockItem si = stockItemDAO.findBySymbol(symbol);
+		if (si == null) {
+			si = downloadAndSaveStockProfile(symbol);
+		}
+		return si;
 	}
 
 	/*
@@ -281,8 +290,7 @@ public class StockItemService {
 
 	/*
 	 * get the latest stock price data for the specified stock item. It will try to
-	 * download any new price data if available.
-	 * TODO: Not yet called.
+	 * download any new price data if available. TODO: Not yet called.
 	 */
 	public List<StockPrice> getLatestStockPrices(String symbol) throws StockException {
 		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
@@ -326,8 +334,8 @@ public class StockItemService {
 	}
 
 	/*
-	 * Calculate RSV and KD values for all items ( filtered on the statsDate
-	 * is null or before latestTradingDate)
+	 * Calculate RSV and KD values for all items ( filtered on the statsDate is null
+	 * or before latestTradingDate)
 	 */
 	public void calculateAndSaveKDForAll() throws StockException {
 
@@ -342,7 +350,7 @@ public class StockItemService {
 	/*
 	 * Calculate RSV and KD values for the specified stock item
 	 */
-	private Date calculateAndSaveKDForSymbol(String symbol) throws StockException {
+	public Date calculateAndSaveKDForSymbol(String symbol) throws StockException {
 		List<StockPrice> spList = stockPriceDAO.load(symbol);
 		Date latestDate = spList.get(spList.size() - 1).getTradingDate();
 		DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -361,7 +369,11 @@ public class StockItemService {
 			sid.setLow(stats.getMin());
 		});
 		sidList.stream().forEach(sid -> {
-			sid.setRsv(100*(sid.getStockPrice().getClose() - sid.getLow()) / (sid.getHigh() - sid.getLow()));
+			if(sid.getHigh()-sid.getLow()<0.001) {
+				sid.setRsv(100.0);
+			} else {
+				sid.setRsv(100 * (sid.getStockPrice().getClose() - sid.getLow()) / (sid.getHigh() - sid.getLow()));
+			}
 		});
 		IntStream.range(0, sidList.size()).forEach(idx -> {
 			StockItemData sid = sidList.get(idx);

@@ -13,6 +13,8 @@ import javax.persistence.NamedAttributeNode;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /* URL for download stock profile 
  * 1. http://mops.twse.com.tw/mops/web/t05st03 GET 
  * 		need to get the cookie: jcsession
@@ -88,7 +90,7 @@ public class StockItem {
 	public void setStatsDate(Date statsDate) {
 		this.statsDate = statsDate;
 	}
-
+	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<StockTradeByTrust> stbt;
 

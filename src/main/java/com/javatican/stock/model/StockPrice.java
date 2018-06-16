@@ -15,16 +15,16 @@ public class StockPrice implements Comparable<StockPrice> {
 	}
 
 	private Date tradingDate;
-	private Double tradeVolume;
-	private Double tradeValue;
-	private Double open;
-	private Double high;
-	private Double low;
-	private Double close;
+	private Double tradeVolume=0.0;
+	private Double tradeValue=0.0;
+	private Double open=0.0;
+	private Double high=0.0;
+	private Double low=0.0;
+	private Double close=0.0;
 	/*
 	 * number of transactions
 	 */
-	private Double transaction;
+	private Double transaction=0.0;
 
 	public StockPrice(Date tradingDate, Double tradeVolume, Double tradeValue, Double open, Double high, Double low,
 			Double close, Double transaction) {

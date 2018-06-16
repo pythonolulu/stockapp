@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>Top 30 stocks buy/sell by Trust</title>
-<link th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
+<title>投信买卖热门股-Top 30 stocks</title>
+<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
 	rel="stylesheet"></link>
-<script th:src="@{/webjars/jquery/1.9.1/jquery.min.js}"></script>
-<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
+<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
 </head>
 <body>
 	<div class="container">
 		<h2>
-			Top stocks list for <span
-				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+			投信买卖热门股 - <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
 		</h2>
 		<div th:unless="${#maps.isEmpty(dataMap)}">
 			<table th:each="item : ${dataMap}" class="table table-striped">
@@ -22,7 +21,9 @@
 					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key.symbol})}" th:text="${item.key.symbol}">2317</a>
 					 	<a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
 					 	th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key.symbol})}" th:text="${item.key.name}">Hong Hai</a>
-					 	<span th:text="${#numbers.formatCurrency(item.key.price)}">NT$90</span>
+					 	<a target='_blank' th:with="imgUrl='https://stock.wearn.com/finance_chart.asp'" th:href="@{${imgUrl}(stockid=${item.key.symbol},timekind=0,timeblock=120,volume=0,indicator1='SStoch',indicator2='MACD',indicator3='Vol')}">
+					 		<img th:src="@{${imgUrl}(stockid=${item.key.symbol},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key.symbol}+' graph'" height="64" width="64"/>
+				 		</a>
 				 	</td>
 				 </tr>
 				 <tr>

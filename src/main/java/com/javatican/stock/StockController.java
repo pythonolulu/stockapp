@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -40,20 +41,13 @@ public class StockController {
 	 * only call once during initial setup
 	 */
 	/*
-	@GetMapping("/prepareTrustData")
-	public ResponseMessage prepareTrustData() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			stockTradeByTrustService.prepareData();
-			mes.setCategory("Success");
-			mes.setText("Stock Trade Data by Trust have been created.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText(" Stock Trade Data by Trust fail to be created.");
-		}
-		return mes;
-	}
+	 * @GetMapping("/prepareTrustData") public ResponseMessage prepareTrustData() {
+	 * ResponseMessage mes = new ResponseMessage(); try {
+	 * stockTradeByTrustService.prepareData(); mes.setCategory("Success");
+	 * mes.setText("Stock Trade Data by Trust have been created."); } catch
+	 * (Exception ex) { ex.printStackTrace(); mes.setCategory("Fail");
+	 * mes.setText(" Stock Trade Data by Trust fail to be created."); } return mes;
+	 * }
 	 */
 
 	/*
@@ -74,6 +68,7 @@ public class StockController {
 		return mes;
 
 	}
+
 	/*
 	 * 2. handler for download and save any new stock trading data by Trust
 	 */
@@ -100,7 +95,6 @@ public class StockController {
 		ResponseMessage mes = new ResponseMessage();
 		try {
 			stockItemService.downloadAndSaveStockPrices();
-			;
 			mes.setCategory("Success");
 			mes.setText("download and save all stock prices.");
 		} catch (Exception ex) {
@@ -130,25 +124,25 @@ public class StockController {
 		return mes;
 	}
 
-/* 
- * only run once
- */
-/*
-	@GetMapping("/prepareData")
-	public ResponseMessage prepareData() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			stockService.prepareData();
-			mes.setCategory("Success");
-			mes.setText("Trading date information has been updated.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("Trading date information fails to be updated.");
-		}
-		return mes;
-	}
-*/
+	/*
+	 * only run once
+	 */
+
+//	@GetMapping("/prepareData")
+//	public ResponseMessage prepareData() {
+//		ResponseMessage mes = new ResponseMessage();
+//		try {
+//			stockService.prepareData();
+//			mes.setCategory("Success");
+//			mes.setText("Trading date information has been updated.");
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//			mes.setCategory("Fail");
+//			mes.setText("Trading date information fails to be updated.");
+//		}
+//		return mes;
+//	}
+
 	@GetMapping("/updatePriceDataForAll")
 	public ResponseMessage updatePriceDataForAll() {
 		ResponseMessage mes = new ResponseMessage();
@@ -178,9 +172,10 @@ public class StockController {
 		}
 		return mes;
 	}
-/*
- * only run at the beginning of new month.
- */
+
+	/*
+	 * only run at the beginning of new month.
+	 */
 	@GetMapping("/updatePriceFieldForAll")
 	public ResponseMessage updateStockItemPriceFieldForAll() {
 		ResponseMessage mes = new ResponseMessage();
@@ -201,7 +196,7 @@ public class StockController {
 	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
-	public ModelAndView getTop30ByTrust2(@PathVariable String tradingDate) {
+	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
@@ -210,10 +205,10 @@ public class StockController {
 		List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
 				.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
-		//prepare K/D values
-		Map<StockItem, Map<String, StockItemData>> statsMap = 
-				stockService.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateLength);
-		
+		// prepare K/D values
+		Map<StockItem, Map<String, StockItemData>> statsMap = stockService
+				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateLength);
+
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);
@@ -235,4 +230,63 @@ public class StockController {
 		}
 		return mes;
 	}
+
+	@GetMapping("/{stockSymbol}/calculateAndSaveKD")
+	public ResponseMessage calculateAndSaveKD(@PathVariable String stockSymbol) {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.calculateAndSaveKDForSymbol(stockSymbol);
+			mes.setCategory("Success");
+			mes.setText("Stats data for stock " + stockSymbol + " has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Stats data for stock " + stockSymbol + " fails to be updated.");
+		}
+		return mes;
+	}
+
+	@GetMapping("/{tradingDate}/preparePerformers")
+	public ResponseMessage prepareTopAndBottomPerformers(@PathVariable String tradingDate) {
+
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockService.preparePerformers(tradingDate, 50);
+			mes.setCategory("Success");
+			mes.setText("Stock price change for top/bottom 50 stocks have been saved.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Stock price change for top/bottom 50 stocks fail to be saved.");
+		}
+		return mes;
+	}
+
+	/*
+	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified
+	 * trading date.
+	 */
+	@GetMapping("/{tradingDate}/top50")
+	public ModelAndView top50(@PathVariable String tradingDate) {
+		int dateLength = 10;
+		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
+		ModelAndView mav;
+		try {
+			List<StockPriceChange> spcList = stockService.loadTop(date);
+			List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
+					.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
+			mav = new ModelAndView("stock/top50");
+			// prepare K/D values
+			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
+					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateLength);
+			mav.addObject("tradingDate", date);
+			mav.addObject("dateList", dList);
+			mav.addObject("spcList", spcList);
+			mav.addObject("statsMap", statsMap);
+		} catch (StockException e) {
+			mav = new ModelAndView("stock/error");
+		}
+		return mav;
+	}
+
 }
