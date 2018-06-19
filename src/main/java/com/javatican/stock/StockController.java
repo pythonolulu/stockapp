@@ -22,6 +22,8 @@ import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StockTradeByTrustService;
+import com.javatican.stock.service.CallWarrantTradeSummaryService;
+import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -36,6 +38,10 @@ public class StockController {
 	private StockItemService stockItemService;
 	@Autowired
 	private StockTradeByTrustService stockTradeByTrustService;
+	@Autowired
+	private CallWarrantTradeSummaryService callWarrantTradeSummaryService;
+	@Autowired
+	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
 
 	/*
 	 * only call once during initial setup
@@ -66,7 +72,6 @@ public class StockController {
 			mes.setText("Trading date and value information fails to be updated.");
 		}
 		return mes;
-
 	}
 
 	/*
@@ -202,17 +207,21 @@ public class StockController {
 		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
 				dateLength);
 		// also return trading date list
-		List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
+		List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+		List<String> dList = dateList.stream()
 				.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
 		// prepare K/D values
 		Map<StockItem, Map<String, StockItemData>> statsMap = stockService
-				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateLength);
+				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateList);
 
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);
 		mav.addObject("statsMap", statsMap);
+		//stockItems with call and put warrants
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		return mav;
 	}
 
@@ -263,7 +272,7 @@ public class StockController {
 	}
 
 	/*
-	 * 5. handler for calculate the top 30 stocks traded by Trust for the specified
+	 * handler for calculate the top 50 stock performers for the specified
 	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top50")
@@ -273,20 +282,86 @@ public class StockController {
 		ModelAndView mav;
 		try {
 			List<StockPriceChange> spcList = stockService.loadTop(date);
-			List<String> dList = stockService.getLatestNTradingDate(dateLength).stream()
+			List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+			List<String> dList = dateList.stream()
 					.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
 			mav = new ModelAndView("stock/top50");
 			// prepare K/D values
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
-					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateLength);
+					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
 			mav.addObject("spcList", spcList);
 			mav.addObject("statsMap", statsMap);
+			//stockItems with call and put warrants
+			mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+			mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		} catch (StockException e) {
 			mav = new ModelAndView("stock/error");
 		}
 		return mav;
 	}
 
+	/*
+	 * handler for calculate the top 50 stock performers for the specified
+	 * trading date.
+	 */
+	@GetMapping("/{tradingDate}/bottom50")
+	public ModelAndView bottom50(@PathVariable String tradingDate) {
+		int dateLength = 10;
+		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
+		ModelAndView mav;
+		try {
+			List<StockPriceChange> spcList = stockService.loadBottom(date);
+
+			List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+			List<String> dList = dateList.stream()
+					.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
+
+			mav = new ModelAndView("stock/bottom50");
+			// prepare K/D values
+			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
+					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
+			mav.addObject("tradingDate", date);
+			mav.addObject("dateList", dList);
+			mav.addObject("spcList", spcList);
+			mav.addObject("statsMap", statsMap);
+			//stockItems with call and put warrants
+			mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+			mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		} catch (StockException e) {
+			mav = new ModelAndView("stock/error");
+		}
+		return mav;
+	}
+	@GetMapping("/prepareCallWarrantData")
+	public ResponseMessage prepareCallWarrantData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			callWarrantTradeSummaryService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Call warrant trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Call warrant trading data fails to be updated.");
+		}
+		return mes;
+
+	}
+	@GetMapping("/preparePutWarrantData")
+	public ResponseMessage preparePutWarrantData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			putWarrantTradeSummaryService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Put warrant trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Put warrant trading data fails to be updated.");
+		}
+		return mes;
+
+	}
 }

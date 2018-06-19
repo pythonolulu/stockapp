@@ -26,6 +26,12 @@
 					 	<a target='_blank' th:with="imgUrl='https://stock.wearn.com/finance_chart.asp'" th:href="@{${imgUrl}(stockid=${item.symbol},timekind=0,timeblock=120,volume=0,indicator1='SStoch',indicator2='MACD',indicator3='Vol')}">
 					 		<img th:src="@{${imgUrl}(stockid=${item.symbol},timekind=0,timeblock=120,volume=0)}" th:alt="${item.symbol}+' graph'" height="64" width="64"/>
 				 		</a>
+				 		<a th:if="${#lists.contains(swcwList, item.symbol)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.symbol})}">
+					 		<img th:src="@{/icons/call.jpeg}" th:alt="'call warrant'" height="16" width="16"/>
+				 		</a>
+				 		<a th:if="${#lists.contains(swpwList, item.symbol)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.symbol})}">
+					 		<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'" height="16" width="16"/>
+				 		</a>
 				 	</td>
 				 </tr>
 				 <tr>

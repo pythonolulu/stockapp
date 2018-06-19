@@ -49,7 +49,7 @@ public class StockTradeByTrustService {
 	StockItemService stockItemService;
 
 	/*
-	 * update stock trade data for Trust (dynamic download and save the new
+	 * update stock trade data for Trust (download and save the new
 	 * available data)
 	 */
 	public void updateData() throws StockException {

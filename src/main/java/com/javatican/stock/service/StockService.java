@@ -25,12 +25,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
+import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
+import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockPriceChangeDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.TradingValueDAO;
+import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
@@ -64,6 +67,10 @@ public class StockService {
 	StockItemDataDAO stockItemDataDAO;
 	@Autowired
 	StockPriceChangeDAO stockPriceChangeDAO;
+	@Autowired
+	CallWarrantTradeSummaryDAO callWarrantTradeSummaryDAO;
+	@Autowired
+	PutWarrantTradeSummaryDAO putWarrantTradeSummaryDAO;
 	@Autowired
 	StockItemService stockItemService;
 	/*
@@ -240,14 +247,13 @@ public class StockService {
 		return dataMap;
 	}
 
-	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList, int dateLength) {
-		List<Date> dList = tradingDateDAO.findLatestNTradingDate(dateLength);
+	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList, List<Date> dateList) {
 		Map<StockItem, Map<String, StockItemData>> statsMap = new LinkedHashMap<>();
 		siList.stream().forEach(si -> {
 			try {
 				List<StockItemData> sidList = stockItemDataDAO.load(si.getSymbol());
 				Map<String, StockItemData> map = new TreeMap<>();
-				sidList.stream().filter(sid -> dList.contains(sid.getTradingDate()))
+				sidList.stream().filter(sid -> dateList.contains(sid.getTradingDate()))
 						.forEach(sid -> map.put(StockUtils.dateToStringSeparatedBySlash(sid.getTradingDate()), sid));
 				statsMap.put(si, map);
 			} catch (StockException ex) {
@@ -348,7 +354,8 @@ public class StockService {
 					spc.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(7).text())));
 					spc.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(8).text())));
 					spc.setChange(sign * Double.valueOf(StockUtils.removeCommaInNumber(tds.get(10).text())));
-					spc.setChangePercent(spc.getChange() / spc.getClose());
+					//spc.setChangePercent(spc.getChange() / spc.getClose());
+					spc.setChangePercent(spc.getChange() / (spc.getClose()-spc.getChange()));
 					spcList.add(spc);
 				} catch (Exception ex) {
 					logger.warn("Problem parsing the price data for stock symbol: " + spc.getSymbol() + ". Igore it.");
@@ -384,6 +391,7 @@ public class StockService {
 			}
 		});
 		stockPriceChangeDAO.saveTop(dateString, topList);
+		//
 		bottomList.stream().forEach(spc -> { 
 			try {
 				spc.setStockItem(stockItemService.getOrCreate(spc.getSymbol()));
@@ -393,4 +401,13 @@ public class StockService {
 		});
 		stockPriceChangeDAO.saveBottom(dateString, bottomList);
 	}
+	
+	public  List<String> getStockSymbolsWithCallWarrant() {
+		return callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+	}
+
+	public  List<String> getStockSymbolsWithPutWarrant() {
+		return putWarrantTradeSummaryDAO.getStockSymbolsWithPutWarrant();
+	}
+
 }

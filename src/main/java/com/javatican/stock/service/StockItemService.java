@@ -90,6 +90,8 @@ public class StockItemService {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		List<StockPrice> spList = null;
 		for (String stockSymbol : stockSymbols) {
+			//not to deal with IX0001(major index), IX0027(electric index), IX0039(financial index), TXFI8(future index)
+			if(stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF")) continue;
 			logger.info("prepare price data for symbol:" + stockSymbol);
 			spList = new ArrayList<>();
 			for (String dateString : dateList) {
@@ -261,6 +263,7 @@ public class StockItemService {
 		Date start = tuple.getValue0();
 		Date end = tuple.getValue1();
 		for (StockItem si : siList) {
+			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
 			try {
 				List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
 				double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
@@ -320,11 +323,12 @@ public class StockItemService {
 		//
 		List<StockPrice> spList;
 		for (StockItem si : siList) {
+			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
 			logger.info("update price data for symbol: " + si.getSymbol());
 			spList = downloadStockPriceAndVolume(si.getSymbol(), firstDayOfTheMonth);
 			stockPriceDAO.update(si.getSymbol(), spList);
 			//
-			stockItemHelper.updatePriceDateForItem(si, latestTradingDate);
+			stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size()-1).getTradingDate());
 			try {
 				Thread.sleep(stockConfig.getSleepTime());
 			} catch (InterruptedException ex) {
@@ -342,6 +346,7 @@ public class StockItemService {
 		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
 		List<StockItem> siList = stockItemDAO.findByStatsDateBeforeOrIsNull(latestTradingDate);
 		for (StockItem si : siList) {
+			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
 			Date latestDate = calculateAndSaveKDForSymbol(si.getSymbol());
 			stockItemHelper.updateStatsDateForItem(si, latestDate);
 		}
