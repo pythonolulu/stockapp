@@ -1,6 +1,8 @@
 package com.javatican.stock.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -57,6 +60,9 @@ public class StockItemService {
 	// Urls for downloading stock profile(name, capital)
 	private static final String TWSE_STOCK_PROFILE_GET_URL = "http://mops.twse.com.tw/mops/web/t05st03";
 	private static final String TWSE_STOCK_PROFILE_POST_URL = "http://mops.twse.com.tw/mops/web/ajax_t05st03";
+	// Url for download all stock price ohlc data for the specified date
+	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
+
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -90,8 +96,10 @@ public class StockItemService {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		List<StockPrice> spList = null;
 		for (String stockSymbol : stockSymbols) {
-			//not to deal with IX0001(major index), IX0027(electric index), IX0039(financial index), TXFI8(future index)
-			if(stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF")) continue;
+			// not to deal with IX0001(major index), IX0027(electric index),
+			// IX0039(financial index), TXFI8(future index)
+			if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
+				continue;
 			logger.info("prepare price data for symbol:" + stockSymbol);
 			spList = new ArrayList<>();
 			for (String dateString : dateList) {
@@ -102,7 +110,7 @@ public class StockItemService {
 				}
 			}
 			stockPriceDAO.save(stockSymbol, spList);
-			stockItemHelper.updatePriceDateForItem(stockSymbol, spList.get(spList.size()-1).getTradingDate());
+			stockItemHelper.updatePriceDateForItem(stockSymbol, spList.get(spList.size() - 1).getTradingDate());
 		}
 	}
 
@@ -263,7 +271,8 @@ public class StockItemService {
 		Date start = tuple.getValue0();
 		Date end = tuple.getValue1();
 		for (StockItem si : siList) {
-			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
+			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+				continue;
 			try {
 				List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
 				double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
@@ -323,17 +332,91 @@ public class StockItemService {
 		//
 		List<StockPrice> spList;
 		for (StockItem si : siList) {
-			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
+			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+				continue;
 			logger.info("update price data for symbol: " + si.getSymbol());
 			spList = downloadStockPriceAndVolume(si.getSymbol(), firstDayOfTheMonth);
 			stockPriceDAO.update(si.getSymbol(), spList);
 			//
-			stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size()-1).getTradingDate());
+			stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size() - 1).getTradingDate());
 			try {
 				Thread.sleep(stockConfig.getSleepTime());
 			} catch (InterruptedException ex) {
 			}
 		}
+	}
+
+	public void updatePriceDataForAllImproved() throws StockException {
+		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
+		List<Date> tdList = tradingDateDAO.findLatestNTradingDate(2);
+		Date latestTradingDate = tdList.get(0);
+		Date penultimateTradingDate = tdList.get(1);
+		//
+		List<StockItem> siList = stockItemDAO.findByPriceDateBeforeOrIsNull(latestTradingDate);
+		Map<String, StockPrice> latestSpMap = downloadAllStockPricesForDate(latestTradingDate);
+		//
+		List<StockPrice> existingSpList;
+		for (StockItem si : siList) {
+			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+				continue;
+			logger.info("updating price data for symbol: " + si.getSymbol());
+			//
+			existingSpList = stockPriceDAO.load(si.getSymbol());
+			if (stockPriceDAO.getLatestDateForPriceData(existingSpList).compareTo(penultimateTradingDate) == 0) {
+				StockPrice sp = latestSpMap.get(si.getSymbol());
+				if (sp == null)
+					continue;
+				existingSpList.add(sp);
+				stockPriceDAO.save(si.getSymbol(), existingSpList);
+				stockItemHelper.updatePriceDateForItem(si, sp.getTradingDate());
+			} else {
+				List<StockPrice> spList = downloadStockPriceAndVolume(si.getSymbol(), firstDayOfTheMonth);
+				if (spList.size() == 0)
+					continue;
+				stockPriceDAO.update(si.getSymbol(), existingSpList, spList);
+				stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size() - 1).getTradingDate());
+				try {
+					Thread.sleep(stockConfig.getSleepTime());
+				} catch (InterruptedException ex) {
+				}
+			}
+			logger.info("finish updating price data for symbol: " + si.getSymbol());
+		}
+	}
+
+	private Map<String, StockPrice> downloadAllStockPricesForDate(Date tradingDate) throws StockException {
+		String dateString = StockUtils.dateToSimpleString(tradingDate);
+		Map<String, StockPrice> spMap = new TreeMap<>();
+		String strUrl = String.format(TWSE_TRADING_PRICE_GET_URL, dateString);
+		try (InputStream inStream = new URL(strUrl).openStream();) {
+			Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
+			Elements tables = doc.select("body > div > table");
+			Elements trs = tables.get(4).select("tbody > tr");
+			StockPrice sp;
+			String symbol;
+			for (Element tr : trs) {
+				Elements tds = tr.select("td");
+				sp = new StockPrice();
+				symbol = tds.get(0).text();
+				sp.setTradingDate(tradingDate);
+				try {
+					sp.setTradeVolume(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+					sp.setTransaction(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+					sp.setTradeValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
+					sp.setOpen(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+					sp.setHigh(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(6).text())));
+					sp.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(7).text())));
+					sp.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(8).text())));
+					// add to map
+					spMap.put(symbol, sp);
+				} catch (Exception ex) {
+					logger.warn("Problem parsing the price data for stock symbol: " + symbol + ". Igore it.");
+				}
+			}
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+		return spMap;
 
 	}
 
@@ -346,7 +429,8 @@ public class StockItemService {
 		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
 		List<StockItem> siList = stockItemDAO.findByStatsDateBeforeOrIsNull(latestTradingDate);
 		for (StockItem si : siList) {
-			if(si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF")) continue;
+			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+				continue;
 			Date latestDate = calculateAndSaveKDForSymbol(si.getSymbol());
 			stockItemHelper.updateStatsDateForItem(si, latestDate);
 		}
@@ -374,7 +458,7 @@ public class StockItemService {
 			sid.setLow(stats.getMin());
 		});
 		sidList.stream().forEach(sid -> {
-			if(sid.getHigh()-sid.getLow()<0.001) {
+			if (sid.getHigh() - sid.getLow() < 0.001) {
 				sid.setRsv(100.0);
 			} else {
 				sid.setRsv(100 * (sid.getStockPrice().getClose() - sid.getLow()) / (sid.getHigh() - sid.getLow()));

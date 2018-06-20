@@ -92,7 +92,7 @@ public class StockPriceDAO {
 		try (InputStream st = resource.getInputStream();) {
 			List<StockPrice> spList = objectMapper.readValue(st, new TypeReference<List<StockPrice>>() {
 			});
-			
+
 			return spList.stream()
 					.filter(sp -> sp.getTradingDate().compareTo(start) >= 0 && sp.getTradingDate().compareTo(end) <= 0)
 					.collect(Collectors.toList());
@@ -121,20 +121,16 @@ public class StockPriceDAO {
 	 */
 	public List<StockPrice> update(String stockSymbol, List<StockPrice> existingData, List<StockPrice> newData)
 			throws StockException {
-		if (existingData.size() > 0) {
-			Date d = existingData.get(existingData.size() - 1).getTradingDate();
-			for (StockPrice sp : newData) {
-				// only new data will be added into the list
-				if (sp.getTradingDate().after(d)) {
-					existingData.add(sp);
-					logger.info("Add stock price for " + stockSymbol + " @" + sp.getTradingDate());
-				}
+		Date d = getLatestDateForPriceData(existingData);
+		for (StockPrice sp : newData) {
+			// only new data will be added into the list
+			if (sp.getTradingDate().after(d)) {
+				existingData.add(sp);
+				logger.info("Add stock price for " + stockSymbol + " @" + sp.getTradingDate());
 			}
-			save(stockSymbol, existingData);
-			return existingData;
-		} else {
-			throw new StockException("No price data in the resource file for symbol:" + stockSymbol);
 		}
+		save(stockSymbol, existingData);
+		return existingData;
 	}
 
 	/*

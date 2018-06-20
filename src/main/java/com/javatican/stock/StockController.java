@@ -19,11 +19,11 @@ import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.model.StockTradeByTrust;
+import com.javatican.stock.service.CallWarrantTradeSummaryService;
+import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StockTradeByTrustService;
-import com.javatican.stock.service.CallWarrantTradeSummaryService;
-import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -152,7 +152,7 @@ public class StockController {
 	public ResponseMessage updatePriceDataForAll() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockItemService.updatePriceDataForAll();
+			stockItemService.updatePriceDataForAllImproved();
 			mes.setCategory("Success");
 			mes.setText("Price data for all stocks have been updated.");
 		} catch (Exception ex) {
@@ -334,11 +334,11 @@ public class StockController {
 		}
 		return mav;
 	}
-	@GetMapping("/prepareCallWarrantData")
-	public ResponseMessage prepareCallWarrantData() {
+	@GetMapping("/updateCallWarrantData")
+	public ResponseMessage updateCallWarrantData() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			callWarrantTradeSummaryService.prepareData();
+			callWarrantTradeSummaryService.updateData();
 			mes.setCategory("Success");
 			mes.setText("Call warrant trading data has been updated.");
 		} catch (Exception ex) {
@@ -349,11 +349,11 @@ public class StockController {
 		return mes;
 
 	}
-	@GetMapping("/preparePutWarrantData")
-	public ResponseMessage preparePutWarrantData() {
+	@GetMapping("/updatePutWarrantData")
+	public ResponseMessage updatePutWarrantData() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			putWarrantTradeSummaryService.prepareData();
+			putWarrantTradeSummaryService.updateData();
 			mes.setCategory("Success");
 			mes.setText("Put warrant trading data has been updated.");
 		} catch (Exception ex) {
