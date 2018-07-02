@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,16 +34,8 @@ public class StockTradeByTrust {
 	@Column(name = "trading_date", nullable = false)
 	private Date tradingDate;
 
-	@ManyToOne
+	@ManyToOne(fetch=FetchType.LAZY)
 	private StockItem stockItem;
-
-	public StockItem getStockItem() {
-		return stockItem;
-	}
-
-	public void setStockItem(StockItem stockItem) {
-		this.stockItem = stockItem;
-	}
 
 	@Column(name = "stock_symbol", nullable = false)
 	private String stockSymbol;
@@ -77,6 +70,15 @@ public class StockTradeByTrust {
 	@Override
 	public String toString() {
 		return String.format("Symbol:%s, buy:%f, sell:%f", this.stockSymbol, this.buy, this.sell);
+	}
+
+
+	public StockItem getStockItem() {
+		return stockItem;
+	}
+
+	public void setStockItem(StockItem stockItem) {
+		this.stockItem = stockItem;
 	}
 
 	public Date getTradingDate() {

@@ -31,6 +31,10 @@ public class CallWarrantTradeSummaryDAO {
 		return callWarrantTradeSummaryRepository.findByTradingDate(tradingDate);
 	}
 
+	public List<CallWarrantTradeSummary> getByStockSymbol(String stockSymbol) {
+		return callWarrantTradeSummaryRepository.findByStockSymbolOrderByTradingDateAsc(stockSymbol);
+	}
+
 	public Date getLatestTradingDate() {
 		return callWarrantTradeSummaryRepository.getLatestTradingDate();
 	}

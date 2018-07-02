@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.PutWarrantTradeSummary;
 import com.javatican.stock.repository.PutWarrantTradeSummaryRepository;
 
@@ -28,6 +29,10 @@ public class PutWarrantTradeSummaryDAO {
 
 	public List<PutWarrantTradeSummary> getByTradingDate(Date tradingDate) {
 		return putWarrantTradeSummaryRepository.findByTradingDate(tradingDate);
+	}
+
+	public List<PutWarrantTradeSummary> getByStockSymbol(String stockSymbol) {
+		return putWarrantTradeSummaryRepository.findByStockSymbolOrderByTradingDateAsc(stockSymbol);
 	}
 
 	public Date getLatestTradingDate() {

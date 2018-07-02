@@ -121,7 +121,8 @@ public class CallWarrantTradeSummaryService {
 					if (item.getTransaction() == 0) {
 						item.setAvgTransactionValue(0.0);
 					} else {
-						item.setAvgTransactionValue(item.getTradeValue() / item.getTransaction());
+						item.setAvgTransactionValue(StockUtils
+								.roundDoubleDp0(item.getTradeValue() / item.getTransaction()));
 					}
 				});
 				callWarrantTradeSummaryDAO.saveAll(cwtsMap.values());

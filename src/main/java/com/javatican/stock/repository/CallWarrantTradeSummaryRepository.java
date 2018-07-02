@@ -14,6 +14,8 @@ import com.javatican.stock.model.StockItem;
 public interface CallWarrantTradeSummaryRepository extends JpaRepository<CallWarrantTradeSummary, Long> {
 	
 	List<CallWarrantTradeSummary> findByTradingDate(Date tradingDate);
+	
+	List<CallWarrantTradeSummary> findByStockSymbolOrderByTradingDateAsc(String stockSymbol);
 
 	@Query("select max(s.tradingDate) from CallWarrantTradeSummary s")
 	Date getLatestTradingDate();

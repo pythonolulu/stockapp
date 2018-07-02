@@ -1,9 +1,18 @@
 package com.javatican.stock.service;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -12,6 +21,28 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.AxisLocation;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.HighLowItemLabelGenerator;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.CandlestickRenderer;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.ohlc.OHLCSeries;
+import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,10 +50,13 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.WritableResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
+ 
 import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
@@ -32,8 +66,7 @@ import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockPriceChangeDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
-import com.javatican.stock.dao.TradingValueDAO;
-import com.javatican.stock.model.CallWarrantTradeSummary;
+import com.javatican.stock.dao.TradingValueDAO; 
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
@@ -53,6 +86,7 @@ public class StockService {
 	private static final String TWSE_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
 	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
 	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
+	private static final String STOCK_CHART_RESOURCE_FILE_PATH = "file:./charts/%s.png";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -73,6 +107,11 @@ public class StockService {
 	PutWarrantTradeSummaryDAO putWarrantTradeSummaryDAO;
 	@Autowired
 	StockItemService stockItemService;
+	@Autowired
+	private ResourceLoader resourceLoader;
+	@Autowired
+	StockItemHelper stockItemHelper;
+
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
 	 * investors. The download contains the data for the current month, so
@@ -247,7 +286,8 @@ public class StockService {
 		return dataMap;
 	}
 
-	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList, List<Date> dateList) {
+	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList,
+			List<Date> dateList) {
 		Map<StockItem, Map<String, StockItemData>> statsMap = new LinkedHashMap<>();
 		siList.stream().forEach(si -> {
 			try {
@@ -354,8 +394,9 @@ public class StockService {
 					spc.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(7).text())));
 					spc.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(8).text())));
 					spc.setChange(sign * Double.valueOf(StockUtils.removeCommaInNumber(tds.get(10).text())));
-					//spc.setChangePercent(spc.getChange() / spc.getClose());
-					spc.setChangePercent(spc.getChange() / (spc.getClose()-spc.getChange()));
+					// spc.setChangePercent(spc.getChange() / spc.getClose());
+					spc.setChangePercent(
+							StockUtils.roundDoubleDp4(spc.getChange() / (spc.getClose() - spc.getChange())));
 					spcList.add(spc);
 				} catch (Exception ex) {
 					logger.warn("Problem parsing the price data for stock symbol: " + spc.getSymbol() + ". Igore it.");
@@ -374,7 +415,7 @@ public class StockService {
 	public List<StockPriceChange> loadBottom(Date tradingDate) throws StockException {
 		return stockPriceChangeDAO.loadBottom(tradingDate);
 	}
-	
+
 	public void preparePerformers(String dateString, int size) throws StockException {
 		List<StockPriceChange> spcList = downloadAndSavePriceData(dateString);
 		List<StockPriceChange> topList = spcList.stream().filter(spc -> spc.getChangePercent() > 0)
@@ -383,7 +424,7 @@ public class StockService {
 		List<StockPriceChange> bottomList = spcList.stream().filter(spc -> spc.getChangePercent() < 0)
 				.sorted(Comparator.comparing(StockPriceChange::getChangePercent)).limit(size)
 				.collect(Collectors.toList());
-		topList.stream().forEach(spc -> { 
+		topList.stream().forEach(spc -> {
 			try {
 				spc.setStockItem(stockItemService.getOrCreate(spc.getSymbol()));
 			} catch (StockException e) {
@@ -392,7 +433,7 @@ public class StockService {
 		});
 		stockPriceChangeDAO.saveTop(dateString, topList);
 		//
-		bottomList.stream().forEach(spc -> { 
+		bottomList.stream().forEach(spc -> {
 			try {
 				spc.setStockItem(stockItemService.getOrCreate(spc.getSymbol()));
 			} catch (StockException e) {
@@ -401,12 +442,12 @@ public class StockService {
 		});
 		stockPriceChangeDAO.saveBottom(dateString, bottomList);
 	}
-	
-	public  List<String> getStockSymbolsWithCallWarrant() {
+
+	public List<String> getStockSymbolsWithCallWarrant() {
 		return callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
 	}
 
-	public  List<String> getStockSymbolsWithPutWarrant() {
+	public List<String> getStockSymbolsWithPutWarrant() {
 		return putWarrantTradeSummaryDAO.getStockSymbolsWithPutWarrant();
 	}
 

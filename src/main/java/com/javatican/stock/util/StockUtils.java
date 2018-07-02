@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -20,6 +21,30 @@ public class StockUtils {
 
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 	private static final SimpleDateFormat format2 = new SimpleDateFormat("yyyy/MM/dd");
+	private static final String FOUR_DEC_DOUBLE_FORMAT = "##.0000";
+	private static final String TWO_DEC_DOUBLE_FORMAT = "##.00";
+	private static final String ZERO_DEC_DOUBLE_FORMAT = "##.";
+
+	/**
+	 * Round double.
+	 *
+	 * @param value the value
+	 * @param format the format
+	 * @return the double
+	 */
+	public static double roundDoubleDp4(double value) {
+		DecimalFormat df = new DecimalFormat(FOUR_DEC_DOUBLE_FORMAT);
+		return Double.valueOf(df.format(value));
+	}
+
+	public static double roundDoubleDp2(double value) {
+		DecimalFormat df = new DecimalFormat(TWO_DEC_DOUBLE_FORMAT);
+		return Double.valueOf(df.format(value));
+	}
+	public static double roundDoubleDp0(double value) {
+		DecimalFormat df = new DecimalFormat(ZERO_DEC_DOUBLE_FORMAT);
+		return Double.valueOf(df.format(value));
+	}
 	/*
 	 * format the current date as a string of '20180101' format
 	 */

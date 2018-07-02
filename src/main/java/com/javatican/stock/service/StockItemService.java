@@ -275,7 +275,8 @@ public class StockItemService {
 				continue;
 			try {
 				List<StockPrice> spList = stockPriceDAO.loadBetweenDate(si.getSymbol(), start, end);
-				double average = spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble();
+				double average = StockUtils
+						.roundDoubleDp2(spList.stream().mapToDouble(StockPrice::getClose).average().getAsDouble());
 				// call the setter method, no need to call save()
 				si.setPrice(average);
 			} catch (Exception ex) {
@@ -461,7 +462,8 @@ public class StockItemService {
 			if (sid.getHigh() - sid.getLow() < 0.001) {
 				sid.setRsv(100.0);
 			} else {
-				sid.setRsv(100 * (sid.getStockPrice().getClose() - sid.getLow()) / (sid.getHigh() - sid.getLow()));
+				sid.setRsv(StockUtils.roundDoubleDp2(
+						100 * (sid.getStockPrice().getClose() - sid.getLow()) / (sid.getHigh() - sid.getLow())));
 			}
 		});
 		IntStream.range(0, sidList.size()).forEach(idx -> {
@@ -475,18 +477,30 @@ public class StockItemService {
 				k = sidList.get(idx - 1).getK() * 2 / 3 + sid.getRsv() / 3.0;
 				d = sidList.get(idx - 1).getD() * 2 / 3 + k / 3;
 			}
-			sid.setK(k);
-			sid.setD(d);
+			sid.setK(StockUtils.roundDoubleDp2(k));
+			sid.setD(StockUtils.roundDoubleDp2(d));
 		});
 		// simple moving average
-		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
+		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(60);
+		//CircularFifoQueue<Double> queue = new CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
 		sidList.stream().forEach(sid -> {
 			queue.add(sid.getStockPrice().getClose());
 			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
-			sid.setSma5(StatUtils.mean(values, 55, 5));
-			sid.setSma10(StatUtils.mean(values, 50, 10));
-			sid.setSma20(StatUtils.mean(values, 40, 20));
-			sid.setSma60(StatUtils.mean(values, 0, 60));
+			if(values.length==60) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, 55, 5)));
+				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, 50, 10)));
+				sid.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, 40, 20)));
+				sid.setSma60(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 60)));
+			} else if(values.length>=20) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
+				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-10, 10)));
+				sid.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-20, 20)));
+			} else if(values.length>=10) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
+				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-10, 10)));
+			} else if(values.length>=5) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
+			}
 		});
 		stockItemDataDAO.save(symbol, sidList);
 		return latestDate;

@@ -7,13 +7,16 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
- 
+
+import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.PutWarrantTradeSummary;
 
 public interface PutWarrantTradeSummaryRepository extends JpaRepository<PutWarrantTradeSummary, Long> {
 	
 	List<PutWarrantTradeSummary> findByTradingDate(Date tradingDate);
 
+	List<PutWarrantTradeSummary> findByStockSymbolOrderByTradingDateAsc(String stockSymbol);
+	
 	@Query("select max(s.tradingDate) from PutWarrantTradeSummary s")
 	Date getLatestTradingDate();
 

@@ -43,4 +43,10 @@ public class StockItemHelper {
 		//must call save()
 		stockItemDAO.save(si);
 	}
+
+	public void updateChartDateForItem(StockItem si, Date latestDate) {
+		si.setChartDate(latestDate);
+		//must call save()
+		stockItemDAO.save(si);
+	}
 }

@@ -20,6 +20,7 @@ import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
+import com.javatican.stock.service.ChartService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -34,6 +35,8 @@ public class StockController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private StockService stockService;
+	@Autowired
+	private ChartService chartService;
 	@Autowired
 	private StockItemService stockItemService;
 	@Autowired
@@ -202,10 +205,15 @@ public class StockController {
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
 	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
+		// show 10 data points for each stock item
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
+		//key: stockItem
+		//value: a map with key of date string and value StockTradeByTrust object
 		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
 				dateLength);
+		//create stock charts
+		chartService.createGraphs(dataMap.keySet());
 		// also return trading date list
 		List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
 		List<String> dList = dateList.stream()
@@ -289,6 +297,9 @@ public class StockController {
 			// prepare K/D values
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
+			//create stock charts
+			chartService.createGraphs(statsMap.keySet());
+			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
 			mav.addObject("spcList", spcList);
@@ -317,11 +328,14 @@ public class StockController {
 			List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
 			List<String> dList = dateList.stream()
 					.map(td -> StockUtils.dateToStringSeparatedBySlash(td)).collect(Collectors.toList());
-
+			//
 			mav = new ModelAndView("stock/bottom50");
 			// prepare K/D values
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
+			//create stock charts
+			chartService.createGraphs(statsMap.keySet());
+			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
 			mav.addObject("spcList", spcList);

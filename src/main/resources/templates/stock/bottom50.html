@@ -32,6 +32,9 @@
 				 		<a th:if="${#lists.contains(swpwList, item.symbol)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.symbol})}">
 					 		<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'" height="16" width="16"/>
 				 		</a>
+				 		<a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.symbol}+'.png')}">
+					 		stock chart
+				 		</a>
 				 	</td>
 				 </tr>
 				 <tr>

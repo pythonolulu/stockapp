@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -37,7 +38,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "stock_item")
-@NamedEntityGraph(name = "StockItem.stbt", attributeNodes = @NamedAttributeNode("stbt"))
+@NamedEntityGraphs({ @NamedEntityGraph(name = "StockItem.stbt", attributeNodes = @NamedAttributeNode("stbt")),
+		@NamedEntityGraph(name = "StockItem.cwts", attributeNodes = @NamedAttributeNode("cwts")),
+		@NamedEntityGraph(name = "StockItem.pwts", attributeNodes = @NamedAttributeNode("pwts")) })
 public class StockItem {
 
 	@Id
@@ -57,8 +60,9 @@ public class StockItem {
 	private Double capital = 0.0;
 
 	/*
-	 * price: the average price (calculated from price data from last trading month). 
-	 * It is mainly used for some calculations that require approximate price information.
+	 * price: the average price (calculated from price data from last trading
+	 * month). It is mainly used for some calculations that require approximate
+	 * price information.
 	 */
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
@@ -70,11 +74,26 @@ public class StockItem {
 	private Date priceDate;
 
 	/*
-	 * stats_date: the date of the latest record in calculated stats data(such as KD, SMA) for the stock item
+	 * stats_date: the date of the latest record in calculated stats data(such as
+	 * KD, SMA) for the stock item
 	 */
 	@Column(name = "stats_date", nullable = true)
 	private Date statsDate;
-	
+
+	public Date getChartDate() {
+		return chartDate;
+	}
+
+	public void setChartDate(Date chartDate) {
+		this.chartDate = chartDate;
+	}
+
+	/*
+	 * chart_date: the date of the chart draw for the stock item
+	 */
+	@Column(name = "chart_date", nullable = true)
+	private Date chartDate;
+
 	public Date getPriceDate() {
 		return priceDate;
 	}
@@ -90,9 +109,18 @@ public class StockItem {
 	public void setStatsDate(Date statsDate) {
 		this.statsDate = statsDate;
 	}
+
 	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<StockTradeByTrust> stbt;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "stockItem")
+	private Collection<CallWarrantTradeSummary> cwts;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "stockItem")
+	private Collection<PutWarrantTradeSummary> pwts;
 
 	public StockItem() {
 		super();
@@ -154,5 +182,14 @@ public class StockItem {
 	public Collection<StockTradeByTrust> getStbt() {
 		return stbt;
 	}
+	public Collection<CallWarrantTradeSummary> getCwts() {
+		return cwts;
+	}
+
+	public Collection<PutWarrantTradeSummary> getPwts() {
+		return pwts;
+	}
+
+
 
 }
