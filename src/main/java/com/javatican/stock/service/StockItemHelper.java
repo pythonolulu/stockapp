@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockItemLogDAO;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.StockItemLog;
 
 /*
  * This helper class is injected as a separated bean into StockItemService , so
@@ -20,33 +22,49 @@ import com.javatican.stock.model.StockItem;
 public class StockItemHelper {
 
 	@Autowired
-	StockItemDAO stockItemDAO;
-	public StockItemHelper() {
-		// TODO Auto-generated constructor stub
-	}
+	StockItemLogDAO stockItemLogDAO;
 
+	// Note: below are commented out. Directly updating the passed-in StockItemLog
+	// instance will result in two updates to the DB.
+	// Therefore, get a fresh StockItemLog object from the DB and update this object
+	// directly.
 	public void updatePriceDateForItem(String symbol, Date latestDate) {
-		StockItem si = stockItemDAO.findBySymbol(symbol);
-		si.setPriceDate(latestDate);
-		//must call save()
-		stockItemDAO.save(si);
+		StockItemLog sil = stockItemLogDAO.findBySymbol(symbol);
+		sil.setPriceDate(latestDate);
+		// must call save()
+		stockItemLogDAO.save(sil);
 	}
 
-	public void updatePriceDateForItem(StockItem si, Date latestDate) {
-		si.setPriceDate(latestDate);
-		//must call save()
-		stockItemDAO.save(si);
+	public void updateStatsDateForItem(String symbol, Date latestDate) {
+		StockItemLog sil = stockItemLogDAO.findBySymbol(symbol);
+		sil.setStatsDate(latestDate);
+		// must call save()
+		stockItemLogDAO.save(sil);
 	}
 
-	public void updateStatsDateForItem(StockItem si, Date latestDate) {
-		si.setStatsDate(latestDate);
-		//must call save()
-		stockItemDAO.save(si);
+	public void updateChartDateForItem(String symbol, Date latestDate) {
+		StockItemLog sil = stockItemLogDAO.findBySymbol(symbol);
+		sil.setChartDate(latestDate);
+		// must call save()
+		stockItemLogDAO.save(sil);
 	}
+	//
+	// public void updatePriceDateForItem(StockItemLog sil, Date latestDate) {
+	// sil.setPriceDate(latestDate);
+	// //must call save()
+	// stockItemLogDAO.save(sil);
+	// }
 
-	public void updateChartDateForItem(StockItem si, Date latestDate) {
-		si.setChartDate(latestDate);
-		//must call save()
-		stockItemDAO.save(si);
-	}
+	// public void updateStatsDateForItem(StockItemLog sil, Date latestDate) {
+	// sil.setStatsDate(latestDate);
+	// //must call save()
+	// stockItemLogDAO.save(sil);
+	// }
+
+	// public void updateChartDateForItem(StockItemLog sil, Date latestDate) {
+	// sil.setChartDate(latestDate);
+	// //must call save()
+	// stockItemLogDAO.save(sil);
+	// }
+
 }

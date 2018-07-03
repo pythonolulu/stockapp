@@ -43,10 +43,12 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
+import com.javatican.stock.dao.StockItemLogDAO;
 import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.PutWarrantTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.model.StockItemLog;
 import com.javatican.stock.model.StockPrice;
 import com.javatican.stock.util.StockUtils;
 
@@ -62,6 +64,10 @@ public class ChartService {
 	PutWarrantTradeSummaryDAO putWarrantTradeSummaryDAO;
 	@Autowired
 	StockItemDataDAO stockItemDataDAO;
+	@Autowired
+	StockItemLogDAO stockItemLogDAO;
+	@Autowired
+	StockItemHelper stockItemHelper;
 	@Autowired
 	private ResourceLoader resourceLoader;
 
@@ -80,33 +86,31 @@ public class ChartService {
 
 	public class StockChart {
 		private StockItem stockItem;
+		private StockItemLog stockItemLog;
 		private List<StockItemData> sidList;
 		private List<CallWarrantTradeSummary> cwtsList;
 		private List<PutWarrantTradeSummary> pwtsList;
 
 		public StockChart(StockItem stockItem) {
 			this.stockItem = stockItem;
+			this.stockItemLog = stockItemLogDAO.findBySymbol(this.stockItem.getSymbol());
+			//this.stockItemLog = stockItem.getStockItemLog();
 		}
 
 		public void create() throws StockException {
 			if (needUpdateChartForSymbol()) {
 				Date latest_data_date = loadData();
 				outputToPNG(StockUtils.dateToSimpleString(latest_data_date));
-				// Note: calling stockItemHelper method to update chartDate property seems to
-				// hit the DB a lot more than necessary.
-				// such as getting a new StockItem instance and the stbt relationship items.
-				// And the stockItem instance is updated twice.
-				// stockItemHelper.updateChartDateForItem(stockItem, latest_data_date);
-				// Note: So direct call to stockItem.setChartDate()
-				stockItem.setChartDate(latest_data_date);
+				//
+				stockItemHelper.updateChartDateForItem(stockItemLog.getSymbol(), latest_data_date);
 			} else {
 				logger.info("Latest stock chart exists for " + stockItem.getSymbol());
 			}
 		}
 
 		public boolean needUpdateChartForSymbol() {
-			if (this.stockItem.getChartDate() == null
-					|| this.stockItem.getChartDate().before(this.stockItem.getStatsDate()))
+			if (this.stockItemLog.getChartDate() == null
+					|| this.stockItemLog.getChartDate().before(this.stockItemLog.getStatsDate()))
 				return true;
 			else
 				return false;

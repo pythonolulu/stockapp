@@ -18,18 +18,6 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 	@Query("select s.symbol from StockItem s")
 	List<String> getAllSymbols();
 
-	List<StockItem> findByPriceDateBefore(Date targetDate);
-
-	List<StockItem> findByStatsDateBefore(Date targetDate);
-
-	List<StockItem> findByStatsDateIsNull();
-
-	@Query("select s from StockItem s where s.priceDate is null or s.priceDate < ?1")
-	List<StockItem> findByPriceDateBeforeOrIsNull(Date targetDate);
-
-	@Query("select s from StockItem s where s.statsDate is null or s.statsDate < ?1")
-	List<StockItem> findByStatsDateBeforeOrIsNull(Date targetDate);
-
 	/*
 	 * @EntityGraph(value = "StockItem.stbt", type = EntityGraphType.LOAD) StockItem
 	 * getBySymbol(String symbol);

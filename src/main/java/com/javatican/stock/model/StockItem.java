@@ -3,8 +3,10 @@ package com.javatican.stock.model;
 import java.util.Collection;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,6 +14,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedEntityGraphs;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -67,49 +70,6 @@ public class StockItem {
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
 
-	/*
-	 * price_date: the date of the latest record in price data for the stock item
-	 */
-	@Column(name = "price_date", nullable = true)
-	private Date priceDate;
-
-	/*
-	 * stats_date: the date of the latest record in calculated stats data(such as
-	 * KD, SMA) for the stock item
-	 */
-	@Column(name = "stats_date", nullable = true)
-	private Date statsDate;
-
-	public Date getChartDate() {
-		return chartDate;
-	}
-
-	public void setChartDate(Date chartDate) {
-		this.chartDate = chartDate;
-	}
-
-	/*
-	 * chart_date: the date of the chart draw for the stock item
-	 */
-	@Column(name = "chart_date", nullable = true)
-	private Date chartDate;
-
-	public Date getPriceDate() {
-		return priceDate;
-	}
-
-	public void setPriceDate(Date priceDate) {
-		this.priceDate = priceDate;
-	}
-
-	public Date getStatsDate() {
-		return statsDate;
-	}
-
-	public void setStatsDate(Date statsDate) {
-		this.statsDate = statsDate;
-	}
-
 	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<StockTradeByTrust> stbt;
@@ -122,6 +82,10 @@ public class StockItem {
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<PutWarrantTradeSummary> pwts;
 
+	@JsonIgnore
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "stockItem")
+	private StockItemLog stockItemLog;
+
 	public StockItem() {
 		super();
 	}
@@ -133,6 +97,10 @@ public class StockItem {
 		this.category = category;
 		this.capital = capital;
 		this.price = price;
+	}
+
+	public StockItemLog getStockItemLog() {
+		return stockItemLog;
 	}
 
 	public String getSymbol() {
@@ -182,6 +150,7 @@ public class StockItem {
 	public Collection<StockTradeByTrust> getStbt() {
 		return stbt;
 	}
+
 	public Collection<CallWarrantTradeSummary> getCwts() {
 		return cwts;
 	}
@@ -189,7 +158,5 @@ public class StockItem {
 	public Collection<PutWarrantTradeSummary> getPwts() {
 		return pwts;
 	}
-
-
 
 }

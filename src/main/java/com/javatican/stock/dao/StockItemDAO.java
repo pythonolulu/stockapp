@@ -50,28 +50,6 @@ public class StockItemDAO {
 		return stockItemRepository.findAll();
 	}
 
-	
-	public List<StockItem> findByPriceDateBeforeOrIsNull(Date targetDate) {
-		return stockItemRepository.findByPriceDateBeforeOrIsNull(targetDate);
-	}
-	
-	public List<StockItem> findByStatsDateBeforeOrIsNull(Date targetDate) {
-		return stockItemRepository.findByStatsDateBeforeOrIsNull(targetDate);
-	}
-	/*
-	public List<StockItem> findByPriceDateBefore(Date targetDate) {
-		return stockItemRepository.findByPriceDateBefore(targetDate);
-	}
-
-	public List<StockItem> findByStatsDateIsNull() {
-		return stockItemRepository.findByStatsDateIsNull();
-	}
-
-	public List<StockItem> findByStatsDateBefore(Date targetDate) {
-		return stockItemRepository.findByStatsDateBefore(targetDate);
-	}
-	*/
-
 	/*
 	 * below is used for selecting price field value of 0.0
 	 */

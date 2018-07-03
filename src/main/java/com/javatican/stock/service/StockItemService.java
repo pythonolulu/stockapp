@@ -38,11 +38,13 @@ import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
+import com.javatican.stock.dao.StockItemLogDAO;
 import com.javatican.stock.dao.StockPriceDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.model.StockItemLog;
 import com.javatican.stock.model.StockPrice;
 import com.javatican.stock.util.StockUtils;
 
@@ -69,6 +71,8 @@ public class StockItemService {
 	StockPriceDAO stockPriceDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
+	@Autowired
+	StockItemLogDAO stockItemLogDAO;
 	@Autowired
 	StockTradeByTrustDAO stockTradeByTrustDAO;
 	@Autowired
@@ -230,7 +234,18 @@ public class StockItemService {
 				} catch (InterruptedException ex) {
 				}
 			}
-			return stockItemDAO.saveAll(siList);
+			Iterable<StockItem> updatedIter = stockItemDAO.saveAll(siList);
+			// create StockItemLog entities
+			List<StockItemLog> silList = new ArrayList<>();
+			StockItemLog sil;
+			for (StockItem sic : updatedIter) {
+				sil = new StockItemLog();
+				sil.setSymbol(sic.getSymbol());
+				sil.setStockItem(sic);
+				silList.add(sil);
+			}
+			stockItemLogDAO.saveAll(silList);
+			return updatedIter;
 		} catch (IOException ex) {
 			throw new StockException(ex);
 		}
@@ -329,17 +344,17 @@ public class StockItemService {
 	public void updatePriceDataForAll() throws StockException {
 		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
 		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
-		List<StockItem> siList = stockItemDAO.findByPriceDateBeforeOrIsNull(latestTradingDate);
+		List<StockItemLog> silList = stockItemLogDAO.findByPriceDateBeforeOrIsNull(latestTradingDate);
 		//
 		List<StockPrice> spList;
-		for (StockItem si : siList) {
-			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+		for (StockItemLog sil : silList) {
+			if (sil.getSymbol().startsWith("IX") || sil.getSymbol().startsWith("TXF"))
 				continue;
-			logger.info("update price data for symbol: " + si.getSymbol());
-			spList = downloadStockPriceAndVolume(si.getSymbol(), firstDayOfTheMonth);
-			stockPriceDAO.update(si.getSymbol(), spList);
+			logger.info("update price data for symbol: " + sil.getSymbol());
+			spList = downloadStockPriceAndVolume(sil.getSymbol(), firstDayOfTheMonth);
+			stockPriceDAO.update(sil.getSymbol(), spList);
 			//
-			stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size() - 1).getTradingDate());
+			stockItemHelper.updatePriceDateForItem(sil.getSymbol(), spList.get(spList.size() - 1).getTradingDate());
 			try {
 				Thread.sleep(stockConfig.getSleepTime());
 			} catch (InterruptedException ex) {
@@ -353,35 +368,35 @@ public class StockItemService {
 		Date latestTradingDate = tdList.get(0);
 		Date penultimateTradingDate = tdList.get(1);
 		//
-		List<StockItem> siList = stockItemDAO.findByPriceDateBeforeOrIsNull(latestTradingDate);
+		List<StockItemLog> silList = stockItemLogDAO.findByPriceDateBeforeOrIsNull(latestTradingDate);
 		Map<String, StockPrice> latestSpMap = downloadAllStockPricesForDate(latestTradingDate);
 		//
 		List<StockPrice> existingSpList;
-		for (StockItem si : siList) {
-			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+		for (StockItemLog sil : silList) {
+			if (sil.getSymbol().startsWith("IX") || sil.getSymbol().startsWith("TXF"))
 				continue;
-			logger.info("updating price data for symbol: " + si.getSymbol());
+			logger.info("updating price data for symbol: " + sil.getSymbol());
 			//
-			existingSpList = stockPriceDAO.load(si.getSymbol());
+			existingSpList = stockPriceDAO.load(sil.getSymbol());
 			if (stockPriceDAO.getLatestDateForPriceData(existingSpList).compareTo(penultimateTradingDate) == 0) {
-				StockPrice sp = latestSpMap.get(si.getSymbol());
+				StockPrice sp = latestSpMap.get(sil.getSymbol());
 				if (sp == null)
 					continue;
 				existingSpList.add(sp);
-				stockPriceDAO.save(si.getSymbol(), existingSpList);
-				stockItemHelper.updatePriceDateForItem(si, sp.getTradingDate());
+				stockPriceDAO.save(sil.getSymbol(), existingSpList);
+				stockItemHelper.updatePriceDateForItem(sil.getSymbol(), sp.getTradingDate());
 			} else {
-				List<StockPrice> spList = downloadStockPriceAndVolume(si.getSymbol(), firstDayOfTheMonth);
+				List<StockPrice> spList = downloadStockPriceAndVolume(sil.getSymbol(), firstDayOfTheMonth);
 				if (spList.size() == 0)
 					continue;
-				stockPriceDAO.update(si.getSymbol(), existingSpList, spList);
-				stockItemHelper.updatePriceDateForItem(si, spList.get(spList.size() - 1).getTradingDate());
+				stockPriceDAO.update(sil.getSymbol(), existingSpList, spList);
+				stockItemHelper.updatePriceDateForItem(sil.getSymbol(), spList.get(spList.size() - 1).getTradingDate());
 				try {
 					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
 				}
 			}
-			logger.info("finish updating price data for symbol: " + si.getSymbol());
+			logger.info("finish updating price data for symbol: " + sil.getSymbol());
 		}
 	}
 
@@ -428,12 +443,13 @@ public class StockItemService {
 	public void calculateAndSaveKDForAll() throws StockException {
 
 		Date latestTradingDate = tradingDateDAO.getLatestTradingDate();
-		List<StockItem> siList = stockItemDAO.findByStatsDateBeforeOrIsNull(latestTradingDate);
-		for (StockItem si : siList) {
-			if (si.getSymbol().startsWith("IX") || si.getSymbol().startsWith("TXF"))
+		List<StockItemLog> silList = stockItemLogDAO.findByStatsDateBeforeOrIsNull(latestTradingDate);
+		for (StockItemLog sil : silList) {
+			if (sil.getSymbol().startsWith("IX") || sil.getSymbol().startsWith("TXF"))
 				continue;
-			Date latestDate = calculateAndSaveKDForSymbol(si.getSymbol());
-			stockItemHelper.updateStatsDateForItem(si, latestDate);
+			Date latestDate = calculateAndSaveKDForSymbol(sil.getSymbol());
+			//stockItemHelper.updateStatsDateForItem(sil, latestDate);
+			stockItemHelper.updateStatsDateForItem(sil.getSymbol(), latestDate);
 		}
 	}
 
@@ -482,28 +498,42 @@ public class StockItemService {
 		});
 		// simple moving average
 		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(60);
-		//CircularFifoQueue<Double> queue = new CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
+		// CircularFifoQueue<Double> queue = new
+		// CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
 		sidList.stream().forEach(sid -> {
 			queue.add(sid.getStockPrice().getClose());
 			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
-			if(values.length==60) {
+			if (values.length == 60) {
 				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, 55, 5)));
 				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, 50, 10)));
 				sid.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, 40, 20)));
 				sid.setSma60(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 60)));
-			} else if(values.length>=20) {
-				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
-				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-10, 10)));
-				sid.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-20, 20)));
-			} else if(values.length>=10) {
-				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
-				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-10, 10)));
-			} else if(values.length>=5) {
-				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length-5, 5)));
+			} else if (values.length >= 20) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
+				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 10, 10)));
+				sid.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 20, 20)));
+			} else if (values.length >= 10) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
+				sid.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 10, 10)));
+			} else if (values.length >= 5) {
+				sid.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
 			}
 		});
 		stockItemDataDAO.save(symbol, sidList);
 		return latestDate;
 	}
-
+	// public void migrateData() {
+	// List<StockItem> siList = stockItemDAO.findAll();
+	// List<StockItemLog> silList = new ArrayList<>();
+	// for(StockItem si: siList) {
+	// StockItemLog sil = new StockItemLog();
+	// sil.setSymbol(si.getSymbol());
+	// sil.setChartDate(si.getChartDate());
+	// sil.setPriceDate(si.getPriceDate());
+	// sil.setStatsDate(si.getStatsDate());
+	// sil.setStockItem(si);
+	// silList.add(sil);
+	// }
+	// stockItemLogDAO.saveAll(silList);
+	// }
 }

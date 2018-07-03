@@ -378,4 +378,20 @@ public class StockController {
 		return mes;
 
 	}
+	
+//
+//	@GetMapping("/migrateData")
+//	public ResponseMessage migrateData() {
+//		ResponseMessage mes = new ResponseMessage();
+//		try {
+//			stockItemService.migrateData();
+//			mes.setCategory("Success");
+//			mes.setText("success");
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//			mes.setCategory("Fail");
+//			mes.setText("fail");
+//		}
+//		return mes;
+//	}
 }
