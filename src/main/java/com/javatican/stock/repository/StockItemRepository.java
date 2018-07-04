@@ -1,6 +1,5 @@
 package com.javatican.stock.repository;
 
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +16,9 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 
 	@Query("select s.symbol from StockItem s")
 	List<String> getAllSymbols();
+//
+//	@Query("select s from StockItem s join s.stockItemLog t ")
+//	List<StockItem> getAllStockItems();
 
 	/*
 	 * @EntityGraph(value = "StockItem.stbt", type = EntityGraphType.LOAD) StockItem

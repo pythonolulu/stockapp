@@ -30,7 +30,7 @@ import com.javatican.stock.model.StockPrice;
  */
 @Repository("stockPriceDAO")
 public class StockPriceDAO {
-	private static final Logger logger = LoggerFactory.getLogger(StockPriceDAO.class);
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 	private static final String RESOURCE_FILE_PATH = "file:./download/price/%s.json";

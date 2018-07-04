@@ -21,6 +21,7 @@ import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.ChartService;
+import com.javatican.stock.service.DealerTradeSummaryService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -45,6 +46,9 @@ public class StockController {
 	private CallWarrantTradeSummaryService callWarrantTradeSummaryService;
 	@Autowired
 	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
+	@Autowired
+	private DealerTradeSummaryService dealerTradeSummaryService;
+
 
 	/*
 	 * only call once during initial setup
@@ -378,7 +382,71 @@ public class StockController {
 		return mes;
 
 	}
+
+	@GetMapping("/updateDealerData")
+	public ResponseMessage updateDealerData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			dealerTradeSummaryService.updateData();
+			mes.setCategory("Success");
+			mes.setText("Dealer trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Dealer trading data fails to be updated.");
+		}
+		return mes;
+
+	}
+
+	@GetMapping("/prepareDealerData")
+	public ResponseMessage prepareDealerData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			dealerTradeSummaryService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Dealer trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Dealer trading data fails to be updated.");
+		}
+		return mes;
+
+	}
 	
+
+	@GetMapping("/prepareCallWarrantData")
+	private ResponseMessage prepareCallWarrantData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			callWarrantTradeSummaryService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Call warrant trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Call warrant trading data fails to be updated.");
+		}
+		return mes;
+
+	}
+
+	@GetMapping("/preparePutWarrantData")
+	private ResponseMessage preparePutWarrantData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			putWarrantTradeSummaryService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Put warrant trading data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Put warrant trading data fails to be updated.");
+		}
+		return mes;
+
+	}
 //
 //	@GetMapping("/migrateData")
 //	public ResponseMessage migrateData() {

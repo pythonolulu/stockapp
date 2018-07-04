@@ -49,6 +49,10 @@ public class StockItemDAO {
 	public List<StockItem> findAll() {
 		return stockItemRepository.findAll();
 	}
+//
+//	public List<StockItem> getAllStockItems() {
+//		return stockItemRepository.getAllStockItems();
+//	}
 
 	/*
 	 * below is used for selecting price field value of 0.0
@@ -59,7 +63,9 @@ public class StockItemDAO {
 
 	public Map<String, StockItem> findAllAsMap() {
 		Map<String, StockItem> siMap = new TreeMap<>();
+		//TODO check this.
 		List<StockItem> siList = findAll();
+		//List<StockItem> siList = getAllStockItems();
 		siList.stream().forEach(si -> siMap.put(si.getSymbol(), si));
 		return siMap;
 	}

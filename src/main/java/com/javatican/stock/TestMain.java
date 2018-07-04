@@ -57,6 +57,14 @@ import com.javatican.stock.util.StockUtils;
 public class TestMain {
 
 	public static void main(String[] args) {
+		String text = "12345F";
+		Pattern p1 = Pattern.compile("[\\d]{5}[\\dF]");
+		Matcher m1 = p1.matcher(text);
+		if (m1.matches()){
+			System.out.println("matched");
+		}
+	}
+	public static void main7(String[] args) {
 		// creating and showing this application's GUI.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
