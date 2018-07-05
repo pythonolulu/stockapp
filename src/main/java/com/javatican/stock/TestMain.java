@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,16 +56,8 @@ import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.util.StockUtils;
 
 public class TestMain {
-
+ 
 	public static void main(String[] args) {
-		String text = "12345F";
-		Pattern p1 = Pattern.compile("[\\d]{5}[\\dF]");
-		Matcher m1 = p1.matcher(text);
-		if (m1.matches()){
-			System.out.println("matched");
-		}
-	}
-	public static void main7(String[] args) {
 		// creating and showing this application's GUI.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -77,7 +70,7 @@ public class TestMain {
 	public static class MyChart extends JFrame {
 		private List<StockItemData> sidList;
 		public MyChart() {
-			this(true);
+			this(false);
 		}
 
 		public MyChart(boolean offline) {
@@ -147,7 +140,7 @@ public class TestMain {
 			TimeSeries volumeSeries = new TimeSeries("Volume");
 			// add data
 			sidList.stream().forEach(
-					sid -> volumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume()));
+					sid -> volumeSeries.add(new Day(sid.getTradingDate()), (new Random().nextBoolean()? 1: -1)*sid.getStockPrice().getTradeVolume()));
 			volumeDataset.addSeries(volumeSeries);
 			return volumeDataset;
 		}

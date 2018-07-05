@@ -6,13 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.javatican.stock.model.StockItem;
@@ -48,7 +52,8 @@ public class StockController {
 	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
 	@Autowired
 	private DealerTradeSummaryService dealerTradeSummaryService;
-
+    @Autowired
+    private ServletContext servletContext;
 
 	/*
 	 * only call once during initial setup
@@ -400,7 +405,7 @@ public class StockController {
 	}
 
 	@GetMapping("/prepareDealerData")
-	public ResponseMessage prepareDealerData() {
+	private ResponseMessage prepareDealerData() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
 			dealerTradeSummaryService.prepareData();
@@ -446,6 +451,16 @@ public class StockController {
 		}
 		return mes;
 
+	}
+//	@GetMapping("/{stockSymbol}/getChart")
+//	public Resource getChart(@PathVariable String stockSymbol) {
+//		chartService.createGraph(stockSymbol);
+//		return new ServletContextResource(servletContext, "/stock/imgs/"+stockSymbol+".png");
+//	}
+	@GetMapping("/{stockSymbol}/getChart")
+	public ModelAndView getChart(@PathVariable String stockSymbol) {
+		chartService.createGraph(stockSymbol);
+		return new ModelAndView("redirect:" + "/stock/imgs/"+stockSymbol+".png");
 	}
 //
 //	@GetMapping("/migrateData")

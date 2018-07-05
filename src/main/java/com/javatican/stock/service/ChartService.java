@@ -41,10 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
+import com.javatican.stock.dao.DealerTradeSummaryDAO;
 import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
+import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockItemLogDAO;
 import com.javatican.stock.model.CallWarrantTradeSummary;
+import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.PutWarrantTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
@@ -63,7 +66,11 @@ public class ChartService {
 	@Autowired
 	PutWarrantTradeSummaryDAO putWarrantTradeSummaryDAO;
 	@Autowired
+	DealerTradeSummaryDAO dealerTradeSummaryDAO;
+	@Autowired
 	StockItemDataDAO stockItemDataDAO;
+	@Autowired
+	StockItemDAO stockItemDAO;
 	@Autowired
 	StockItemLogDAO stockItemLogDAO;
 	@Autowired
@@ -84,12 +91,18 @@ public class ChartService {
 		}
 	}
 
+	public void createGraph(String stockSymbol) { 
+		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
+		createGraph(si);
+	}
+
 	public class StockChart {
 		private StockItem stockItem;
 		private StockItemLog stockItemLog;
 		private List<StockItemData> sidList;
 		private List<CallWarrantTradeSummary> cwtsList;
 		private List<PutWarrantTradeSummary> pwtsList;
+		private List<DealerTradeSummary> dtsList;
 
 		public StockChart(StockItem stockItem) {
 			this.stockItem = stockItem;
@@ -132,6 +145,7 @@ public class ChartService {
 			this.sidList = stockItemDataDAO.load(stockItem.getSymbol());
 			this.cwtsList = callWarrantTradeSummaryDAO.getByStockSymbol(stockItem.getSymbol());
 			this.pwtsList = putWarrantTradeSummaryDAO.getByStockSymbol(stockItem.getSymbol());
+			this.dtsList = dealerTradeSummaryDAO.getByStockSymbol(stockItem.getSymbol());
 			return sidList.get(sidList.size() - 1).getTradingDate();
 		}
 
@@ -153,7 +167,7 @@ public class ChartService {
 			candlestickRenderer.setSeriesVisibleInLegend(0, false);
 			// Create candlestickSubplot
 			XYPlot candlestickSubplot = new XYPlot(priceDataset, null, priceAxis, candlestickRenderer);
-			candlestickSubplot.setBackgroundPaint(Color.white);
+			candlestickSubplot.setBackgroundPaint(Color.WHITE);
 			// create SMA renderer
 			XYLineAndShapeRenderer smaRenderer = new XYLineAndShapeRenderer();
 			// add 2nd dataset (SMA)
@@ -170,7 +184,7 @@ public class ChartService {
 			candlestickSubplot.setRenderer(1, smaRenderer);
 			candlestickSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 			// Create volume chart volumeAxis
-			NumberAxis volumeAxis = new NumberAxis("交易额");
+			NumberAxis volumeAxis = new NumberAxis("交易量(千股)");
 			volumeAxis.setAutoRangeIncludesZero(true);
 			// Set to no decimal
 			volumeAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
@@ -186,7 +200,7 @@ public class ChartService {
 			//volRenderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator("Date={1}, Vol={2}",new SimpleDateFormat("yy/MM/dd"), new DecimalFormat("###,###")));
 			// Create volumeSubplot
 			XYPlot volumeSubplot = new XYPlot(volumeDataset, null, volumeAxis, volRenderer);
-			volumeSubplot.setBackgroundPaint(Color.white);
+			volumeSubplot.setBackgroundPaint(Color.WHITE);
 			//
 			// Create k/d chart kdAxis
 			NumberAxis kdAxis = new NumberAxis("K9/D9");
@@ -217,12 +231,14 @@ public class ChartService {
 			volumeSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 			// if stockItem has Call Warrants
 			XYPlot cwtvSubplot = null;
+			XYPlot ictvSubplot = null;
 			if (!cwtsList.isEmpty()) {
+				//3rd subplot 'cwtvSubplot'
 				TimeSeriesCollection cwtvDataset = createCallWarrantTradeValueDataset();
 				TimeSeriesCollection cwatvDataset = createCallWarrantAvgTransValueDataset();
 				TimeSeriesCollection cwtDataset = createCallWarrantTransactionDataset();
 				// Create call warrant trade value chart cwtvAxis
-				NumberAxis cwtvAxis = new NumberAxis("交易额(認購)");
+				NumberAxis cwtvAxis = new NumberAxis("交易额-認購(百万)");
 				cwtvAxis.setAutoRangeIncludesZero(true);
 				// Set to no decimal
 				cwtvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
@@ -232,9 +248,9 @@ public class ChartService {
 				cwtvRenderer.setSeriesPaint(0, Color.ORANGE);
 				// Create call warrant trade value Subplot
 				cwtvSubplot = new XYPlot(cwtvDataset, null, cwtvAxis, cwtvRenderer);
-				cwtvSubplot.setBackgroundPaint(Color.white);
+				cwtvSubplot.setBackgroundPaint(Color.WHITE);
 				// 2nd axis for average transaction value
-				NumberAxis cwatvAxis = new NumberAxis("每筆均交易额(認購)");
+				NumberAxis cwatvAxis = new NumberAxis("每筆均交易额-認購(千)");
 				cwatvAxis.setAutoRangeIncludesZero(true);
 				cwtvSubplot.setRangeAxis(1, cwatvAxis);
 				cwtvSubplot.setRangeAxisLocation(1, AxisLocation.BOTTOM_OR_RIGHT);
@@ -249,7 +265,7 @@ public class ChartService {
 				cwatvRenderer.setSeriesPaint(0, Color.RED);
 				cwtvSubplot.setRenderer(1, cwatvRenderer);
 				// 3rd axis for call warrant transaction
-				NumberAxis cwtAxis = new NumberAxis("交易筆数(認購)");
+				NumberAxis cwtAxis = new NumberAxis("交易筆数-認購");
 				cwtAxis.setAutoRangeIncludesZero(true);
 				cwtvSubplot.setRangeAxis(2, cwtAxis);
 				cwtvSubplot.setRangeAxisLocation(2, AxisLocation.BOTTOM_OR_RIGHT);
@@ -264,15 +280,59 @@ public class ChartService {
 				cwtRenderer.setSeriesPaint(0, Color.GREEN);
 				cwtvSubplot.setRenderer(2, cwtRenderer);
 				cwtvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+				//
+				//4th subplot 'ictvSubplot'
+				TimeSeriesCollection ictvDataset = this.createInvestorCallTradeValueDataset();
+				TimeSeriesCollection icnvDataset = this.createInvestorCallNetValueDataset(); 
+				TimeSeriesCollection dsnbDataset = this.createDealerStockNetBuyDataset(); 
+				// 
+				NumberAxis ictvAxis = new NumberAxis("买卖金额-認購(百万)");
+				ictvAxis.setAutoRangeIncludesZero(true);
+				// Set to no decimal
+				ictvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
+				// 
+				XYBarRenderer ictvRenderer = new XYBarRenderer();
+				ictvRenderer.setShadowVisible(false);
+				ictvRenderer.setSeriesPaint(0, Color.CYAN);
+				ictvRenderer.setSeriesPaint(1, Color.PINK);
+				//  
+				ictvSubplot = new XYPlot(ictvDataset, null, ictvAxis, ictvRenderer);
+				ictvSubplot.setBackgroundPaint(Color.WHITE);
+				// 2nd dataset
+				ictvSubplot.setDataset(1, icnvDataset);
+				// 
+				XYLineAndShapeRenderer icnvRenderer = new XYLineAndShapeRenderer();
+				icnvRenderer.setDefaultShapesVisible(false);
+				icnvRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
+				icnvRenderer.setSeriesPaint(0, Color.BLUE);
+				ictvSubplot.setRenderer(1, icnvRenderer);
+				// 3rd dataset
+				NumberAxis dsnbAxis = new NumberAxis("自营商标的累积净买(百万)");
+				dsnbAxis.setAutoRangeIncludesZero(true);
+				ictvSubplot.setRangeAxis(1, dsnbAxis);
+				ictvSubplot.setRangeAxisLocation(1, AxisLocation.BOTTOM_OR_RIGHT);
+				// 3rd dataset
+				ictvSubplot.setDataset(2, dsnbDataset);
+				// map the 3rd dataset to 3rd axis
+				ictvSubplot.mapDatasetToRangeAxis(2, 1);
+				
+				// 
+				XYLineAndShapeRenderer dsnbRenderer = new XYLineAndShapeRenderer();
+				dsnbRenderer.setDefaultShapesVisible(false);
+				dsnbRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
+				dsnbRenderer.setSeriesPaint(0, Color.RED);
+				ictvSubplot.setRenderer(2, dsnbRenderer);
+				ictvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 			}
 			// if stockItem has Put Warrants
 			XYPlot pwtvSubplot = null;
+			XYPlot iptvSubplot = null;
 			if (!pwtsList.isEmpty()) {
 				TimeSeriesCollection pwtvDataset = createPutWarrantTradeValueDataset();
 				TimeSeriesCollection pwatvDataset = createPutWarrantAvgTransValueDataset();
 				TimeSeriesCollection pwtDataset = createPutWarrantTransactionDataset();
 				// Create put warrant trade value chart pwtvAxis
-				NumberAxis pwtvAxis = new NumberAxis("交易额(認售)");
+				NumberAxis pwtvAxis = new NumberAxis("交易额-認售(百万)");
 				pwtvAxis.setAutoRangeIncludesZero(true);
 				// Set to no decimal
 				pwtvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
@@ -283,9 +343,9 @@ public class ChartService {
 				if(cwtvSubplot!=null) pwtvRenderer.setSeriesVisibleInLegend(0, false);
 				// Create call warrant trade value Subplot
 				pwtvSubplot = new XYPlot(pwtvDataset, null, pwtvAxis, pwtvRenderer);
-				pwtvSubplot.setBackgroundPaint(Color.white);
+				pwtvSubplot.setBackgroundPaint(Color.WHITE);
 				// 2nd axis for average transaction value
-				NumberAxis pwatvAxis = new NumberAxis("每筆均交易额(認售)");
+				NumberAxis pwatvAxis = new NumberAxis("每筆均交易额-認售(千)");
 				pwatvAxis.setAutoRangeIncludesZero(true);
 				pwtvSubplot.setRangeAxis(1, pwatvAxis);
 				pwtvSubplot.setRangeAxisLocation(1, AxisLocation.BOTTOM_OR_RIGHT);
@@ -301,7 +361,7 @@ public class ChartService {
 				if(cwtvSubplot!=null) pwatvRenderer.setSeriesVisibleInLegend(0, false);
 				pwtvSubplot.setRenderer(1, pwatvRenderer);
 				// 3rd axis for call warrant transaction
-				NumberAxis pwtAxis = new NumberAxis("交易筆数(認售)");
+				NumberAxis pwtAxis = new NumberAxis("交易筆数-認售");
 				pwtAxis.setAutoRangeIncludesZero(true);
 				pwtvSubplot.setRangeAxis(2, pwtAxis);
 				pwtvSubplot.setRangeAxisLocation(2, AxisLocation.BOTTOM_OR_RIGHT);
@@ -317,6 +377,32 @@ public class ChartService {
 				if(cwtvSubplot!=null) pwtRenderer.setSeriesVisibleInLegend(0, false);
 				pwtvSubplot.setRenderer(2, pwtRenderer);
 				pwtvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+				//
+				//6th subplot 'iptvSubplot'
+				TimeSeriesCollection iptvDataset = this.createInvestorPutTradeValueDataset();
+				TimeSeriesCollection ipnvDataset = this.createInvestorPutNetValueDataset(); 
+				// 
+				NumberAxis iptvAxis = new NumberAxis("买卖金额-認售(百万)");
+				iptvAxis.setAutoRangeIncludesZero(true);
+				// Set to no decimal
+				iptvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
+				// 
+				XYBarRenderer iptvRenderer = new XYBarRenderer();
+				iptvRenderer.setShadowVisible(false);
+				iptvRenderer.setSeriesPaint(0, Color.CYAN);
+				iptvRenderer.setSeriesPaint(1, Color.PINK);
+				//  
+				iptvSubplot = new XYPlot(iptvDataset, null, iptvAxis, iptvRenderer);
+				iptvSubplot.setBackgroundPaint(Color.WHITE);
+				// 2nd dataset
+				iptvSubplot.setDataset(1, ipnvDataset); 
+				//
+				XYLineAndShapeRenderer ipnvRenderer = new XYLineAndShapeRenderer();
+				ipnvRenderer.setDefaultShapesVisible(false);
+				ipnvRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
+				ipnvRenderer.setSeriesPaint(0, Color.BLACK);
+				iptvSubplot.setRenderer(1, ipnvRenderer);
+				iptvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 			}
 			//
 			DateAxis dateAxis = new DateAxis("Date");
@@ -328,9 +414,11 @@ public class ChartService {
 			mainPlot.add(volumeSubplot, 1);
 			if (cwtvSubplot != null) {
 				mainPlot.add(cwtvSubplot,1);
+				mainPlot.add(ictvSubplot,1);
 			}
 			if (pwtvSubplot != null) {
 				mainPlot.add(pwtvSubplot,1);
+				mainPlot.add(iptvSubplot,1);
 			}
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("%s(%s)", stockItem.getName(), stockItem.getSymbol()),
@@ -361,11 +449,11 @@ public class ChartService {
 			for(StockItemData sid: sidList) {
 				 Double closePrice = sid.getStockPrice().getClose();
 				 if(closePrice>oldClosePrice) {
-					 pVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume());
+					 pVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume()/1000);
 				 } else if(closePrice<oldClosePrice) {
-					 nVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume());
+					 nVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume()/1000);
 				 } else {
-					 zVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume());
+					 zVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume()/1000);
 				 }
 				 oldClosePrice = closePrice;
 			}
@@ -429,7 +517,7 @@ public class ChartService {
 			TimeSeries series1 = new TimeSeries("交易额");
 			// add data
 			cwtsList.stream().forEach(cwts -> {
-				series1.add(new Day(cwts.getTradingDate()), cwts.getTradeValue());
+				series1.add(new Day(cwts.getTradingDate()), cwts.getTradeValue()/1000000);
 			});
 			// add data
 			cwtvDataset.addSeries(series1);
@@ -441,7 +529,7 @@ public class ChartService {
 			TimeSeries series1 = new TimeSeries("每筆均交易额");
 			// add data
 			cwtsList.stream().forEach(cwts -> {
-				series1.add(new Day(cwts.getTradingDate()), cwts.getAvgTransactionValue());
+				series1.add(new Day(cwts.getTradingDate()), cwts.getAvgTransactionValue()/1000);
 			});
 			// add data
 			cwatvDataset.addSeries(series1);
@@ -459,13 +547,55 @@ public class ChartService {
 			cwtDataset.addSeries(series1);
 			return cwtDataset;
 		}
+		
+		private TimeSeriesCollection createInvestorCallTradeValueDataset() {
+			TimeSeriesCollection ictvDataset = new TimeSeriesCollection();
+			TimeSeries series1 = new TimeSeries("散户买(認購)");
+			TimeSeries series2 = new TimeSeries("散户卖(認購)");
+			// add data
+			dtsList.stream().forEach(dts -> {
+				series1.add(new Day(dts.getTradingDate()), dts.getHedgeCallSell()/1000000);
+				series2.add(new Day(dts.getTradingDate()), -1*dts.getHedgeCallBuy()/1000000);
+			});
+			// add data
+			ictvDataset.addSeries(series1);
+			ictvDataset.addSeries(series2);
+			return ictvDataset;
+		}
 
+		private TimeSeriesCollection createInvestorCallNetValueDataset() {
+			TimeSeriesCollection icnvDataset = new TimeSeriesCollection();
+			TimeSeries series1 = new TimeSeries("散户净买(認購)"); 
+			// add data
+			dtsList.stream().forEach(dts -> {
+				series1.add(new Day(dts.getTradingDate()), -1*dts.getHedgeCallNet()/1000000);
+			});
+			// add data
+			icnvDataset.addSeries(series1); 
+			return icnvDataset;
+		}
+
+		private TimeSeriesCollection createDealerStockNetBuyDataset() {
+			TimeSeriesCollection dsnbDataset = new TimeSeriesCollection();
+			TimeSeries series1 = new TimeSeries("自营商标的累积净买"); 
+			// add data
+			double prevHedgeNetSum = 0.0;
+			for(DealerTradeSummary dts: dtsList) {
+				double newHedgeNetSum = prevHedgeNetSum+dts.getHedgeNet()/1000000;
+				series1.add(new Day(dts.getTradingDate()),  newHedgeNetSum);
+				prevHedgeNetSum = newHedgeNetSum;
+			} 
+			// add data
+			dsnbDataset.addSeries(series1); 
+			return dsnbDataset;
+		}
+		
 		private TimeSeriesCollection createPutWarrantTradeValueDataset() {
 			TimeSeriesCollection pwtvDataset = new TimeSeriesCollection();
 			TimeSeries series1 = new TimeSeries("交易额");
 			// add data
 			pwtsList.stream().forEach(pwts -> {
-				series1.add(new Day(pwts.getTradingDate()), pwts.getTradeValue());
+				series1.add(new Day(pwts.getTradingDate()), pwts.getTradeValue()/1000000);
 			});
 			// add data
 			pwtvDataset.addSeries(series1);
@@ -477,7 +607,7 @@ public class ChartService {
 			TimeSeries series1 = new TimeSeries("每筆均交易额");
 			// add data
 			pwtsList.stream().forEach(pwts -> {
-				series1.add(new Day(pwts.getTradingDate()), pwts.getAvgTransactionValue());
+				series1.add(new Day(pwts.getTradingDate()), pwts.getAvgTransactionValue()/1000);
 			});
 			// add data
 			pwatvDataset.addSeries(series1);
@@ -494,6 +624,33 @@ public class ChartService {
 			// add data
 			pwtDataset.addSeries(series1);
 			return pwtDataset;
+		}
+
+		private TimeSeriesCollection createInvestorPutTradeValueDataset() {
+			TimeSeriesCollection iptvDataset = new TimeSeriesCollection();
+			TimeSeries series1 = new TimeSeries("散户买(認售)");
+			TimeSeries series2 = new TimeSeries("散户卖(認售)");
+			// add data
+			dtsList.stream().forEach(dts -> {
+				series1.add(new Day(dts.getTradingDate()), dts.getHedgePutSell()/1000000);
+				series2.add(new Day(dts.getTradingDate()), -1*dts.getHedgePutBuy()/1000000);
+			});
+			// add data
+			iptvDataset.addSeries(series1);
+			iptvDataset.addSeries(series2);
+			return iptvDataset;
+		}
+
+		private TimeSeriesCollection createInvestorPutNetValueDataset() {
+			TimeSeriesCollection ipnvDataset = new TimeSeriesCollection();
+			TimeSeries series1 = new TimeSeries("散户净买(認售)"); 
+			// add data
+			dtsList.stream().forEach(dts -> {
+				series1.add(new Day(dts.getTradingDate()), -1*dts.getHedgePutNet()/1000000);
+			});
+			// add data
+			ipnvDataset.addSeries(series1); 
+			return ipnvDataset;
 		}
 
 	}
