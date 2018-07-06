@@ -21,25 +21,26 @@ import org.springframework.transaction.annotation.Transactional;
 import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockItemDAO;
-import com.javatican.stock.dao.StockTradeByTrustDAO;
+import com.javatican.stock.dao.StockTradeByForeignDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.model.StockItem;
-import com.javatican.stock.model.StockTradeByTrust;
+import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.util.StockUtils;
 
-@Service("stockTradeByTrustService")
+@Service("stockTradeByForeignService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
-public class StockTradeByTrustService {
+public class StockTradeByForeignService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_STOCK_TRADE_BY_TRUST_GET_URL = "http://www.tse.com.tw/fund/TWT44U?response=html&date=%s";
-
+	private static final String TWSE_STOCK_TRADE_BY_FOREIGN_GET_URL = "http://www.tse.com.tw/fund/TWT38U?response=html&date=%s";
+	private static String CALL_WARRANT_RE = "0[1-9][\\d]{4}";
+	private static String PUT_WARRANT_RE = "0[\\d]{4}P";
 	@Autowired
 	StockConfig stockConfig;
 
 	@Autowired
-	StockTradeByTrustDAO stockTradeByTrustDAO;
+	StockTradeByForeignDAO stockTradeByForeignDAO;
 
 	@Autowired
 	TradingDateDAO tradingDateDAO;
@@ -51,57 +52,63 @@ public class StockTradeByTrustService {
 	StockItemService stockItemService;
 
 	/*
-	 * update stock trade data for Trust (download and save the new available data)
+	 * update stock trade data for Foreign (download and save the new available
+	 * data)
 	 */
 	public void updateData() throws StockException {
-		Date latest = stockTradeByTrustDAO.getLatestTradingDate();
+		Date latest = stockTradeByForeignDAO.getLatestTradingDate();
 		List<TradingDate> tdList = tradingDateDAO.findAfter(latest);
 		downloadAndSave(tdList);
 	}
 
 	/*
-	 * manual downloads history stock trade data by Trust (only run once)
+	 * manual downloads history stock trade data by Foreign (only run once)
 	 */
-	private void prepareData() throws StockException {
-		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/05/01").get(),
-				StockUtils.stringToDate("2018/05/27").get());
+	public void prepareData() throws StockException {
+		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/04/27").get(),
+				StockUtils.stringToDate("2018/07/05").get());
 		downloadAndSave(tdList);
 
 	}
 
 	/*
-	 * download and save the stock trade data by Trust for a list of TradingDate
+	 * download and save the stock trade data by Foreign for a list of TradingDate
 	 * instances.
 	 */
 	private void downloadAndSave(List<TradingDate> tdList) throws StockException {
 		Map<String, StockItem> siMap = stockItemDAO.findAllAsMap();
-		List<StockTradeByTrust> result = new ArrayList<>();
+		List<StockTradeByForeign> result = new ArrayList<>();
+
 		for (TradingDate td : tdList) {
 			String dateString = StockUtils.dateToSimpleString(td.getDate());
-			logger.info("prepare trust data for date:" + dateString);
-
+			logger.info("prepare foreign data for date:" + dateString);
 			//
-			String strUrl = String.format(TWSE_STOCK_TRADE_BY_TRUST_GET_URL, dateString);
+			String strUrl = String.format(TWSE_STOCK_TRADE_BY_FOREIGN_GET_URL, dateString);
 			try (InputStream inStream = new URL(strUrl).openStream();) {
 				Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
 
 				Elements trs = doc.select("table > tbody > tr");
-				StockTradeByTrust stbt;
+				StockTradeByForeign stbf;
 				StockItem si = null;
 				for (Element tr : trs) {
 					Elements tds = tr.select("td");
-					stbt = new StockTradeByTrust(td.getDate());
-					stbt.setStockSymbol(tds.get(1).text());
-					stbt.setBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
-					stbt.setSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
-					stbt.setDiff(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
-					si = siMap.get(stbt.getStockSymbol());
-					if (si == null) {
-						si = stockItemService.downloadAndSaveStockProfile(stbt.getStockSymbol());
-						siMap.put(stbt.getStockSymbol(), si);
+					String itemSymbol = tds.get(1).text();
+					if (itemSymbol.matches(CALL_WARRANT_RE) || itemSymbol.matches(PUT_WARRANT_RE)) {
+						logger.info("The symbol: " + itemSymbol + " is not a stock item and is skipped!");
+						continue;
 					}
-					stbt.setStockItem(si);
-					result.add(stbt);
+					stbf = new StockTradeByForeign(td.getDate());
+					stbf.setStockSymbol(itemSymbol);
+					stbf.setBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+					stbf.setSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
+					stbf.setDiff(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+					si = siMap.get(stbf.getStockSymbol());
+					if (si == null) {
+						si = stockItemService.downloadAndSaveStockProfile(stbf.getStockSymbol());
+						siMap.put(stbf.getStockSymbol(), si);
+					}
+					stbf.setStockItem(si);
+					result.add(stbf);
 				}
 				try {
 					Thread.sleep(stockConfig.getSleepTime());
@@ -110,7 +117,8 @@ public class StockTradeByTrustService {
 			} catch (Exception ex) {
 				throw new StockException(ex);
 			}
+
 		}
-		stockTradeByTrustDAO.saveAll(result);
+		stockTradeByForeignDAO.saveAll(result);
 	}
 }

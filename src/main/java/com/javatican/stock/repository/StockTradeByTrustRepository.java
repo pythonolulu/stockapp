@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.StockTradeByTrust;
 
 public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByTrust, Long> {
@@ -25,4 +26,5 @@ public interface StockTradeByTrustRepository extends JpaRepository<StockTradeByT
 	@EntityGraph(value = "StockTradeByTrust.stockItem.stbt", type = EntityGraphType.LOAD)
 	List<StockTradeByTrust> findByTradingDate(Date tradingDate);
 
+	List<StockTradeByTrust> findByStockSymbolOrderByTradingDateAsc(String stockSymbol);
 }

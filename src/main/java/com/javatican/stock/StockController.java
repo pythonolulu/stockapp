@@ -29,6 +29,7 @@ import com.javatican.stock.service.DealerTradeSummaryService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
+import com.javatican.stock.service.StockTradeByForeignService;
 import com.javatican.stock.service.StockTradeByTrustService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
@@ -47,13 +48,15 @@ public class StockController {
 	@Autowired
 	private StockTradeByTrustService stockTradeByTrustService;
 	@Autowired
+	private StockTradeByForeignService stockTradeByForeignService;
+	@Autowired
 	private CallWarrantTradeSummaryService callWarrantTradeSummaryService;
 	@Autowired
 	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
 	@Autowired
 	private DealerTradeSummaryService dealerTradeSummaryService;
-    @Autowired
-    private ServletContext servletContext;
+//    @Autowired
+//    private ServletContext servletContext;
 
 	/*
 	 * only call once during initial setup
@@ -87,7 +90,7 @@ public class StockController {
 	}
 
 	/*
-	 * 2. handler for download and save any new stock trading data by Trust
+	 * 2.1. handler for download and save any new stock trading data by Trust
 	 */
 	@GetMapping("/updateTrustData")
 	public ResponseMessage updateTrustData() {
@@ -100,6 +103,23 @@ public class StockController {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
 			mes.setText(" Stock Trade Data by Trust fail to be updated.");
+		}
+		return mes;
+	}
+	/*
+	 * 2.2. handler for download and save any new stock trading data by Foreign Traders
+	 */
+	@GetMapping("/prepareForeignData")
+	public ResponseMessage updateForeignData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockTradeByForeignService.prepareData();
+			mes.setCategory("Success");
+			mes.setText("Stock Trade Data by foreign traders have been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText(" Stock Trade Data by foreign traders fail to be updated.");
 		}
 		return mes;
 	}

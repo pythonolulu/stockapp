@@ -42,6 +42,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "stock_item")
 @NamedEntityGraphs({ @NamedEntityGraph(name = "StockItem.stbt", attributeNodes = @NamedAttributeNode("stbt")),
+		@NamedEntityGraph(name = "StockItem.stbf", attributeNodes = @NamedAttributeNode("stbf")),
 		@NamedEntityGraph(name = "StockItem.cwts", attributeNodes = @NamedAttributeNode("cwts")),
 		@NamedEntityGraph(name = "StockItem.pwts", attributeNodes = @NamedAttributeNode("pwts")) })
 public class StockItem {
@@ -76,6 +77,10 @@ public class StockItem {
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
+	private Collection<StockTradeByForeign> stbf;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "stockItem")
 	private Collection<CallWarrantTradeSummary> cwts;
 
 	@JsonIgnore
@@ -86,10 +91,11 @@ public class StockItem {
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<DealerTradeSummary> dts;
 
-//	//TODO remove this
-//	@JsonIgnore
-//	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "stockItem")
-//	private StockItemLog stockItemLog;
+	// //TODO remove this
+	// @JsonIgnore
+	// @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy =
+	// "stockItem")
+	// private StockItemLog stockItemLog;
 
 	public StockItem() {
 		super();
@@ -103,10 +109,10 @@ public class StockItem {
 		this.capital = capital;
 		this.price = price;
 	}
-//
-//	public StockItemLog getStockItemLog() {
-//		return stockItemLog;
-//	}
+	//
+	// public StockItemLog getStockItemLog() {
+	// return stockItemLog;
+	// }
 
 	public String getSymbol() {
 		return symbol;
@@ -154,6 +160,10 @@ public class StockItem {
 
 	public Collection<StockTradeByTrust> getStbt() {
 		return stbt;
+	}
+
+	public Collection<StockTradeByForeign> getStbf() {
+		return stbf;
 	}
 
 	public Collection<CallWarrantTradeSummary> getCwts() {
