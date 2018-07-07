@@ -12,38 +12,19 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "stock_item_log")
 public class StockItemLog {
- 
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="stock_item_id", nullable=false)
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "stock_item_id", nullable = false)
 	private StockItem stockItem;
-	
-	public StockItem getStockItem() {
-		return stockItem;
-	}
-
-	public void setStockItem(StockItem stockItem) {
-		this.stockItem = stockItem;
-	}
-
-	public String getSymbol() {
-		return symbol;
-	}
-
-	public void setSymbol(String symbol) {
-		this.symbol = symbol;
-	}
-
-	public Long getId() {
-		return id;
-	}
 
 	@Column(name = "symbol", nullable = false, unique = true)
 	private String symbol;
@@ -66,8 +47,35 @@ public class StockItemLog {
 	@Column(name = "stats_date", nullable = true)
 	private Date statsDate;
 
+	@Column(name = "valid", nullable = true)
+	private boolean valid = true;
+
+	public StockItem getStockItem() {
+		return stockItem;
+	}
+
+	public void setStockItem(StockItem stockItem) {
+		this.stockItem = stockItem;
+	}
+
+	public String getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
 	public Date getChartDate() {
 		return chartDate;
+	}
+
+	public boolean isValid() {
+		return valid;
 	}
 
 	public void setChartDate(Date chartDate) {
@@ -89,6 +97,5 @@ public class StockItemLog {
 	public void setStatsDate(Date statsDate) {
 		this.statsDate = statsDate;
 	}
-
 
 }

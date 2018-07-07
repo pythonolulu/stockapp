@@ -70,6 +70,10 @@ public class StockItem {
 	 */
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
+	
+	@JsonIgnore
+	@Column(name = "valid", nullable = true)
+	private boolean valid = true;
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
@@ -177,5 +181,10 @@ public class StockItem {
 	public Collection<DealerTradeSummary> getDts() {
 		return dts;
 	}
+
+	public boolean isValid() {
+		return valid;
+	}
+
 
 }

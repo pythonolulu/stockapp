@@ -11,11 +11,15 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
 	StockItem findBySymbol(String symbol);
 
 	boolean existsBySymbol(String symbol);
-
+	
+	@Query("select s from StockItem s where s.price=?1 and s.valid=true")
 	List<StockItem> findByPrice(Double price);
 
-	@Query("select s.symbol from StockItem s")
+	@Query("select s.symbol from StockItem s where s.valid=true")
 	List<String> getAllSymbols();
+	
+	@Query("select s from StockItem s where s.valid=true")
+	List<StockItem> findAll();
 //
 //	@Query("select s from StockItem s join s.stockItemLog t ")
 //	List<StockItem> getAllStockItems();

@@ -64,7 +64,7 @@ public class StockTradeByForeignService {
 	/*
 	 * manual downloads history stock trade data by Foreign (only run once)
 	 */
-	public void prepareData() throws StockException {
+	private void prepareData() throws StockException {
 		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/04/27").get(),
 				StockUtils.stringToDate("2018/07/05").get());
 		downloadAndSave(tdList);
