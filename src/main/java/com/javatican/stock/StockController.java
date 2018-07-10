@@ -26,6 +26,7 @@ import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.ChartService;
 import com.javatican.stock.service.DealerTradeSummaryService;
+import com.javatican.stock.service.MarginService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
@@ -55,11 +56,14 @@ public class StockController {
 	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
 	@Autowired
 	private DealerTradeSummaryService dealerTradeSummaryService;
+	@Autowired
+	private MarginService marginService;
 	// @Autowired
 	// private ServletContext servletContext;
 
 	/*
-	 * 1. handler for downloading and saving any new trading date and trading values data
+	 * 1. handler for downloading and saving any new trading date and trading values
+	 * data
 	 */
 	@GetMapping("/updateData")
 	public ResponseMessage updateData() {
@@ -151,8 +155,8 @@ public class StockController {
 	}
 
 	/*
-	 * 4. handler for calculating average price for last month for missing price field
-	 * stock items.
+	 * 4. handler for calculating average price for last month for missing price
+	 * field stock items.
 	 */
 	@GetMapping("/updateMissingPriceField")
 	public ResponseMessage updateMissingStockItemPriceField() {
@@ -201,6 +205,7 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	/*
 	 * 6. handler for calculating K/D and SMA values for all existing stock items
 	 */
@@ -290,6 +295,38 @@ public class StockController {
 		return mes;
 
 	}
+
+	@GetMapping("/updateMarginData")
+	public ResponseMessage updateMarginData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			marginService.updateData();
+			mes.setCategory("Success");
+			mes.setText("Margin and sbl data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Margin and sbl data fails to be updated.");
+		}
+		return mes;
+
+	}
+
+	@GetMapping("/extractMarginData")
+	private ResponseMessage extractMarginData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			marginService.extractMarginData();
+			mes.setCategory("Success");
+			mes.setText("Margin and sbl data has been extracted.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Margin and sbl data fails to be extracted.");
+		}
+		return mes;
+
+	}
 	/*
 	 * only run at the beginning of new month.
 	 */
@@ -309,8 +346,8 @@ public class StockController {
 	}
 
 	/*
-	 * a. handler for calculating the top 30 stocks traded by Trust for the specified
-	 * trading date.
+	 * a. handler for calculating the top 30 stocks traded by Trust for the
+	 * specified trading date.
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
 	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
@@ -343,8 +380,8 @@ public class StockController {
 	}
 
 	/*
-	 * b. handler for calculating the top 50 stock performers for the specified trading
-	 * date.
+	 * b. handler for calculating the top 50 stock performers for the specified
+	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top50")
 	public ModelAndView top50(@PathVariable String tradingDate) {
@@ -377,8 +414,8 @@ public class StockController {
 	}
 
 	/*
-	 * c. handler for calculating the bottom 50 stock performers for the specified trading
-	 * date.
+	 * c. handler for calculating the bottom 50 stock performers for the specified
+	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/bottom50")
 	public ModelAndView bottom50(@PathVariable String tradingDate) {
@@ -412,7 +449,6 @@ public class StockController {
 		return mav;
 	}
 
-
 	@GetMapping("/prepareDealerData")
 	private ResponseMessage prepareDealerData() {
 		ResponseMessage mes = new ResponseMessage();
@@ -429,37 +465,38 @@ public class StockController {
 
 	}
 
-	@GetMapping("/prepareCallWarrantData")
-	private ResponseMessage prepareCallWarrantData() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			callWarrantTradeSummaryService.prepareData();
-			mes.setCategory("Success");
-			mes.setText("Call warrant trading data has been updated.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("Call warrant trading data fails to be updated.");
-		}
-		return mes;
+//
+//	@GetMapping("/prepareCallWarrantData")
+//	private ResponseMessage prepareCallWarrantData() {
+//		ResponseMessage mes = new ResponseMessage();
+//		try {
+//			callWarrantTradeSummaryService.prepareData();
+//			mes.setCategory("Success");
+//			mes.setText("Call warrant trading data has been updated.");
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//			mes.setCategory("Fail");
+//			mes.setText("Call warrant trading data fails to be updated.");
+//		}
+//		return mes;
+//
+//	}
 
-	}
-
-	@GetMapping("/preparePutWarrantData")
-	private ResponseMessage preparePutWarrantData() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			putWarrantTradeSummaryService.prepareData();
-			mes.setCategory("Success");
-			mes.setText("Put warrant trading data has been updated.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("Put warrant trading data fails to be updated.");
-		}
-		return mes;
-
-	}
+//	@GetMapping("/preparePutWarrantData")
+//	private ResponseMessage preparePutWarrantData() {
+//		ResponseMessage mes = new ResponseMessage();
+//		try {
+//			putWarrantTradeSummaryService.prepareData();
+//			mes.setCategory("Success");
+//			mes.setText("Put warrant trading data has been updated.");
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//			mes.setCategory("Fail");
+//			mes.setText("Put warrant trading data fails to be updated.");
+//		}
+//		return mes;
+//
+//	}
 
 	// @GetMapping("/{stockSymbol}/getChart")
 	// public Resource getChart(@PathVariable String stockSymbol) {

@@ -69,7 +69,7 @@ public class InvestorPutTradeValuePlot implements JPlot {
 		ipnvRenderer.setSeriesPaint(1, Color.BLACK);
 		ipnvRenderer.setSeriesLinesVisible(1, false);
 		ipnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
+		Shape tri = ShapeUtils.createDownTriangle(1.5F);
 		ipnvRenderer.setSeriesShape(1, tri);
 		iptvSubplot.setRenderer(1, ipnvRenderer);
 		iptvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);

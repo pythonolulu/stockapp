@@ -72,7 +72,7 @@ public class InvestorCallTradeValuePlot implements JPlot {
 		icnvRenderer.setSeriesPaint(1, Color.BLACK);
 		icnvRenderer.setSeriesLinesVisible(1, false);
 		icnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
+		Shape tri = ShapeUtils.createDownTriangle(1.5F);
 		icnvRenderer.setSeriesShape(1, tri);
 		ictvSubplot.setRenderer(1, icnvRenderer);
 		// 3rd dataset

@@ -8,10 +8,14 @@ import java.util.List;
 
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.date.SerialDate;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.Range;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -94,6 +98,15 @@ public class ChartService {
 	@Autowired
 	@Qualifier("ttvPlot")
 	private JPlot ttvPlot;
+	@Autowired
+	@Qualifier("mbPlot")
+	private JPlot mbPlot;
+	@Autowired
+	@Qualifier("mssPlot")
+	private JPlot mssPlot;
+	@Autowired
+	@Qualifier("sblPlot")
+	private JPlot sblPlot;
 
 	public void createGraphs(Collection<StockItem> siList) {
 		siList.stream().forEach(stockItem -> createGraph(stockItem));
@@ -126,9 +139,6 @@ public class ChartService {
 	public class StockChartUtil {
 		private StockItem stockItem;
 		private StockItemLog stockItemLog;
-		private List<StockItemData> sidList;
-		private List<StockTradeByForeign> stbfList;
-		private List<StockTradeByTrust> stbtList;
 
 		public StockChartUtil(StockItem stockItem) {
 			this.stockItem = stockItem;
@@ -157,7 +167,7 @@ public class ChartService {
 			Resource resource = resourceLoader
 					.getResource(String.format(STOCK_CHART_RESOURCE_FILE_PATH, stockItem.getSymbol()));
 			try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
-				ChartUtils.writeChartAsPNG(st, chart, 1920, 1080);
+				ChartUtils.writeChartAsPNG(st, chart, 1600, 1800);
 				logger.info("Finish creating chart for " + stockItem.getSymbol() + " using latest data dated: "
 						+ stockItemLog.getPriceDate());
 			} catch (Exception ex) {
@@ -186,33 +196,73 @@ public class ChartService {
 			XYPlot ftvSubplot = (XYPlot) ftvPlot.getPlot(stockItem);
 			XYPlot ttvSubplot = (XYPlot) ttvPlot.getPlot(stockItem);
 			//
+			XYPlot mbSubplot = (XYPlot) mbPlot.getPlot(stockItem);
+			XYPlot mssSubplot = (XYPlot) mssPlot.getPlot(stockItem);
+			XYPlot sblSubplot = (XYPlot) sblPlot.getPlot(stockItem);
+			//
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
 			// dateAxis.setTickMarkPosition(DateTickMarkPosition.MIDDLE);
 			// Create mainPlot
 			CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot(dateAxis);
 			mainPlot.setGap(5.0);
-			mainPlot.add(candlestickSubplot, 5);
-			mainPlot.add(volumeSubplot, 2);
-			if (ftvSubplot != null)
-				mainPlot.add(ftvSubplot, 2);
-			if (ttvSubplot != null)
-				mainPlot.add(ttvSubplot, 2);
-			if (cwtvSubplot != null)
-				mainPlot.add(cwtvSubplot, 2);
-			if (ictvSubplot != null)
-				mainPlot.add(ictvSubplot, 2);
+			// annotation x position
+			double x = candlestickSubplot.getDataset(0).getX(0, 0).doubleValue();
 			//
-			if (pwtvSubplot != null)
+			mainPlot.add(candlestickSubplot, 6);
+			mainPlot.add(volumeSubplot, 2);
+			if (ftvSubplot != null) {
+				mainPlot.add(ftvSubplot, 2);
+				showAnnotation(ftvSubplot, x, "外资买卖");
+			}
+			if (ttvSubplot != null) {
+				mainPlot.add(ttvSubplot, 2);
+				showAnnotation(ttvSubplot, x, "投信买卖");
+			}
+			if (mbSubplot != null) {
+				mainPlot.add(mbSubplot, 2);
+				showAnnotation(mbSubplot, x, "融资馀额");
+			}
+			if (mssSubplot != null) {
+				mainPlot.add(mssSubplot, 2);
+				showAnnotation(mssSubplot, x, "融券馀额");
+			}
+			if (sblSubplot != null) {
+				mainPlot.add(sblSubplot, 2);
+				showAnnotation(sblSubplot, x, "借券馀额");
+			}
+			if (cwtvSubplot != null) {
+				mainPlot.add(cwtvSubplot, 2);
+				showAnnotation(cwtvSubplot, x, "認購交易");
+			}
+			if (ictvSubplot != null) {
+				mainPlot.add(ictvSubplot, 2);
+				showAnnotation(ictvSubplot, x, "認購买卖");
+			}
+			//
+			if (pwtvSubplot != null) {
 				mainPlot.add(pwtvSubplot, 2);
-			if (iptvSubplot != null)
+				showAnnotation(pwtvSubplot, x, "認售交易");
+			}
+			if (iptvSubplot != null) {
 				mainPlot.add(iptvSubplot, 2);
+				showAnnotation(iptvSubplot, x, "認售买卖");
+			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("%s(%s)", stockItem.getName(), stockItem.getSymbol()),
 					JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
 			// chart.removeLegend();
 			return chart;
+		}
+
+		private void showAnnotation(XYPlot p, double x, String text) {
+			Range r = p.getRangeAxis(0).getRange();
+			double y = (r.getLowerBound() + r.getUpperBound()) / 2;
+			final XYTextAnnotation annotation = new XYTextAnnotation(text, x, y);
+			annotation.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 24));
+			
+			p.addAnnotation(annotation);
 		}
 
 	}

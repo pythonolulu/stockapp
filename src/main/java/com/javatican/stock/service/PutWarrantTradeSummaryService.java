@@ -68,9 +68,9 @@ public class PutWarrantTradeSummaryService {
 	/*
 	 * manual downloads history warrant trade data (only run once)
 	 */
-	public void prepareData() throws StockException {
-		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/06/28").get(),
-				StockUtils.stringToDate("2018/06/28").get());
+	private void prepareData() throws StockException {
+		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/01/01").get(),
+				StockUtils.stringToDate("2018/07/06").get());
 		// downloadAndSave(tdList);
 		downloadAndSaveWT(tdList);
 
@@ -188,6 +188,7 @@ public class PutWarrantTradeSummaryService {
 						WarrantTrade wt = new WarrantTrade();
 						wt.setWarrantSymbol(tds.get(1).text());
 						wt.setAvgPrice(StockUtils.roundDoubleDp2(tradeValue / volume));
+						wt.setTradeValue(StockUtils.roundDoubleDp0(tradeValue));
 						wt.setStockSymbol(symbol);
 						wtList.add(wt);
 					}

@@ -23,7 +23,7 @@ import com.javatican.stock.util.StockUtils;
 
 @Repository("stockPriceChangeDAO")
 public class StockPriceChangeDAO {
-	private static final Logger logger = LoggerFactory.getLogger(StockPriceChangeDAO.class);
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 	private static final String TOP_RESOURCE_FILE_PATH = "file:./download/change/%s_top.json";

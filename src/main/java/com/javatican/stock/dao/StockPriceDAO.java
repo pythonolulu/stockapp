@@ -47,9 +47,9 @@ public class StockPriceDAO {
 	public StockPriceDAO() {
 	}
 
-	public List<String> existingSymbols() throws StockException {
+	private List<String> existingSymbols() throws StockException {
 		try {
-			Resource[] resources = resourcePatternResolver.getResources("file:./download/*.json");
+			Resource[] resources = resourcePatternResolver.getResources("file:./download/price/*.json");
 			List<String> symbols = new ArrayList<>();
 			for (Resource r : resources) {
 				String filename = r.getFilename();
@@ -164,7 +164,7 @@ public class StockPriceDAO {
 	 * return List of StockPrice if the latest date for the stock price data is
 	 * before the specified date otherwise return null
 	 */
-	public List<StockPrice> getExistingPriceDataIfNewDataAvailable(String stockSymbol, Date date)
+	private List<StockPrice> getExistingPriceDataIfNewDataAvailable(String stockSymbol, Date date)
 			throws StockException {
 		List<StockPrice> cList = load(stockSymbol);
 		// assuming the price data is sorted by date ascending
