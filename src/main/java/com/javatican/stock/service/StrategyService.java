@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockException;
+import com.javatican.stock.dao.CallWarrantSelectStrategy1DAO;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.TradingDateDAO;
@@ -37,6 +38,8 @@ public class StrategyService {
 	CallWarrantTradeSummaryDAO callWarrantTradeSummaryDAO;
 	@Autowired
 	WarrantTradeDAO warrantTradeDAO;
+	@Autowired
+	CallWarrantSelectStrategy1DAO callWarrantSelectStrategy1DAO;
 
 	/*
 	 * Buy a call warrant(with the largest trade value for the specific target
@@ -108,6 +111,7 @@ public class StrategyService {
 		Map<String, Double> upPercentAccMap = new TreeMap<>();
 		for (String symbol : statsMap.keySet()) {
 			Map<String, Double> upPercentMap = statsMap.get(symbol);
+			callWarrantSelectStrategy1DAO.save(symbol, upPercentMap);
 			long size = upPercentMap.size();
 			long up_size = upPercentMap.values().stream().filter(value -> value > 0.0).count();
 			double acc_percent = upPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);

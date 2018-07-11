@@ -51,7 +51,8 @@ import com.javatican.stock.util.StockUtils;
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class ChartService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String STOCK_CHART_RESOURCE_FILE_PATH = "file:./charts/%s.png";
+	private static final String STOCK_CHART_MAIN_RESOURCE_FILE_PATH = "file:./charts/%s.png";
+	private static final String STOCK_CHART_STRATEGY_RESOURCE_FILE_PATH = "file:./charts/strategy/%s.png";
 
 	@Autowired
 	CallWarrantTradeSummaryDAO callWarrantTradeSummaryDAO;
@@ -107,6 +108,9 @@ public class ChartService {
 	@Autowired
 	@Qualifier("sblPlot")
 	private JPlot sblPlot;
+	@Autowired
+	@Qualifier("cwss1Plot")
+	private JPlot cwss1Plot;
 
 	public void createGraphs(Collection<StockItem> siList) {
 		siList.stream().forEach(stockItem -> createGraph(stockItem));
@@ -165,14 +169,54 @@ public class ChartService {
 		private void outputToPNG() throws StockException {
 			JFreeChart chart = createChart();
 			Resource resource = resourceLoader
-					.getResource(String.format(STOCK_CHART_RESOURCE_FILE_PATH, stockItem.getSymbol()));
+					.getResource(String.format(STOCK_CHART_MAIN_RESOURCE_FILE_PATH, stockItem.getSymbol()));
 			try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 				ChartUtils.writeChartAsPNG(st, chart, 1600, 1800);
-				logger.info("Finish creating chart for " + stockItem.getSymbol() + " using latest data dated: "
+				logger.info("Finish creating main chart for " + stockItem.getSymbol() + " using latest data dated: "
 						+ stockItemLog.getPriceDate());
 			} catch (Exception ex) {
 				throw new StockException(ex);
 			}
+			// Resource resource = resourceLoader
+			chart = createStrategyChart();
+			resource = resourceLoader
+					.getResource(String.format(STOCK_CHART_STRATEGY_RESOURCE_FILE_PATH, stockItem.getSymbol()));
+			try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
+				ChartUtils.writeChartAsPNG(st, chart, 1600, 600);
+				logger.info("Finish creating strategy chart for " + stockItem.getSymbol() + " using latest data dated: "
+						+ stockItemLog.getPriceDate());
+			} catch (Exception ex) {
+				throw new StockException(ex);
+			}
+		}
+
+		private JFreeChart createStrategyChart() throws StockException {
+			XYPlot candlestickSubplot = (XYPlot) pricePlot.getPlot(stockItem);
+			XYPlot volumeSubplot = (XYPlot) volumePlot.getPlot(stockItem);
+			XYPlot cwss1Subplot = (XYPlot) cwss1Plot.getPlot(stockItem);
+			 
+			DateAxis dateAxis = new DateAxis("Date");
+			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
+			// dateAxis.setTickMarkPosition(DateTickMarkPosition.MIDDLE);
+			// Create mainPlot
+			CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot(dateAxis);
+			mainPlot.setGap(5.0);
+			// annotation x position
+			//double x = candlestickSubplot.getDataset(0).getX(0, 0).doubleValue();
+			//
+			mainPlot.add(candlestickSubplot, 6);
+			mainPlot.add(volumeSubplot, 2);
+			
+			if (cwss1Subplot != null) {
+				mainPlot.add(cwss1Subplot, 2);
+				//showAnnotation(cwss1Subplot, x, "CallWarrantSelectStragegy1");
+			}
+			//
+			mainPlot.setOrientation(PlotOrientation.VERTICAL);
+			JFreeChart chart = new JFreeChart(String.format("%s(%s)", stockItem.getName(), stockItem.getSymbol()),
+					JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
+			// chart.removeLegend();
+			return chart;
 		}
 
 		private JFreeChart createChart() throws StockException {
@@ -261,7 +305,7 @@ public class ChartService {
 			double y = (r.getLowerBound() + r.getUpperBound()) / 2;
 			final XYTextAnnotation annotation = new XYTextAnnotation(text, x, y);
 			annotation.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 24));
-			
+
 			p.addAnnotation(annotation);
 		}
 
