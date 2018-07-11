@@ -364,7 +364,7 @@ public class StockItemService {
 
 	public void updatePriceDataForAllImproved() throws StockException {
 		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
-		List<Date> tdList = tradingDateDAO.findLatestNTradingDate(2);
+		List<Date> tdList = tradingDateDAO.findLatestNTradingDateDesc(2);
 		Date latestTradingDate = tdList.get(0);
 		Date penultimateTradingDate = tdList.get(1);
 		//

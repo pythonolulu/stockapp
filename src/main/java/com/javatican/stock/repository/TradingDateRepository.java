@@ -13,7 +13,7 @@ public interface TradingDateRepository extends JpaRepository<TradingDate, Long> 
 	TradingDate findTopByOrderByDateDesc();
 	
 	@Query("select t.date from TradingDate t order by t.date desc ")
-	List<Date> findLatestNTradingDate(Pageable pageable);
+	List<Date> findLatestNTradingDateDesc(Pageable pageable);
 
 	boolean existsByDate(Date date);
 

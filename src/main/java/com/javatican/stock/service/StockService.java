@@ -19,7 +19,6 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,10 +73,11 @@ public class StockService {
 	@Autowired
 	StockItemService stockItemService;
 	@Autowired
-	private ResourceLoader resourceLoader;
-	@Autowired
 	StockItemHelper stockItemHelper;
 
+	public long tradingDateCount()  {
+		return tradingDateDAO.count();
+	}
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
 	 * investors. The download contains the data for the current month, so
@@ -214,8 +214,8 @@ public class StockService {
 	 * }).limit(30).collect(Collectors.toList()); return stbtList; }
 	 */
 
-	public List<Date> getLatestNTradingDate(int dateLength) {
-		return tradingDateDAO.findLatestNTradingDate(dateLength);
+	public List<Date> getLatestNTradingDateDesc(int dateLength) {
+		return tradingDateDAO.findLatestNTradingDateDesc(dateLength);
 	}
 
 	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
@@ -234,7 +234,7 @@ public class StockService {
 			return -1 * Double.compare(amt1, amt2);
 		}).limit(30).map(stbt -> stbt.getStockItem()).collect(Collectors.toList());
 		// 3. query the latest 10 trading dates
-		List<Date> dList = tradingDateDAO.findLatestNTradingDate(dateLength);
+		List<Date> dList = tradingDateDAO.findLatestNTradingDateDesc(dateLength);
 		// 4. map object to return to caller
 		// key is the stockItem
 		// value is a sub-map object with key of trading date and value of

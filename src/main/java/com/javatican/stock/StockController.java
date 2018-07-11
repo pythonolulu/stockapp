@@ -32,6 +32,7 @@ import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StockTradeByForeignService;
 import com.javatican.stock.service.StockTradeByTrustService;
+import com.javatican.stock.service.StrategyService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -58,6 +59,8 @@ public class StockController {
 	private DealerTradeSummaryService dealerTradeSummaryService;
 	@Autowired
 	private MarginService marginService;
+	@Autowired
+	private StrategyService strategyService;
 	// @Autowired
 	// private ServletContext servletContext;
 
@@ -361,7 +364,7 @@ public class StockController {
 		// create stock charts
 		chartService.createGraphs(dataMap.keySet());
 		// also return trading date list
-		List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+		List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 		List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
 				.collect(Collectors.toList());
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
@@ -390,7 +393,7 @@ public class StockController {
 		ModelAndView mav;
 		try {
 			List<StockPriceChange> spcList = stockService.loadTop(date);
-			List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+			List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 			List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
 					.collect(Collectors.toList());
 			mav = new ModelAndView("stock/top50");
@@ -425,7 +428,7 @@ public class StockController {
 		try {
 			List<StockPriceChange> spcList = stockService.loadBottom(date);
 
-			List<Date> dateList = stockService.getLatestNTradingDate(dateLength);
+			List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 			List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
 					.collect(Collectors.toList());
 			//
@@ -524,4 +527,21 @@ public class StockController {
 	// }
 	// return mes;
 	// }
+	
+
+	@GetMapping("/callWarrantSelectStrategy1")
+	private ResponseMessage callWarrantSelectStrategy1() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService.callWarrantSelectStrategy1(3, (int) stockService.tradingDateCount());
+			mes.setCategory("Success");
+			mes.setText("call Warrant Select Strategy data has been calculated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("call Warrant Select Strategy data has failed to be calculated.");
+		}
+		return mes;
+
+	}
 }

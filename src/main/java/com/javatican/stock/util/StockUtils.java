@@ -22,14 +22,17 @@ public class StockUtils {
 	private static final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 	private static final SimpleDateFormat format2 = new SimpleDateFormat("yyyy/MM/dd");
 	private static final String FOUR_DEC_DOUBLE_FORMAT = "##.0000";
+	private static final String ONE_DEC_DOUBLE_FORMAT = "##.0";
 	private static final String TWO_DEC_DOUBLE_FORMAT = "##.00";
 	private static final String ZERO_DEC_DOUBLE_FORMAT = "##.";
 
 	/**
 	 * Round double.
 	 *
-	 * @param value the value
-	 * @param format the format
+	 * @param value
+	 *            the value
+	 * @param format
+	 *            the format
 	 * @return the double
 	 */
 	public static double roundDoubleDp4(double value) {
@@ -41,10 +44,17 @@ public class StockUtils {
 		DecimalFormat df = new DecimalFormat(TWO_DEC_DOUBLE_FORMAT);
 		return Double.valueOf(df.format(value));
 	}
+	
+	public static double roundDoubleDp1(double value) {
+		DecimalFormat df = new DecimalFormat(ONE_DEC_DOUBLE_FORMAT);
+		return Double.valueOf(df.format(value));
+	}
+
 	public static double roundDoubleDp0(double value) {
 		DecimalFormat df = new DecimalFormat(ZERO_DEC_DOUBLE_FORMAT);
 		return Double.valueOf(df.format(value));
 	}
+
 	/*
 	 * format the current date as a string of '20180101' format
 	 */
@@ -52,6 +62,7 @@ public class StockUtils {
 		Calendar cal = Calendar.getInstance();
 		return format.format(cal.getTime());
 	}
+
 	/*
 	 * parse a date string of '2018/01/01' format
 	 */
@@ -62,6 +73,7 @@ public class StockUtils {
 			return Optional.empty();
 		}
 	}
+
 	/*
 	 * parse a date string of '20180101' format
 	 */
@@ -72,18 +84,21 @@ public class StockUtils {
 			return Optional.empty();
 		}
 	}
+
 	/*
 	 * format a date object as '20180101' -like string
 	 */
 	public static String dateToSimpleString(Date date) {
 		return format.format(date);
 	}
+
 	/*
 	 * format a date object as '2018/01/01' -like string
 	 */
 	public static String dateToStringSeparatedBySlash(Date date) {
 		return format2.format(date);
 	}
+
 	/*
 	 * write the parsed document into a file
 	 */
@@ -105,6 +120,7 @@ public class StockUtils {
 	public static String removeCommaInNumber(String number) {
 		return number.replace(",", "");
 	}
+
 	/*
 	 * return the first day of the current month as string
 	 */
@@ -113,37 +129,40 @@ public class StockUtils {
 		cal.set(Calendar.DAY_OF_MONTH, 1);
 		return format.format(cal.getTime());
 	}
+
 	/*
 	 * calculate the first day and last day of the last month
 	 */
-	public static Pair<Date, Date> getFirstAndLastDayOfLastMonth(){
-		Calendar cal = Calendar.getInstance(); 
+	public static Pair<Date, Date> getFirstAndLastDayOfLastMonth() {
+		Calendar cal = Calendar.getInstance();
 		int currentYear = cal.get(Calendar.YEAR);
 		int currentMonth = cal.get(Calendar.MONTH);
-		//first day of this month
+		// first day of this month
 		cal.set(currentYear, currentMonth, 1);
-		//last day of previous month
+		// last day of previous month
 		cal.add(Calendar.DAY_OF_MONTH, -1);
 		Date second = cal.getTime();
-		//first day of previous month
+		// first day of previous month
 		cal.set(Calendar.DAY_OF_MONTH, 1);
 		Date first = cal.getTime();
 		return Pair.with(first, second);
 	}
+
 	/*
-	 * calculate the date strings for the first day of each month within past 6 months period.
+	 * calculate the date strings for the first day of each month within past 6
+	 * months period.
 	 */
-	public static List<String> calculateDateStringPastSixMonth(){
+	public static List<String> calculateDateStringPastSixMonth() {
 		List<String> result = new ArrayList<>();
-		Calendar cal = Calendar.getInstance(); 
+		Calendar cal = Calendar.getInstance();
 		int currentYear = cal.get(Calendar.YEAR);
 		int currentMonth = cal.get(Calendar.MONTH);
 		int day = 1;
-		for(int i=5; i>=0; i--) {
-			int month=currentMonth-i;
+		for (int i = 5; i >= 0; i--) {
+			int month = currentMonth - i;
 			int year = currentYear;
-			if(month<0) {
-				month+=12;
+			if (month < 0) {
+				month += 12;
 				year--;
 			}
 			cal.set(year, month, day);
@@ -152,4 +171,23 @@ public class StockUtils {
 		return result;
 	}
 
+	public static Date getNextNTradingDate(Date currentDate, int n, List<Date> dateList) {
+		if (dateList == null || dateList.isEmpty())
+			return null;
+		int last_index = dateList.size() - 1;
+		int current_index = dateList.indexOf(currentDate);
+		if (current_index < 0)
+			return null;
+		int target_index = current_index + n;
+		if (target_index > last_index)
+			return null;
+		return dateList.get(target_index);
+	}
+
+	public static String getNextNTradingDate(String currentDateStr, int n, List<Date> dateList) {
+		Date currentDate = StockUtils.stringSimpleToDate(currentDateStr).get();
+		Date targetDate = getNextNTradingDate(currentDate, n, dateList);
+		if(targetDate==null) return null;
+		else return StockUtils.dateToSimpleString(targetDate);
+	}
 }

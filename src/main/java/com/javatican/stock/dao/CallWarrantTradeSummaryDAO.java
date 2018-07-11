@@ -3,6 +3,8 @@ package com.javatican.stock.dao;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -41,6 +43,13 @@ public class CallWarrantTradeSummaryDAO {
 
 	public List<String> getStockSymbolsWithCallWarrant() {
 		return callWarrantTradeSummaryRepository.getStockSymbolsWithCallWarrant();
+	}
+
+	public Map<String, StockItem> getStockItemsWithCallWarrant() {
+		List<StockItem> siList = callWarrantTradeSummaryRepository.getStockItemsWithCallWarrant();
+		Map siMap = new TreeMap<>();
+		siList.stream().forEach(si->siMap.put(si.getSymbol(),si));
+		return siMap;
 	}
 
 }

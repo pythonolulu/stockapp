@@ -2,6 +2,7 @@ package com.javatican.stock.dao;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,9 @@ public class TradingDateDAO {
 	@Autowired
 	TradingDateRepository tradingDateRepository;
 
+	public long count() {
+		return tradingDateRepository.count();
+	}
 	public void save(TradingDate tradingDate) {
 		tradingDateRepository.save(tradingDate);
 	}
@@ -42,11 +46,16 @@ public class TradingDateDAO {
 		return tradingDateRepository.findTopByOrderByDateDesc().getDate();
 	}
 	
-	public List<Date> findLatestNTradingDate(int length){
+	public List<Date> findLatestNTradingDateDesc(int length){
 		//PageRequest constructor has been deprecated, and use of() method.
 		Pageable pageable = PageRequest.of(0, length);
-		return tradingDateRepository.findLatestNTradingDate(pageable);
-		
+		return tradingDateRepository.findLatestNTradingDateDesc(pageable);
+	}
+	public List<Date> findLatestNTradingDateAsc(int length){
+		//PageRequest constructor has been deprecated, and use of() method.
+		Pageable pageable = PageRequest.of(0, length);
+		List<Date> dateList = tradingDateRepository.findLatestNTradingDateDesc(pageable);
+		return dateList.stream().sorted().collect(Collectors.toList());
 	}
  
 }
