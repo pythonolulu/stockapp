@@ -47,7 +47,7 @@ public class CallWarrantTradeSummaryDAO {
 
 	public Map<String, StockItem> getStockItemsWithCallWarrant() {
 		List<StockItem> siList = callWarrantTradeSummaryRepository.getStockItemsWithCallWarrant();
-		Map siMap = new TreeMap<>();
+		Map<String,StockItem> siMap = new TreeMap<>();
 		siList.stream().forEach(si->siMap.put(si.getSymbol(),si));
 		return siMap;
 	}

@@ -11,9 +11,12 @@ import com.javatican.stock.model.TradingDate;
 
 public interface TradingDateRepository extends JpaRepository<TradingDate, Long> {
 	TradingDate findTopByOrderByDateDesc();
-	
+
 	@Query("select t.date from TradingDate t order by t.date desc ")
 	List<Date> findLatestNTradingDateDesc(Pageable pageable);
+	
+	@Query("select t.date from TradingDate t order by t.date asc ")
+	List<Date> findAllTradingDate();
 
 	boolean existsByDate(Date date);
 

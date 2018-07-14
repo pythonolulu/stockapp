@@ -2,8 +2,10 @@ package com.javatican.stock;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -15,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.servlet.ModelAndView;
@@ -330,6 +333,7 @@ public class StockController {
 		return mes;
 
 	}
+
 	/*
 	 * only run at the beginning of new month.
 	 */
@@ -468,38 +472,38 @@ public class StockController {
 
 	}
 
-//
-//	@GetMapping("/prepareCallWarrantData")
-//	private ResponseMessage prepareCallWarrantData() {
-//		ResponseMessage mes = new ResponseMessage();
-//		try {
-//			callWarrantTradeSummaryService.prepareData();
-//			mes.setCategory("Success");
-//			mes.setText("Call warrant trading data has been updated.");
-//		} catch (Exception ex) {
-//			ex.printStackTrace();
-//			mes.setCategory("Fail");
-//			mes.setText("Call warrant trading data fails to be updated.");
-//		}
-//		return mes;
-//
-//	}
+	//
+	// @GetMapping("/prepareCallWarrantData")
+	// private ResponseMessage prepareCallWarrantData() {
+	// ResponseMessage mes = new ResponseMessage();
+	// try {
+	// callWarrantTradeSummaryService.prepareData();
+	// mes.setCategory("Success");
+	// mes.setText("Call warrant trading data has been updated.");
+	// } catch (Exception ex) {
+	// ex.printStackTrace();
+	// mes.setCategory("Fail");
+	// mes.setText("Call warrant trading data fails to be updated.");
+	// }
+	// return mes;
+	//
+	// }
 
-//	@GetMapping("/preparePutWarrantData")
-//	private ResponseMessage preparePutWarrantData() {
-//		ResponseMessage mes = new ResponseMessage();
-//		try {
-//			putWarrantTradeSummaryService.prepareData();
-//			mes.setCategory("Success");
-//			mes.setText("Put warrant trading data has been updated.");
-//		} catch (Exception ex) {
-//			ex.printStackTrace();
-//			mes.setCategory("Fail");
-//			mes.setText("Put warrant trading data fails to be updated.");
-//		}
-//		return mes;
-//
-//	}
+	// @GetMapping("/preparePutWarrantData")
+	// private ResponseMessage preparePutWarrantData() {
+	// ResponseMessage mes = new ResponseMessage();
+	// try {
+	// putWarrantTradeSummaryService.prepareData();
+	// mes.setCategory("Success");
+	// mes.setText("Put warrant trading data has been updated.");
+	// } catch (Exception ex) {
+	// ex.printStackTrace();
+	// mes.setCategory("Fail");
+	// mes.setText("Put warrant trading data fails to be updated.");
+	// }
+	// return mes;
+	//
+	// }
 
 	// @GetMapping("/{stockSymbol}/getChart")
 	// public Resource getChart(@PathVariable String stockSymbol) {
@@ -527,19 +531,78 @@ public class StockController {
 	// }
 	// return mes;
 	// }
-	
 
 	@GetMapping("/callWarrantSelectStrategy1")
-	private ResponseMessage callWarrantSelectStrategy1() {
+	public ModelAndView callWarrantSelectStrategy1(
+			@RequestParam(value = "holdPeriod", defaultValue = "3") int holdPeriod,
+			@RequestParam(value = "dataDatePeriod", defaultValue = "120") int dataDatePeriod,
+			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
+			@RequestParam(value = "drawChart", defaultValue = "false") boolean drawChart
+			) {
+		//int totalDatePeriod = (int) stockService.tradingDateCount();
+		Date date = stockService.getLatestTradingDate();
+		ModelAndView mav;
+		try {
+			Map<String, Map<String, Double>> statsMap = strategyService
+					.callWarrantSelectStrategy1(StockUtils.dateToSimpleString(date), holdPeriod);
+			Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+			//
+			Map<String, Double> upPercentCountMap = new TreeMap<>();
+			Map<String, Double> upPercentAccMap = new TreeMap<>();
+			for (String symbol : statsMap.keySet()) {
+				Map<String, Double> upPercentMap= statsMap.get(symbol);
+				if (upPercentMap.size() > dataDatePeriod) {
+					upPercentMap = upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				}  
+				long size = upPercentMap.size();
+				long up_size = upPercentMap.values().stream().filter(value -> value > 0.0).count();
+				double acc_percent = upPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
+				// give a threshold, say, half of the dataDatePeriod-holdPeriod
+				if (size > (dataDatePeriod - holdPeriod) / 2) {
+					upPercentCountMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
+					upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
+				}
+			}
+			mav = new ModelAndView("stock/callWarrantSelectStrategy1");
+			//
+			Map<String, Double> resultMap = new LinkedHashMap<>();
+			upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+					.limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+
+			resultMap.entrySet().stream().forEach(entry -> {
+				logger.info(
+						"Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), avg percentage:"
+								+ entry.getValue() + ", win percentage:" + upPercentCountMap.get(entry.getKey()));
+			});
+
+			// create stock charts
+			if(drawChart) chartService.createGraphs2(resultMap.keySet());
+			//
+			mav.addObject("upPercentAccMap", resultMap);
+			mav.addObject("upPercentCountMap", upPercentCountMap);
+			mav.addObject("siMap", siMap);
+			mav.addObject("tradingDate", date);
+			// stockItems with call and put warrants
+			// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+			mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		} catch (StockException e) {
+			mav = new ModelAndView("stock/error");
+		}
+		return mav;
+	}
+
+	@GetMapping("/putWarrantSelectStrategy1")
+	public ResponseMessage putWarrantSelectStrategy1() {
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			strategyService.callWarrantSelectStrategy1(3, (int) stockService.tradingDateCount());
+			strategyService.putWarrantSelectStrategy1(3, (int) stockService.tradingDateCount());
 			mes.setCategory("Success");
-			mes.setText("call Warrant Select Strategy data has been calculated.");
+			mes.setText("put Warrant Select Strategy data has been calculated.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("call Warrant Select Strategy data has failed to be calculated.");
+			mes.setText("put Warrant Select Strategy data has failed to be calculated.");
 		}
 		return mes;
 

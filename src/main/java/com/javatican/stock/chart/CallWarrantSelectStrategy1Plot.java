@@ -29,20 +29,21 @@ import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.util.StockUtils;
 
-@Component("cwss1Plot")
-public class CallWarrantSelectStrategy1Plot implements JPlot {
+@Component
+public abstract class CallWarrantSelectStrategy1Plot implements JPlot {
 
 	@Autowired
 	CallWarrantSelectStrategy1DAO callWarrantSelectStrategy1DAO;
 	
 	private Map<String,Double> upPercentMap;
-
 	public CallWarrantSelectStrategy1Plot() {
 	}
 	
+	public abstract int getHoldPeriod();
+
 	@Override
 	public Plot getPlot(StockItem stockItem) throws StockException {
-		this.upPercentMap = callWarrantSelectStrategy1DAO.load(stockItem.getSymbol());
+		this.upPercentMap = callWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
 		if(upPercentMap.isEmpty()) return null;
 		return createPlot();
 	}

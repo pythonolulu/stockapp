@@ -56,6 +56,9 @@ public class CallWarrantTradeSummaryService {
 	@Autowired
 	StockItemService stockItemService;
 
+	public Map<String, StockItem> getStockItemsWithCallWarrant() {
+		return callWarrantTradeSummaryDAO.getStockItemsWithCallWarrant();
+	}
 	/*
 	 * update warrant trade data (download and save the new available data)
 	 */

@@ -45,14 +45,20 @@ public class StrategyService {
 	 * Buy a call warrant(with the largest trade value for the specific target
 	 * stock) on each trading date and hold for a 'holdPeriod' day period, calculate
 	 * the probability of going up and sort the stock targets based on this
-	 * probability. holdPeriod: the period of each warrant item to hold
+	 * probability. Parameters: holdPeriod: the period of each warrant item to hold;
 	 * dataDatePeriod: how many days of data to calculate
+	 * 
 	 */
-	public void callWarrantSelectStrategy1(int holdPeriod, int dataDatePeriod) throws StockException {
+
+	public Map<String, Map<String, Double>> callWarrantSelectStrategy1(String dateString, int holdPeriod)
+			throws StockException {
+		if (callWarrantSelectStrategy1DAO.existsForCombinedResult(dateString, holdPeriod)) {
+			return callWarrantSelectStrategy1DAO.loadCombinedResult(dateString, holdPeriod);
+		}
 		// get the latest 'dataDatePeriod' trading dates.
-		List<Date> dateList = tradingDateDAO.findLatestNTradingDateAsc(dataDatePeriod);
+		List<Date> dateList = tradingDateDAO.findAllTradingDate();
 		// get all symbols that have call warrants
-		Map<String, StockItem> siMap = callWarrantTradeSummaryDAO.getStockItemsWithCallWarrant();
+		List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
 		// statsMap: the map to store the calculated probability for warrants to go up
 		// for each stock symbol and for each trading date
 		// Key is the symbol. Value is a map object with key 'dateString' and
@@ -64,23 +70,22 @@ public class StrategyService {
 		// 'warrant symbol' and value 'the WarrantTrade object'
 		Map<String, Map<String, WarrantTrade>> cachedWTMap = new TreeMap<>();
 		for (Date d : dateList) {
-			String dateString = StockUtils.dateToSimpleString(d);
+			String dString = StockUtils.dateToSimpleString(d);
 			Map<String, WarrantTrade> wtMap = null;
-			if ((wtMap = cachedWTMap.get(dateString)) == null) {
-				wtMap = warrantTradeDAO.loadCallWarrantsAsMap(dateString);
+			if ((wtMap = cachedWTMap.get(dString)) == null) {
+				wtMap = warrantTradeDAO.loadCallWarrantsAsMap(dString);
 			} else {
-				cachedWTMap.remove(dateString);
+				cachedWTMap.remove(dString);
 			}
 			// get the trading date which is of 'holdPeriod' days after the current date
-			String dateStringNext = StockUtils.getNextNTradingDate(dateString, holdPeriod, dateList);
+			String dateStringNext = StockUtils.getNextNTradingDate(dString, holdPeriod, dateList);
 			if (dateStringNext == null)
 				break;
 			Map<String, WarrantTrade> wtMapNext = warrantTradeDAO.loadCallWarrantsAsMap(dateStringNext);
 			// store in the cached map
 			cachedWTMap.put(dateStringNext, wtMapNext);
 			//
-			for (StockItem si : siMap.values()) {
-				String symbol = si.getSymbol();
+			for (String symbol : symbolList) {
 				// get the largest trade value of warrant for the symbol
 				Optional<WarrantTrade> targetWTOp = wtMap.values().stream()
 						.filter(wt -> wt.getStockSymbol().equals(symbol))
@@ -103,37 +108,22 @@ public class StrategyService {
 					upPercentMap = new TreeMap<>();
 					statsMap.put(symbol, upPercentMap);
 				}
-				upPercentMap.put(dateString, upPercent);
+				upPercentMap.put(dString, upPercent);
 			}
 		}
-		// get the top lists with the best win percentages
-		Map<String, Double> upPercentCountMap = new TreeMap<>();
-		Map<String, Double> upPercentAccMap = new TreeMap<>();
+		// write upPercentMap to file for each stock item
 		for (String symbol : statsMap.keySet()) {
 			Map<String, Double> upPercentMap = statsMap.get(symbol);
-			callWarrantSelectStrategy1DAO.save(symbol, upPercentMap);
-			long size = upPercentMap.size();
-			long up_size = upPercentMap.values().stream().filter(value -> value > 0.0).count();
-			double acc_percent = upPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
-			// give a threshold, say, half of the dataDatePeriod-holdPeriod
-			if (size > (dataDatePeriod - holdPeriod) / 2) {
-				upPercentCountMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
-				upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
-			}
+			callWarrantSelectStrategy1DAO.save(symbol,holdPeriod, upPercentMap);
 		}
-		upPercentCountMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(30)
-				.forEach(entry -> {
-					logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), win percentage:"
-							+ entry.getValue() + ", avg percentage:" + upPercentAccMap.get(entry.getKey()));
+		// write combined result
+		callWarrantSelectStrategy1DAO.saveCombinedResult(dateString, holdPeriod, statsMap);
+		return statsMap;
+	}
 
-				});
-		logger.info("============================");
-		upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(30)
-		.forEach(entry -> {
-			logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), avg percentage:"
-					+ entry.getValue() + ", win percentage:" + upPercentCountMap.get(entry.getKey()));
+	public void putWarrantSelectStrategy1(int i, int tradingDateCount) {
+		// TODO Auto-generated method stub
 
-		});
 	}
 
 }

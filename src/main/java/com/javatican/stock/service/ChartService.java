@@ -109,11 +109,21 @@ public class ChartService {
 	@Qualifier("sblPlot")
 	private JPlot sblPlot;
 	@Autowired
-	@Qualifier("cwss1Plot")
-	private JPlot cwss1Plot;
+	@Qualifier("cwss1Hp1Plot")
+	private JPlot cwss1Hp1Plot;
+	@Autowired
+	@Qualifier("cwss1Hp3Plot")
+	private JPlot cwss1Hp3Plot;
+	@Autowired
+	@Qualifier("cwss1Hp5Plot")
+	private JPlot cwss1Hp5Plot;
 
 	public void createGraphs(Collection<StockItem> siList) {
 		siList.stream().forEach(stockItem -> createGraph(stockItem));
+	}
+	
+	public void createGraphs2(Collection<String> symbolList) {
+		symbolList.stream().forEach(symbol -> createGraph(symbol));
 	}
 
 	public boolean createGraph(StockItem stockItem) {
@@ -193,7 +203,9 @@ public class ChartService {
 		private JFreeChart createStrategyChart() throws StockException {
 			XYPlot candlestickSubplot = (XYPlot) pricePlot.getPlot(stockItem);
 			XYPlot volumeSubplot = (XYPlot) volumePlot.getPlot(stockItem);
-			XYPlot cwss1Subplot = (XYPlot) cwss1Plot.getPlot(stockItem);
+			XYPlot cwss1Hp1Subplot = (XYPlot) cwss1Hp1Plot.getPlot(stockItem);
+			XYPlot cwss1Hp3Subplot = (XYPlot) cwss1Hp3Plot.getPlot(stockItem);
+			XYPlot cwss1Hp5Subplot = (XYPlot) cwss1Hp5Plot.getPlot(stockItem);
 			 
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
@@ -207,9 +219,17 @@ public class ChartService {
 			mainPlot.add(candlestickSubplot, 6);
 			mainPlot.add(volumeSubplot, 2);
 			
-			if (cwss1Subplot != null) {
-				mainPlot.add(cwss1Subplot, 2);
-				//showAnnotation(cwss1Subplot, x, "CallWarrantSelectStragegy1");
+			if (cwss1Hp1Subplot != null) {
+				mainPlot.add(cwss1Hp1Subplot, 2);
+				//showAnnotation(cwss1Hp1Subplot, x, "CallWarrantSelectStragegy1");
+			}
+			if (cwss1Hp3Subplot != null) {
+				mainPlot.add(cwss1Hp3Subplot, 2);
+				//showAnnotation(cwss1Hp3Subplot, x, "CallWarrantSelectStragegy1");
+			}
+			if (cwss1Hp5Subplot != null) {
+				mainPlot.add(cwss1Hp5Subplot, 2);
+				//showAnnotation(cwss1Hp5Subplot, x, "CallWarrantSelectStragegy1");
 			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);

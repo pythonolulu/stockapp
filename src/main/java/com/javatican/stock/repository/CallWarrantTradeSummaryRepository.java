@@ -23,6 +23,6 @@ public interface CallWarrantTradeSummaryRepository extends JpaRepository<CallWar
 	@Query("select s.stockSymbol from CallWarrantTradeSummary s where s.tradingDate = ( select max(s.tradingDate) from CallWarrantTradeSummary s) ")
 	List<String> getStockSymbolsWithCallWarrant();
 	
-	@Query("select s.stockItem from CallWarrantTradeSummary s where s.tradingDate = ( select max(s.tradingDate) from CallWarrantTradeSummary s) ")
+	@Query("select t from CallWarrantTradeSummary s join s.stockItem t where s.tradingDate = ( select max(s.tradingDate) from CallWarrantTradeSummary s) ")
 	List<StockItem> getStockItemsWithCallWarrant();
 }

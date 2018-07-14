@@ -31,7 +31,10 @@
 					 		<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'" height="16" width="16"/>
 				 		</a>
 				 		<a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
-					 		stock chart
+					 		主要线图
+				 		</a>
+				 		<a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
+					 		决策分析线图
 				 		</a>
 				 	</td>
 				 </tr>

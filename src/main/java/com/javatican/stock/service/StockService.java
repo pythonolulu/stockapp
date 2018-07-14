@@ -75,9 +75,10 @@ public class StockService {
 	@Autowired
 	StockItemHelper stockItemHelper;
 
-	public long tradingDateCount()  {
+	public long tradingDateCount() {
 		return tradingDateDAO.count();
 	}
+
 	/*
 	 * update trading dates and total trading values and trading values for 3 big
 	 * investors. The download contains the data for the current month, so
@@ -216,6 +217,10 @@ public class StockService {
 
 	public List<Date> getLatestNTradingDateDesc(int dateLength) {
 		return tradingDateDAO.findLatestNTradingDateDesc(dateLength);
+	}
+
+	public Date getLatestTradingDate() {
+		return tradingDateDAO.getLatestTradingDate();
 	}
 
 	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
