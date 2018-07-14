@@ -3,12 +3,14 @@ package com.javatican.stock.dao;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.PutWarrantTradeSummary;
+import com.javatican.stock.model.StockItem;
 import com.javatican.stock.repository.PutWarrantTradeSummaryRepository;
 
 @Repository("putWarrantTradeSummaryDAO")
@@ -42,4 +44,11 @@ public class PutWarrantTradeSummaryDAO {
 	public List<String> getStockSymbolsWithPutWarrant() {
 		return putWarrantTradeSummaryRepository.getStockSymbolsWithPutWarrant();
 	}
+	public Map<String, StockItem> getStockItemsWithPutWarrant() {
+		List<StockItem> siList = putWarrantTradeSummaryRepository.getStockItemsWithPutWarrant();
+		Map<String,StockItem> siMap = new TreeMap<>();
+		siList.stream().forEach(si->siMap.put(si.getSymbol(),si));
+		return siMap;
+	}
+
 }

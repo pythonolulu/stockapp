@@ -2,6 +2,7 @@ package com.javatican.stock;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -366,7 +367,7 @@ public class StockController {
 		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
 				dateLength);
 		// create stock charts
-		chartService.createGraphs(dataMap.keySet());
+		chartService.createGraphs(dataMap.keySet(), false);
 		// also return trading date list
 		List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 		List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
@@ -405,7 +406,7 @@ public class StockController {
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
-			chartService.createGraphs(statsMap.keySet());
+			chartService.createGraphs(statsMap.keySet(), false);
 			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
@@ -441,7 +442,7 @@ public class StockController {
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
-			chartService.createGraphs(statsMap.keySet());
+			chartService.createGraphs(statsMap.keySet(), false);
 			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
@@ -513,7 +514,7 @@ public class StockController {
 	// }
 	@GetMapping("/{stockSymbol}/getChart")
 	public ModelAndView getChart(@PathVariable String stockSymbol) {
-		chartService.createGraph(stockSymbol);
+		chartService.createGraph(stockSymbol, false);
 		return new ModelAndView("redirect:" + "/stock/imgs/" + stockSymbol + ".png");
 	}
 	//
@@ -532,79 +533,232 @@ public class StockController {
 	// return mes;
 	// }
 
+	@GetMapping("/prepareDataForCallWarrantSelectStrategy1")
+	public ResponseMessage prepareDataForCallWarrantSelectStrategy1() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService.prepareDataForCallWarrantSelectStrategy1(1);
+			strategyService.prepareDataForCallWarrantSelectStrategy1(3);
+			strategyService.prepareDataForCallWarrantSelectStrategy1(5);
+			mes.setCategory("Success");
+			mes.setText("Call warrant select strategy 1 data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Call warrant select strategy 1 data failed to be prepared.");
+		}
+		return mes;
+	}
+
+	@GetMapping("/prepareDataForPutWarrantSelectStrategy1")
+	public ResponseMessage prepareDataForPutWarrantSelectStrategy1() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService.prepareDataForPutWarrantSelectStrategy1(1);
+			strategyService.prepareDataForPutWarrantSelectStrategy1(3);
+			strategyService.prepareDataForPutWarrantSelectStrategy1(5);
+			mes.setCategory("Success");
+			mes.setText("Put warrant select strategy 1 data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Put warrant select strategy 1 data failed to be prepared.");
+		}
+		return mes;
+	}
+
+	/*
+	 * Buy a call warrant(with the largest trade value for the specific target
+	 * stock) on each trading date and hold for a 'holdPeriod' day period, calculate
+	 * the probability of going up and sort the stock targets based on this
+	 * probability. Parameters: holdPeriod: the period of each warrant item to hold;
+	 * dataDatePeriod: how many days of data to calculate
+	 * 
+	 */
 	@GetMapping("/callWarrantSelectStrategy1")
 	public ModelAndView callWarrantSelectStrategy1(
 			@RequestParam(value = "holdPeriod", defaultValue = "3") int holdPeriod,
 			@RequestParam(value = "dataDatePeriod", defaultValue = "120") int dataDatePeriod,
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
-			@RequestParam(value = "drawChart", defaultValue = "false") boolean drawChart
-			) {
-		//int totalDatePeriod = (int) stockService.tradingDateCount();
+			@RequestParam(value = "forceDrawChart", defaultValue = "false") boolean forceDrawChart) {
+		// int totalDatePeriod = (int) stockService.tradingDateCount();
 		Date date = stockService.getLatestTradingDate();
 		ModelAndView mav;
-		try {
-			Map<String, Map<String, Double>> statsMap = strategyService
-					.callWarrantSelectStrategy1(StockUtils.dateToSimpleString(date), holdPeriod);
+		// statsMap: key is the symbol, value is a tree map with key of date string and
+		// value of double(warrant price up percentage)
+		Map<String, TreeMap<String, Double>> statsMap = strategyService
+				.getStatsDataForCallWarrantSelectStrategy1(holdPeriod);
+		if (statsMap != null) {
+			// all the stock items with call warrants(used for getting its item name)
 			Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
-			//
-			Map<String, Double> upPercentCountMap = new TreeMap<>();
-			Map<String, Double> upPercentAccMap = new TreeMap<>();
+			// upProbabilityMap: store the probability of the warrant price going up
+			// key is the symbol string and value is a double of probability
+			Map<String, Double> upProbabilityMap = new HashMap<>();
+			// upPercentAccMap: store the accumulated price up percentages
+			// key: symbol string, value is a double of accumulated percentage
+			Map<String, Double> upPercentAccMap = new HashMap<>();
+			// dataCountMap: store the count of actual data points used for the calculation
+			// for up probability and percent accumulation
+			// key : symbol string, value is a long for the data count
+			Map<String, Long> dataCountMap = new HashMap<>();
 			for (String symbol : statsMap.keySet()) {
-				Map<String, Double> upPercentMap= statsMap.get(symbol);
+				// upPercentMap contains price up percentages of warrant on each trading date
+				// for the stock symbol
+				// key : date string, value: a double of up percentage
+				TreeMap<String, Double> upPercentMap = statsMap.get(symbol);
+				// filteredUpPercentMap: store filtered result of upPercentMap (only select the
+				// latest 'dataDatePeriod' trading dates)
+				final TreeMap<String, Double> filteredUpPercentMap;
 				if (upPercentMap.size() > dataDatePeriod) {
-					upPercentMap = upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
-							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-				}  
-				long size = upPercentMap.size();
-				long up_size = upPercentMap.values().stream().filter(value -> value > 0.0).count();
-				double acc_percent = upPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
-				// give a threshold, say, half of the dataDatePeriod-holdPeriod
-				if (size > (dataDatePeriod - holdPeriod) / 2) {
-					upPercentCountMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
-					upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
+					filteredUpPercentMap = new TreeMap<>();
+					// below is not compiling because collect(Collectors.toMap()) method will
+					// return a Map object, can not be casted to a TreeMap
+					//
+					// filteredUpPercentMap =
+					// upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
+					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+					upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
+							.forEach(e -> filteredUpPercentMap.put(e.getKey(), e.getValue()));
+				} else {
+					filteredUpPercentMap = upPercentMap;
 				}
+				long size = filteredUpPercentMap.size();
+				long up_size = filteredUpPercentMap.values().stream().filter(value -> value > 0.0).count();
+				double acc_percent = filteredUpPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
+				if (size == 0)
+					continue;
+				upProbabilityMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
+				upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
+				dataCountMap.put(symbol, size);
+
 			}
 			mav = new ModelAndView("stock/callWarrantSelectStrategy1");
 			//
-			Map<String, Double> resultMap = new LinkedHashMap<>();
+			LinkedHashMap<String, Double> resultMap = new LinkedHashMap<>();
 			upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed())
 					.limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 
 			resultMap.entrySet().stream().forEach(entry -> {
-				logger.info(
-						"Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), avg percentage:"
-								+ entry.getValue() + ", win percentage:" + upPercentCountMap.get(entry.getKey()));
+				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName()
+						+ "), avg percentage:" + entry.getValue() + ", win percentage:"
+						+ upProbabilityMap.get(entry.getKey()) + ", data count:" + dataCountMap.get(entry.getKey()));
 			});
 
 			// create stock charts
-			if(drawChart) chartService.createGraphs2(resultMap.keySet());
+			chartService.createGraphs2(resultMap.keySet(), forceDrawChart);
 			//
 			mav.addObject("upPercentAccMap", resultMap);
-			mav.addObject("upPercentCountMap", upPercentCountMap);
+			mav.addObject("upProbabilityMap", upProbabilityMap);
+			mav.addObject("dataCountMap", dataCountMap);
 			mav.addObject("siMap", siMap);
 			mav.addObject("tradingDate", date);
+			mav.addObject("dataDatePeriod", dataDatePeriod);
+			mav.addObject("selectCount", selectCount);
+			mav.addObject("holdPeriod", holdPeriod);
 			// stockItems with call and put warrants
 			// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 			mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
-		} catch (StockException e) {
+		} else {
 			mav = new ModelAndView("stock/error");
 		}
 		return mav;
 	}
 
+	/*
+	 * Buy a call warrant(with the largest trade value for the specific target
+	 * stock) on each trading date and hold for a 'holdPeriod' day period, calculate
+	 * the probability of going up and sort the stock targets based on this
+	 * probability. Parameters: holdPeriod: the period of each warrant item to hold;
+	 * dataDatePeriod: how many days of data to calculate
+	 * 
+	 */
 	@GetMapping("/putWarrantSelectStrategy1")
-	public ResponseMessage putWarrantSelectStrategy1() {
-		ResponseMessage mes = new ResponseMessage();
-		try {
-			strategyService.putWarrantSelectStrategy1(3, (int) stockService.tradingDateCount());
-			mes.setCategory("Success");
-			mes.setText("put Warrant Select Strategy data has been calculated.");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			mes.setCategory("Fail");
-			mes.setText("put Warrant Select Strategy data has failed to be calculated.");
-		}
-		return mes;
+	public ModelAndView putWarrantSelectStrategy1(
+			@RequestParam(value = "holdPeriod", defaultValue = "3") int holdPeriod,
+			@RequestParam(value = "dataDatePeriod", defaultValue = "120") int dataDatePeriod,
+			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
+			@RequestParam(value = "forceDrawChart", defaultValue = "false") boolean forceDrawChart) {
+		// int totalDatePeriod = (int) stockService.tradingDateCount();
+		Date date = stockService.getLatestTradingDate();
+		ModelAndView mav;
+		// statsMap: key is the symbol, value is a tree map with key of date string and
+		// value of double(warrant price up percentage)
+		Map<String, TreeMap<String, Double>> statsMap = strategyService
+				.getStatsDataForPutWarrantSelectStrategy1(holdPeriod);
+		if (statsMap != null) {
+			// all the stock items with put warrants(used for getting its item name)
+			Map<String, StockItem> siMap = putWarrantTradeSummaryService.getStockItemsWithPutWarrant();
+			// upProbabilityMap: store the probability of the warrant price going up
+			// key is the symbol string and value is a double of probability
+			Map<String, Double> upProbabilityMap = new HashMap<>();
+			// upPercentAccMap: store the accumulated price up percentages
+			// key: symbol string, value is a double of accumulated percentage
+			Map<String, Double> upPercentAccMap = new HashMap<>();
+			// dataCountMap: store the count of actual data points used for the calculation
+			// for up probability and percent accumulation
+			// key : symbol string, value is a long for the data count
+			Map<String, Long> dataCountMap = new HashMap<>();
+			for (String symbol : statsMap.keySet()) {
+				// upPercentMap contains price up percentages of warrant on each trading date
+				// for the stock symbol
+				// key : date string, value: a double of up percentage
+				TreeMap<String, Double> upPercentMap = statsMap.get(symbol);
+				// filteredUpPercentMap: store filtered result of upPercentMap (only select the
+				// latest 'dataDatePeriod' trading dates)
+				final TreeMap<String, Double> filteredUpPercentMap;
+				if (upPercentMap.size() > dataDatePeriod) {
+					filteredUpPercentMap = new TreeMap<>();
+					// below is not compiling because collect(Collectors.toMap()) method will
+					// return a Map object, can not be casted to a TreeMap
+					//
+					// filteredUpPercentMap =
+					// upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
+					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+					upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
+							.forEach(e -> filteredUpPercentMap.put(e.getKey(), e.getValue()));
+				} else {
+					filteredUpPercentMap = upPercentMap;
+				}
+				long size = filteredUpPercentMap.size();
+				long up_size = filteredUpPercentMap.values().stream().filter(value -> value > 0.0).count();
+				double acc_percent = filteredUpPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
+				if (size == 0)
+					continue;
+				upProbabilityMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
+				upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
+				dataCountMap.put(symbol, size);
 
+			}
+			mav = new ModelAndView("stock/putWarrantSelectStrategy1");
+			//
+			LinkedHashMap<String, Double> resultMap = new LinkedHashMap<>();
+			upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+					.limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+
+			resultMap.entrySet().stream().forEach(entry -> {
+				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName()
+						+ "), avg percentage:" + entry.getValue() + ", win percentage:"
+						+ upProbabilityMap.get(entry.getKey()) + ", data count:" + dataCountMap.get(entry.getKey()));
+			});
+
+			// create stock charts
+			chartService.createGraphs2(resultMap.keySet(), forceDrawChart);
+			//
+			mav.addObject("upPercentAccMap", resultMap);
+			mav.addObject("upProbabilityMap", upProbabilityMap);
+			mav.addObject("dataCountMap", dataCountMap);
+			mav.addObject("siMap", siMap);
+			mav.addObject("tradingDate", date);
+			mav.addObject("dataDatePeriod", dataDatePeriod);
+			mav.addObject("selectCount", selectCount);
+			mav.addObject("holdPeriod", holdPeriod);
+			// stockItems with call and put warrants
+			mav.addObject("swcwList", stockService.getStockSymbolsWithPutWarrant());
+			//mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		} else {
+			mav = new ModelAndView("stock/error");
+		}
+		return mav;
 	}
+
 }

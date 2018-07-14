@@ -2,10 +2,7 @@ package com.javatican.stock.chart;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.Map;
 
 import org.jfree.chart.axis.AxisLocation;
@@ -15,7 +12,6 @@ import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -24,8 +20,6 @@ import org.springframework.stereotype.Component;
 
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantSelectStrategy1DAO;
-import com.javatican.stock.dao.DealerTradeSummaryDAO; 
-import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.util.StockUtils;
 

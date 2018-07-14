@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title th:text="|認購權證累计涨幅前50名 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">認購權證累计涨幅前50名</title>
+<title th:text="|認購權證累计涨幅 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">認購權證累计涨幅</title>
 <link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
 	rel="stylesheet"></link>
 <script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
@@ -10,9 +10,14 @@
 <body>
 	<div class="container">
 		<h2>
-			認購權證累计涨幅前50名 -<span
+			<span
+				th:text="|認購權證过去${dataDatePeriod}日累计涨幅, 前${selectCount}名|"> 認購權證过去60日累计涨幅, 前50名</span>
+			 -<span
 				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+				<span
+				th:text="|持有策略：${holdPeriod}日|"> 持有策略：3日</span>
 		</h2>
+		
 		<div th:unless="${#maps.isEmpty(upPercentAccMap)}">
 			<table class="table table-striped">
 				<thead>
@@ -22,6 +27,7 @@
 						<th scope="col">名称</th>
 						<th scope="col">累计涨幅</th>
 						<th scope="col">上涨机率</th>
+						<th scope="col">资料数</th>
 						<th scope="col">缩图</th>
 						<th scope="col">主要线图</th>
 						<th scope="col">决策分析线图</th>
@@ -37,7 +43,8 @@
 					    <td><a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
 					 	th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key})}" th:text="${siMap.get(item.key).name}">鸿海</a></td>
 					    <td th:text="|${#numbers.formatDecimal(item.value*100,1,'COMMA',0,'POINT')}%|">250%</td> 
-					    <td th:text="|${#numbers.formatDecimal(upPercentCountMap.get(item.key)*100,1,'COMMA',1,'POINT')}%|">49.5%</td>
+					    <td th:text="|${#numbers.formatDecimal(upProbabilityMap.get(item.key)*100,1,'COMMA',1,'POINT')}%|">49.5%</td>
+					    <td th:text="${dataCountMap.get(item.key)}">20</td>
 					    
 					    <td><a target='_blank' th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key},CHT_CAT=DATE)}">
 					 		<img th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key}+' graph'" height="64" width="64"/>

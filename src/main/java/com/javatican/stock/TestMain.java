@@ -11,11 +11,14 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -56,8 +59,34 @@ import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.util.StockUtils;
 
 public class TestMain {
- 
+
 	public static void main(String[] args) {
+		// note: the return values of keySet() or entrySet() of TreeMap will keep the
+		// order of the TreeMap（ascending key order)
+		TreeMap<String, Double> upPercentMap = new TreeMap<>();
+		TreeMap<String, Double> resultMap = new TreeMap<>();
+		upPercentMap.put("20180609", 19.8);
+		upPercentMap.put("20180702", 20.3);
+		upPercentMap.put("20180703", 20.5);
+		upPercentMap.put("20180710", 20.8);
+		upPercentMap.put("20180701", 20.1);
+		upPercentMap.put("20180705", 20.2);
+		upPercentMap.put("20180406", 20.0);
+		upPercentMap.put("20180704", 20.9);
+		upPercentMap.put("20180707", 20.4);
+		upPercentMap.put("20180708", 21.1);
+		upPercentMap.put("20180711", 19.1);
+		// below is not compiling , because collect(Collectors.toMap()) method will
+		// return a Map object, can not be casted to a TreeMap
+		//
+		// resultMap = upPercentMap.entrySet().stream().skip(upPercentMap.size() - 7)
+		// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		upPercentMap.entrySet().stream().skip(upPercentMap.size() - 7)
+				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		resultMap.entrySet().stream().forEach(e -> System.out.println("key:" + e.getKey() + ",value:" + e.getValue()));
+	}
+
+	public static void main7(String[] args) {
 		// creating and showing this application's GUI.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -69,6 +98,7 @@ public class TestMain {
 
 	public static class MyChart extends JFrame {
 		private List<StockItemData> sidList;
+
 		public MyChart() {
 			this(false);
 		}
@@ -139,8 +169,8 @@ public class TestMain {
 			TimeSeriesCollection volumeDataset = new TimeSeriesCollection();
 			TimeSeries volumeSeries = new TimeSeries("Volume");
 			// add data
-			sidList.stream().forEach(
-					sid -> volumeSeries.add(new Day(sid.getTradingDate()), (new Random().nextBoolean()? 1: -1)*sid.getStockPrice().getTradeVolume()));
+			sidList.stream().forEach(sid -> volumeSeries.add(new Day(sid.getTradingDate()),
+					(new Random().nextBoolean() ? 1 : -1) * sid.getStockPrice().getTradeVolume()));
 			volumeDataset.addSeries(volumeSeries);
 			return volumeDataset;
 		}

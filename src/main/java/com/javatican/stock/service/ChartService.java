@@ -117,21 +117,31 @@ public class ChartService {
 	@Autowired
 	@Qualifier("cwss1Hp5Plot")
 	private JPlot cwss1Hp5Plot;
+	//
+	@Autowired
+	@Qualifier("pwss1Hp1Plot")
+	private JPlot pwss1Hp1Plot;
+	@Autowired
+	@Qualifier("pwss1Hp3Plot")
+	private JPlot pwss1Hp3Plot;
+	@Autowired
+	@Qualifier("pwss1Hp5Plot")
+	private JPlot pwss1Hp5Plot;
 
-	public void createGraphs(Collection<StockItem> siList) {
-		siList.stream().forEach(stockItem -> createGraph(stockItem));
+	public void createGraphs(Collection<StockItem> siList, boolean force) {
+		siList.stream().forEach(stockItem -> createGraph(stockItem,force));
 	}
 	
-	public void createGraphs2(Collection<String> symbolList) {
-		symbolList.stream().forEach(symbol -> createGraph(symbol));
+	public void createGraphs2(Collection<String> symbolList, boolean force) {
+		symbolList.stream().forEach(symbol -> createGraph(symbol, force));
 	}
 
-	public boolean createGraph(StockItem stockItem) {
+	public boolean createGraph(StockItem stockItem, boolean force) {
 		if (stockItem == null)
 			return false;
 		StockChartUtil sc = new StockChartUtil(stockItem);
 		try {
-			sc.create();
+			sc.create(force);
 			return true;
 		} catch (StockException e) {
 			logger.info("Cannot create chart for " + stockItem.getSymbol());
@@ -139,10 +149,10 @@ public class ChartService {
 		}
 	}
 
-	public boolean createGraph(String stockSymbol) {
+	public boolean createGraph(String stockSymbol, boolean force) {
 		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
 		if (si != null) {
-			createGraph(si);
+			createGraph(si, force);
 			return true;
 		} else {
 			return false;
@@ -159,8 +169,8 @@ public class ChartService {
 			this.stockItemLog = stockItemLogDAO.findBySymbol(this.stockItem.getSymbol());
 		}
 
-		public void create() throws StockException {
-			if (needUpdateChartForSymbol()) {
+		public void create(boolean force) throws StockException {
+			if (force || needUpdateChartForSymbol()) {
 				outputToPNG();
 				stockItemHelper.updateChartDateForItem(stockItemLog.getSymbol(), stockItemLog.getPriceDate());
 			} else {
@@ -192,7 +202,7 @@ public class ChartService {
 			resource = resourceLoader
 					.getResource(String.format(STOCK_CHART_STRATEGY_RESOURCE_FILE_PATH, stockItem.getSymbol()));
 			try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
-				ChartUtils.writeChartAsPNG(st, chart, 1600, 600);
+				ChartUtils.writeChartAsPNG(st, chart, 1600, 1260);
 				logger.info("Finish creating strategy chart for " + stockItem.getSymbol() + " using latest data dated: "
 						+ stockItemLog.getPriceDate());
 			} catch (Exception ex) {
@@ -206,6 +216,10 @@ public class ChartService {
 			XYPlot cwss1Hp1Subplot = (XYPlot) cwss1Hp1Plot.getPlot(stockItem);
 			XYPlot cwss1Hp3Subplot = (XYPlot) cwss1Hp3Plot.getPlot(stockItem);
 			XYPlot cwss1Hp5Subplot = (XYPlot) cwss1Hp5Plot.getPlot(stockItem);
+			//
+			XYPlot pwss1Hp1Subplot = (XYPlot) pwss1Hp1Plot.getPlot(stockItem);
+			XYPlot pwss1Hp3Subplot = (XYPlot) pwss1Hp3Plot.getPlot(stockItem);
+			XYPlot pwss1Hp5Subplot = (XYPlot) pwss1Hp5Plot.getPlot(stockItem);
 			 
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
@@ -214,22 +228,35 @@ public class ChartService {
 			CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot(dateAxis);
 			mainPlot.setGap(5.0);
 			// annotation x position
-			//double x = candlestickSubplot.getDataset(0).getX(0, 0).doubleValue();
+			double x = candlestickSubplot.getDataset(0).getX(0, 0).doubleValue();
 			//
 			mainPlot.add(candlestickSubplot, 6);
 			mainPlot.add(volumeSubplot, 2);
-			
+
 			if (cwss1Hp1Subplot != null) {
 				mainPlot.add(cwss1Hp1Subplot, 2);
-				//showAnnotation(cwss1Hp1Subplot, x, "CallWarrantSelectStragegy1");
+				showAnnotation(cwss1Hp1Subplot, x, "認購權證,持有1日");
 			}
 			if (cwss1Hp3Subplot != null) {
 				mainPlot.add(cwss1Hp3Subplot, 2);
-				//showAnnotation(cwss1Hp3Subplot, x, "CallWarrantSelectStragegy1");
+				showAnnotation(cwss1Hp3Subplot, x, "認購權證,持有3日");
 			}
 			if (cwss1Hp5Subplot != null) {
 				mainPlot.add(cwss1Hp5Subplot, 2);
-				//showAnnotation(cwss1Hp5Subplot, x, "CallWarrantSelectStragegy1");
+				showAnnotation(cwss1Hp5Subplot, x, "認購權證,持有5日");
+			}
+			//
+			if (pwss1Hp1Subplot != null) {
+				mainPlot.add(pwss1Hp1Subplot, 2);
+				showAnnotation(pwss1Hp1Subplot, x, "認售權證,持有1日");
+			}
+			if (pwss1Hp3Subplot != null) {
+				mainPlot.add(pwss1Hp3Subplot, 2);
+				showAnnotation(pwss1Hp3Subplot, x, "認售權證,持有3日");
+			}
+			if (pwss1Hp5Subplot != null) {
+				mainPlot.add(pwss1Hp5Subplot, 2);
+				showAnnotation(pwss1Hp5Subplot, x, "認售權證,持有5日");
 			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);

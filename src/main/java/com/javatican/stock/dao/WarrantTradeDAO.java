@@ -4,10 +4,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javatican.stock.StockException;
-import com.javatican.stock.model.StockPrice;
 import com.javatican.stock.model.WarrantTrade;
 
 @Repository("warrantTradeDAO")
@@ -77,14 +75,14 @@ public class WarrantTradeDAO {
 	
 	//return a map with key of warrant symbol
 	public Map<String, WarrantTrade> loadCallWarrantsAsMap(String dateString) throws StockException {
-		Map<String, WarrantTrade> wtMap = new TreeMap<>();
+		Map<String, WarrantTrade> wtMap = new HashMap<>();
 		List<WarrantTrade> wtList = loadCallWarrants(dateString);
 		wtList.stream().forEach(wt -> wtMap.put(wt.getWarrantSymbol(), wt));
 		return wtMap;
 	}
 
 	public Map<String, WarrantTrade> loadPutWarrantsAsMap(String dateString) throws StockException {
-		Map<String, WarrantTrade> wtMap = new TreeMap<>();
+		Map<String, WarrantTrade> wtMap = new HashMap<>();
 		List<WarrantTrade> wtList = loadPutWarrants(dateString);
 		wtList.stream().forEach(wt -> wtMap.put(wt.getWarrantSymbol(), wt));
 		return wtMap;
