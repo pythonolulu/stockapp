@@ -54,6 +54,8 @@ public class CallWarrantSelectStrategy1DAO {
 			objectMapper.writeValue(st, statsMap);
 			logger.info("Finish saving combined strategy '1' data of holdPeriod: " + holdPeriod + " days");
 		} catch (Exception ex) {
+			logger.warn(
+					"Errror while trying to save call warrant select strategy '1' data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
@@ -68,6 +70,8 @@ public class CallWarrantSelectStrategy1DAO {
 					});
 			return statsMap;
 		} catch (Exception ex) {
+			logger.warn(
+					"Errror while trying to load call warrant select strategy '1' data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
@@ -77,8 +81,10 @@ public class CallWarrantSelectStrategy1DAO {
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, upPercentMap);
 			logger.info(
-					"Finish saving strategy '1' data of holdPeriod: " + holdPeriod + " days for stock:" + stockSymbol);
+					"Finish saving call warrant strategy '1' data of holdPeriod: " + holdPeriod + " days for stock:" + stockSymbol);
 		} catch (Exception ex) {
+			logger.warn("Errror while trying to save call warrant select strategy '1' data of holdPeriod: " + holdPeriod
+					+ " days for stock:" + stockSymbol);
 			throw new StockException(ex);
 		}
 	}
@@ -90,6 +96,8 @@ public class CallWarrantSelectStrategy1DAO {
 			});
 			return upPercentMap;
 		} catch (Exception ex) {
+			logger.warn("Errror while trying to load call warrant select strategy '1' data of holdPeriod: " + holdPeriod
+					+ " days for stock:" + stockSymbol);
 			throw new StockException(ex);
 		}
 	}

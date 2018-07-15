@@ -358,7 +358,8 @@ public class StockController {
 	 * specified trading date.
 	 */
 	@GetMapping("/{tradingDate}/top30ByTrust")
-	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate) {
+	public ModelAndView getTop30ByTrust(@PathVariable String tradingDate,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		// show 10 data points for each stock item
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
@@ -367,7 +368,7 @@ public class StockController {
 		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
 				dateLength);
 		// create stock charts
-		chartService.createGraphs(dataMap.keySet(), false);
+		chartService.createGraphs(dataMap.keySet(), force);
 		// also return trading date list
 		List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 		List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
@@ -392,7 +393,8 @@ public class StockController {
 	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/top50")
-	public ModelAndView top50(@PathVariable String tradingDate) {
+	public ModelAndView top50(@PathVariable String tradingDate,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		ModelAndView mav;
@@ -406,7 +408,7 @@ public class StockController {
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
-			chartService.createGraphs(statsMap.keySet(), false);
+			chartService.createGraphs(statsMap.keySet(), force);
 			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
@@ -426,7 +428,8 @@ public class StockController {
 	 * trading date.
 	 */
 	@GetMapping("/{tradingDate}/bottom50")
-	public ModelAndView bottom50(@PathVariable String tradingDate) {
+	public ModelAndView bottom50(@PathVariable String tradingDate,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		int dateLength = 10;
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		ModelAndView mav;
@@ -442,7 +445,7 @@ public class StockController {
 			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
-			chartService.createGraphs(statsMap.keySet(), false);
+			chartService.createGraphs(statsMap.keySet(), force);
 			//
 			mav.addObject("tradingDate", date);
 			mav.addObject("dateList", dList);
@@ -513,9 +516,16 @@ public class StockController {
 	// "/stock/imgs/"+stockSymbol+".png");
 	// }
 	@GetMapping("/{stockSymbol}/getChart")
-	public ModelAndView getChart(@PathVariable String stockSymbol) {
-		chartService.createGraph(stockSymbol, false);
+	public ModelAndView getChart(@PathVariable String stockSymbol,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
+		chartService.createGraph(stockSymbol, force);
 		return new ModelAndView("redirect:" + "/stock/imgs/" + stockSymbol + ".png");
+	}
+	@GetMapping("/{stockSymbol}/getStrategyChart")
+	public ModelAndView getStrategyChart(@PathVariable String stockSymbol,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
+		chartService.createGraph(stockSymbol, force);
+		return new ModelAndView("redirect:" + "/stock/imgs/strategy/" + stockSymbol + ".png");
 	}
 	//
 	// @GetMapping("/migrateData")
@@ -754,7 +764,7 @@ public class StockController {
 			mav.addObject("holdPeriod", holdPeriod);
 			// stockItems with call and put warrants
 			mav.addObject("swcwList", stockService.getStockSymbolsWithPutWarrant());
-			//mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+			// mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		} else {
 			mav = new ModelAndView("stock/error");
 		}

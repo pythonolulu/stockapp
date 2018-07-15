@@ -1,5 +1,6 @@
 package com.javatican.stock.dao;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
@@ -41,33 +42,33 @@ public class PutWarrantSelectStrategy1DAO {
 	}
 
 	public boolean existsForCombinedResult(int holdPeriod) {
-		Resource resource = resourceLoader
-				.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
 		return resource.exists();
 	}
 
-	public void saveCombinedResult( int holdPeriod, Map<String, TreeMap<String, Double>> statsMap)
+	public void saveCombinedResult(int holdPeriod, Map<String, TreeMap<String, Double>> statsMap)
 			throws StockException {
-		Resource resource = resourceLoader
-				.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, statsMap);
 			logger.info("Finish saving combined strategy '1' data of holdPeriod: " + holdPeriod + " days");
 		} catch (Exception ex) {
+			logger.warn(
+					"Errror while trying to save put warrant select strategy '1' data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
 
-	public Map<String, TreeMap<String, Double>> loadCombinedResult(int holdPeriod)
-			throws StockException {
-		Resource resource = resourceLoader
-				.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+	public Map<String, TreeMap<String, Double>> loadCombinedResult(int holdPeriod) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
 		try (InputStream st = resource.getInputStream();) {
 			Map<String, TreeMap<String, Double>> statsMap = objectMapper.readValue(st,
 					new TypeReference<Map<String, TreeMap<String, Double>>>() {
 					});
 			return statsMap;
 		} catch (Exception ex) {
+			logger.warn(
+					"Errror while trying to load put warrant select strategy '1' data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
@@ -76,9 +77,11 @@ public class PutWarrantSelectStrategy1DAO {
 		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, upPercentMap);
-			logger.info(
-					"Finish saving strategy '1' data of holdPeriod: " + holdPeriod + " days for stock:" + stockSymbol);
-		} catch (Exception ex) {
+			logger.info("Finish saving put warrant strategy '1' data of holdPeriod: " + holdPeriod + " days for stock:"
+					+ stockSymbol);
+		} catch (IOException ex) {
+			logger.warn("Errror while trying to save put warrant select strategy '1' data of holdPeriod: " + holdPeriod
+					+ " days for stock:" + stockSymbol);
 			throw new StockException(ex);
 		}
 	}
@@ -86,26 +89,31 @@ public class PutWarrantSelectStrategy1DAO {
 	public TreeMap<String, Double> load(String stockSymbol, int holdPeriod) throws StockException {
 		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
 		try (InputStream st = resource.getInputStream();) {
-			TreeMap<String, Double> upPercentMap = objectMapper.readValue(st, new TypeReference<TreeMap<String, Double>>() {
-			});
+			TreeMap<String, Double> upPercentMap = objectMapper.readValue(st,
+					new TypeReference<TreeMap<String, Double>>() {
+					});
 			return upPercentMap;
 		} catch (Exception ex) {
+			logger.warn("Errror while trying to load put warrant select strategy '1' data of holdPeriod: " + holdPeriod
+					+ " days for stock:" + stockSymbol);
 			throw new StockException(ex);
 		}
 	}
 
-	public TreeMap<String, Double> loadBetweenDate(String stockSymbol, int holdPeriod, Date start, Date end) throws StockException {
+	public TreeMap<String, Double> loadBetweenDate(String stockSymbol, int holdPeriod, Date start, Date end)
+			throws StockException {
 
 		TreeMap<String, Double> upPercentMap = this.load(stockSymbol, holdPeriod);
-//		return upPercentMap.entrySet().stream()
-//				.filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start) >= 0
-//						&& StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
-//				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		// return upPercentMap.entrySet().stream()
+		// .filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start)
+		// >= 0
+		// && StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
+		// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		TreeMap<String, Double> resultMap = new TreeMap<>();
 		upPercentMap.entrySet().stream()
-		.filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start) >= 0
-				&& StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
-		.forEach(e->resultMap.put(e.getKey(), e.getValue()));
+				.filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start) >= 0
+						&& StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
+				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 		return resultMap;
 
 	}

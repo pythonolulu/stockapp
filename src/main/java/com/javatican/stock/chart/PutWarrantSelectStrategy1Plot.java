@@ -28,18 +28,24 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 
 	@Autowired
 	PutWarrantSelectStrategy1DAO putWarrantSelectStrategy1DAO;
-	
-	private Map<String,Double> upPercentMap;
+
+	private Map<String, Double> upPercentMap;
+
 	public PutWarrantSelectStrategy1Plot() {
 	}
-	
+
 	public abstract int getHoldPeriod();
 
 	@Override
-	public Plot getPlot(StockItem stockItem) throws StockException {
-		this.upPercentMap = putWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
-		if(upPercentMap.isEmpty()) return null;
-		return createPlot();
+	public Plot getPlot(StockItem stockItem) {
+		try {
+			this.upPercentMap = putWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
+			if (upPercentMap.isEmpty())
+				return null;
+			return createPlot();
+		} catch (StockException e) {
+			return null;
+		}
 	}
 
 	private XYPlot createPlot() {
@@ -58,7 +64,7 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 		//
 		XYPlot upSubplot = new XYPlot(upDataset, null, upAxis, upRenderer);
 		upSubplot.setBackgroundPaint(Color.WHITE);
-		// 2nd dataset 
+		// 2nd dataset
 		NumberAxis upaAxis = new NumberAxis("累计涨跌幅(百万比)");
 		upaAxis.setAutoRangeIncludesZero(true);
 		upSubplot.setRangeAxis(1, upaAxis);
@@ -77,7 +83,6 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 		return upSubplot;
 	}
 
-
 	private TimeSeriesCollection createUpPercentageDataset() {
 		TimeSeriesCollection upDataset = new TimeSeriesCollection();
 		TimeSeries series1 = new TimeSeries("涨(百分比)");
@@ -85,12 +90,10 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 		// add data
 		upPercentMap.entrySet().stream().forEach(e -> {
 			Day d = new Day(StockUtils.stringSimpleToDate(e.getKey()).get());
-			if(e.getValue()>0) {
-				series1.add(d, 
-						e.getValue()*100);
+			if (e.getValue() > 0) {
+				series1.add(d, e.getValue() * 100);
 			} else {
-				series2.add(d, 
-						e.getValue()*100);
+				series2.add(d, e.getValue() * 100);
 			}
 		});
 		// add data
@@ -99,18 +102,17 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 		return upDataset;
 	}
 
-
 	private TimeSeriesCollection createUpPercentageAccDataset() {
 		TimeSeriesCollection upaDataset = new TimeSeriesCollection();
 		TimeSeries series1 = new TimeSeries("累计涨跌幅(百分比)");
 		// add data
 		double prevSum = 0.0;
-		for(Map.Entry<String,Double> e: upPercentMap.entrySet()) {
+		for (Map.Entry<String, Double> e : upPercentMap.entrySet()) {
 			Day d = new Day(StockUtils.stringSimpleToDate(e.getKey()).get());
 			double newSum = prevSum + e.getValue();
-			series1.add(d,  newSum*100);
-			prevSum=newSum;
-		} 
+			series1.add(d, newSum * 100);
+			prevSum = newSum;
+		}
 		// add data
 		upaDataset.addSeries(series1);
 		return upaDataset;

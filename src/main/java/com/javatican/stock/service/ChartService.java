@@ -152,8 +152,7 @@ public class ChartService {
 	public boolean createGraph(String stockSymbol, boolean force) {
 		StockItem si = stockItemDAO.findBySymbol(stockSymbol);
 		if (si != null) {
-			createGraph(si, force);
-			return true;
+			return createGraph(si, force);
 		} else {
 			return false;
 		}
@@ -195,6 +194,7 @@ public class ChartService {
 				logger.info("Finish creating main chart for " + stockItem.getSymbol() + " using latest data dated: "
 						+ stockItemLog.getPriceDate());
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				throw new StockException(ex);
 			}
 			// Resource resource = resourceLoader
@@ -206,6 +206,7 @@ public class ChartService {
 				logger.info("Finish creating strategy chart for " + stockItem.getSymbol() + " using latest data dated: "
 						+ stockItemLog.getPriceDate());
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				throw new StockException(ex);
 			}
 		}
@@ -235,28 +236,28 @@ public class ChartService {
 
 			if (cwss1Hp1Subplot != null) {
 				mainPlot.add(cwss1Hp1Subplot, 2);
-				showAnnotation(cwss1Hp1Subplot, x, "認購權證,持有1日");
+				showAnnotation(cwss1Hp1Subplot, x, "購權1日");
 			}
 			if (cwss1Hp3Subplot != null) {
 				mainPlot.add(cwss1Hp3Subplot, 2);
-				showAnnotation(cwss1Hp3Subplot, x, "認購權證,持有3日");
+				showAnnotation(cwss1Hp3Subplot, x, "購權3日");
 			}
 			if (cwss1Hp5Subplot != null) {
 				mainPlot.add(cwss1Hp5Subplot, 2);
-				showAnnotation(cwss1Hp5Subplot, x, "認購權證,持有5日");
+				showAnnotation(cwss1Hp5Subplot, x, "購權5日");
 			}
 			//
 			if (pwss1Hp1Subplot != null) {
 				mainPlot.add(pwss1Hp1Subplot, 2);
-				showAnnotation(pwss1Hp1Subplot, x, "認售權證,持有1日");
+				showAnnotation(pwss1Hp1Subplot, x, "售權1日");
 			}
 			if (pwss1Hp3Subplot != null) {
 				mainPlot.add(pwss1Hp3Subplot, 2);
-				showAnnotation(pwss1Hp3Subplot, x, "認售權證,持有3日");
+				showAnnotation(pwss1Hp3Subplot, x, "售權3日");
 			}
 			if (pwss1Hp5Subplot != null) {
 				mainPlot.add(pwss1Hp5Subplot, 2);
-				showAnnotation(pwss1Hp5Subplot, x, "認售權證,持有5日");
+				showAnnotation(pwss1Hp5Subplot, x, "售權5日");
 			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);

@@ -37,9 +37,14 @@ public abstract class CallWarrantSelectStrategy1Plot implements JPlot {
 
 	@Override
 	public Plot getPlot(StockItem stockItem) throws StockException {
-		this.upPercentMap = callWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
-		if(upPercentMap.isEmpty()) return null;
-		return createPlot();
+		try {
+			this.upPercentMap = callWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
+			if (upPercentMap.isEmpty())
+				return null;
+			return createPlot();
+		} catch (StockException e) {
+			return null;
+		}
 	}
 
 	private XYPlot createPlot() {
