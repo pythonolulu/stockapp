@@ -1,6 +1,7 @@
 package com.javatican.stock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,20 +10,18 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.javatican.stock.model.RealtimeMarketInfo;
+import com.javatican.stock.model.RealtimeMarketInfo.StockItemMarketInfo;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
@@ -32,6 +31,7 @@ import com.javatican.stock.service.ChartService;
 import com.javatican.stock.service.DealerTradeSummaryService;
 import com.javatican.stock.service.MarginService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
+import com.javatican.stock.service.RealtimeQuoteService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StockTradeByForeignService;
@@ -65,6 +65,9 @@ public class StockController {
 	private MarginService marginService;
 	@Autowired
 	private StrategyService strategyService;
+	@Autowired
+	RealtimeQuoteService realtimeQuoteService;
+
 	// @Autowired
 	// private ServletContext servletContext;
 
@@ -365,8 +368,8 @@ public class StockController {
 		Date date = StockUtils.stringSimpleToDate(tradingDate).get();
 		// key: stockItem
 		// value: a map with key of date string and value StockTradeByTrust object
-		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = stockService.getTop30StockItemTradeByTrust(date,
-				dateLength);
+		LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> dataMap = stockService
+				.getTop30StockItemTradeByTrust(date, dateLength);
 		// create stock charts
 		chartService.createGraphs(dataMap.keySet(), force);
 		// also return trading date list
@@ -375,9 +378,9 @@ public class StockController {
 				.collect(Collectors.toList());
 		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
 		// prepare K/D values
-		Map<StockItem, Map<String, StockItemData>> statsMap = stockService
+		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService
 				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateList);
-
+		//
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);
@@ -405,7 +408,7 @@ public class StockController {
 					.collect(Collectors.toList());
 			mav = new ModelAndView("stock/top50");
 			// prepare K/D values
-			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
+			LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
 			chartService.createGraphs(statsMap.keySet(), force);
@@ -442,7 +445,7 @@ public class StockController {
 			//
 			mav = new ModelAndView("stock/bottom50");
 			// prepare K/D values
-			Map<StockItem, Map<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
+			LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService.getStockItemStatsData(
 					spcList.stream().map(spc -> spc.getStockItem()).collect(Collectors.toList()), dateList);
 			// create stock charts
 			chartService.createGraphs(statsMap.keySet(), force);
@@ -521,6 +524,7 @@ public class StockController {
 		chartService.createGraph(stockSymbol, force);
 		return new ModelAndView("redirect:" + "/stock/imgs/" + stockSymbol + ".png");
 	}
+
 	@GetMapping("/{stockSymbol}/getStrategyChart")
 	public ModelAndView getStrategyChart(@PathVariable String stockSymbol,
 			@RequestParam(value = "force", defaultValue = "false") boolean force) {
@@ -590,7 +594,7 @@ public class StockController {
 			@RequestParam(value = "holdPeriod", defaultValue = "3") int holdPeriod,
 			@RequestParam(value = "dataDatePeriod", defaultValue = "120") int dataDatePeriod,
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
-			@RequestParam(value = "forceDrawChart", defaultValue = "false") boolean forceDrawChart) {
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		// int totalDatePeriod = (int) stockService.tradingDateCount();
 		Date date = stockService.getLatestTradingDate();
 		ModelAndView mav;
@@ -655,7 +659,7 @@ public class StockController {
 			});
 
 			// create stock charts
-			chartService.createGraphs2(resultMap.keySet(), forceDrawChart);
+			chartService.createGraphs2(resultMap.keySet(), force);
 			//
 			mav.addObject("upPercentAccMap", resultMap);
 			mav.addObject("upProbabilityMap", upProbabilityMap);
@@ -687,7 +691,7 @@ public class StockController {
 			@RequestParam(value = "holdPeriod", defaultValue = "3") int holdPeriod,
 			@RequestParam(value = "dataDatePeriod", defaultValue = "120") int dataDatePeriod,
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
-			@RequestParam(value = "forceDrawChart", defaultValue = "false") boolean forceDrawChart) {
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		// int totalDatePeriod = (int) stockService.tradingDateCount();
 		Date date = stockService.getLatestTradingDate();
 		ModelAndView mav;
@@ -752,7 +756,7 @@ public class StockController {
 			});
 
 			// create stock charts
-			chartService.createGraphs2(resultMap.keySet(), forceDrawChart);
+			chartService.createGraphs2(resultMap.keySet(), force);
 			//
 			mav.addObject("upPercentAccMap", resultMap);
 			mav.addObject("upProbabilityMap", upProbabilityMap);
@@ -763,12 +767,107 @@ public class StockController {
 			mav.addObject("selectCount", selectCount);
 			mav.addObject("holdPeriod", holdPeriod);
 			// stockItems with call and put warrants
-			mav.addObject("swcwList", stockService.getStockSymbolsWithPutWarrant());
+			mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 			// mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		} else {
 			mav = new ModelAndView("stock/error");
 		}
 		return mav;
+	}
+
+	@GetMapping("/sma20SelectStrategy2")
+	public ModelAndView sma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force, 
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
+		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/sma20SelectStrategy2");
+		LinkedHashMap<String, List<Number>> statsMap;
+		if (!strategyService.existsForSma20SelectStrategy2StatsData(dateString)) {
+			Map<String, List<Number>> resultMap = new HashMap<>();
+			for (StockItem si : siMap.values()) {
+				List<StockItemData> sidList = stockService.getStockItemStatsData(si);
+				if (sidList == null || !strategyService.isLatestPriceAboveSma20(sidList)) {
+					continue;
+				} else {
+					int daysAboveSma20 = strategyService.getDaysAboveSma20(sidList);
+					int daysSma20GoingUp = strategyService.getDaysSma20GoingUp(sidList);
+					double latestPriceAboveSma20 = strategyService.getLatestPriceAboveSma20(sidList);
+					double latestK9 = strategyService.getLatestK9(sidList);
+					double latestD9 = strategyService.getLatestD9(sidList);
+					resultMap.put(si.getSymbol(), Arrays.<Number>asList(daysAboveSma20, daysSma20GoingUp, latestPriceAboveSma20,
+							latestK9, latestD9));
+				}
+			}
+			// sort according to daysAboveSma20
+			statsMap = new LinkedHashMap<>();
+			resultMap.entrySet().stream()
+					.sorted((e1, e2) -> e1.getValue().get(0).intValue() > e2.getValue().get(0).intValue() ? -1
+							: (e1.getValue().get(0).intValue() < e2.getValue().get(0).intValue() ? 1 : 0))
+					.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
+			// write statsMap
+			try {
+				strategyService.saveSma20SelectStrategy2StatsData(dateString, statsMap);
+			} catch (StockException ex) {
+				ex.printStackTrace();
+			}
+		} else {
+			try {
+				statsMap = strategyService.loadSma20SelectStrategy2StatsData(dateString);
+			} catch (StockException e) {
+				e.printStackTrace();
+				mav = new ModelAndView("stock/error");
+				return mav;
+			}
+		}
+		// create stock charts
+		chartService.createGraphs2(statsMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if(realtimeQuote){
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(statsMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+			//
+		mav.addObject("realtimeMap",realtimeMap);
+		mav.addObject("tradingDate", date);
+		mav.addObject("statsMap", statsMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+
+	@GetMapping("/getRealtimeQuote")
+	private ResponseMessage getRealtimeQuote(@RequestParam(value = "symbols") String symbols) {
+		List<String> symbolList = new ArrayList<>();
+		for (String symbol : symbols.split(",")) {
+			symbolList.add(symbol);
+		}
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			RealtimeMarketInfo mri = realtimeQuoteService.getInfo(symbolList);
+			for (StockItemMarketInfo simi : mri.getMsgArray()) {
+				logger.info(simi.toString());
+			}
+			mes.setCategory("Success");
+			mes.setText("Realtime quote is successfully received.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Realtime quote fails to receive.");
+		}
+		return mes;
+
 	}
 
 }

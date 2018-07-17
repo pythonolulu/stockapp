@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -223,7 +222,7 @@ public class StockService {
 		return tradingDateDAO.getLatestTradingDate();
 	}
 
-	public Map<StockItem, Map<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
+	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
 			int dateLength) {
 		// 1. get the stbt list for the specified date
 		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
@@ -244,11 +243,11 @@ public class StockService {
 		// key is the stockItem
 		// value is a sub-map object with key of trading date and value of
 		// StockTradeByTrust object
-		Map<StockItem, Map<String, StockTradeByTrust>> dataMap = new LinkedHashMap<>();
+		LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> dataMap = new LinkedHashMap<>();
 		// 5. filter the 'stbt' collection using latest 10 trading dates list.
 		// and create the sub-map object
 		siList.stream().forEach(si -> {
-			Map<String, StockTradeByTrust> map = new TreeMap<>();
+			TreeMap<String, StockTradeByTrust> map = new TreeMap<>();
 			si.getStbt().stream().filter(stbt -> dList.contains(stbt.getTradingDate()))
 					.forEach(stbt -> map.put(StockUtils.dateToStringSeparatedBySlash(stbt.getTradingDate()), stbt));
 			// map.values().stream().forEach(stbt->logger.info(stbt.toString()));
@@ -257,13 +256,30 @@ public class StockService {
 		return dataMap;
 	}
 
-	public Map<StockItem, Map<String, StockItemData>> getStockItemStatsData(List<StockItem> siList,
+	public List<StockItemData> getStockItemStatsData(StockItem si){
+		try {
+			return stockItemDataDAO.load(si.getSymbol());
+		} catch (StockException e) {
+			logger.warn("Error loading stock item stats data for symbol:"+si.getSymbol());
+			return null;
+		}
+	}
+	public List<StockItemData> getStockItemStatsData(String symbol){
+		try {
+			return stockItemDataDAO.load(symbol);
+		} catch (StockException e) {
+			logger.warn("Error loading stock item stats data for symbol:"+symbol);
+			return null;
+		}
+	}
+	
+	public LinkedHashMap<StockItem, TreeMap<String, StockItemData>> getStockItemStatsData(List<StockItem> siList,
 			List<Date> dateList) {
-		Map<StockItem, Map<String, StockItemData>> statsMap = new LinkedHashMap<>();
+		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = new LinkedHashMap<>();
 		siList.stream().forEach(si -> {
 			try {
 				List<StockItemData> sidList = stockItemDataDAO.load(si.getSymbol());
-				Map<String, StockItemData> map = new TreeMap<>();
+				TreeMap<String, StockItemData> map = new TreeMap<>();
 				sidList.stream().filter(sid -> dateList.contains(sid.getTradingDate()))
 						.forEach(sid -> map.put(StockUtils.dateToStringSeparatedBySlash(sid.getTradingDate()), sid));
 				statsMap.put(si, map);

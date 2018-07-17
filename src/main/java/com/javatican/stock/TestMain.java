@@ -5,6 +5,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -60,7 +62,26 @@ import com.javatican.stock.util.StockUtils;
 
 public class TestMain {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+		final String TWSE_REALTIME_QUOTE_GET_URL = "http://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s&json=1&delay=0&_=%s";
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(String.format("tse_%s.tw|", "2317"));
+		sb.append(String.format("tse_%s.tw|", "2330"));
+
+		String strUrl = String.format(TWSE_REALTIME_QUOTE_GET_URL, sb.toString(), Long.toString(1531705877469L));
+
+		// try (InputStream inStream = new URL(strUrl).openStream();) {
+		// Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
+		// System.out.println(doc.body());
+		// }
+		Document doc = Jsoup.connect(strUrl).get();
+		System.out.println(doc.text());
+
+	}
+
+	public static void main8(String[] args) {
 		// note: the return values of keySet() or entrySet() of TreeMap will keep the
 		// order of the TreeMap（ascending key order)
 		TreeMap<String, Double> upPercentMap = new TreeMap<>();
