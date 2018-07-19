@@ -11,6 +11,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -61,8 +62,14 @@ import com.javatican.stock.model.StockPriceChange;
 import com.javatican.stock.util.StockUtils;
 
 public class TestMain {
-
 	public static void main(String[] args) throws IOException {
+		Date today = new Date();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(today);
+		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		System.out.println(dayOfWeek);
+	}
+	public static void main9(String[] args) throws IOException {
 		final String TWSE_REALTIME_QUOTE_GET_URL = "http://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s&json=1&delay=0&_=%s";
 
 		StringBuilder sb = new StringBuilder();

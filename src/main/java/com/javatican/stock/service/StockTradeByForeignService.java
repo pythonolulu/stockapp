@@ -36,6 +36,7 @@ public class StockTradeByForeignService {
 	private static final String TWSE_STOCK_TRADE_BY_FOREIGN_GET_URL = "http://www.tse.com.tw/fund/TWT38U?response=html&date=%s";
 	private static String CALL_WARRANT_RE = "0[1-9][\\d]{4}";
 	private static String PUT_WARRANT_RE = "0[\\d]{4}P";
+	private static String ANOTHER_WARRANT_RE = "03[\\d]{3}[A-Z]";
 	@Autowired
 	StockConfig stockConfig;
 
@@ -93,7 +94,8 @@ public class StockTradeByForeignService {
 				for (Element tr : trs) {
 					Elements tds = tr.select("td");
 					String itemSymbol = tds.get(1).text();
-					if (itemSymbol.matches(CALL_WARRANT_RE) || itemSymbol.matches(PUT_WARRANT_RE)) {
+					if (itemSymbol.matches(CALL_WARRANT_RE) || itemSymbol.matches(PUT_WARRANT_RE)
+							|| itemSymbol.matches(ANOTHER_WARRANT_RE)) {
 						logger.info("The symbol: " + itemSymbol + " is not a stock item and is skipped!");
 						continue;
 					}

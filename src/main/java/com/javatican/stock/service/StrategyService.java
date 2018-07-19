@@ -1,5 +1,6 @@
 package com.javatican.stock.service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,13 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantSelectStrategy1DAO;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
+import com.javatican.stock.dao.PriceBreakUpSelectStrategy3DAO;
 import com.javatican.stock.dao.PutWarrantSelectStrategy1DAO;
 import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.Sma20SelectStrategy2DAO;
 import com.javatican.stock.dao.StockItemDAO;
+import com.javatican.stock.dao.StockItemDataDAO;
+import com.javatican.stock.dao.StockItemWeeklyDataDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.WarrantTradeDAO;
 import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.model.StockItemWeeklyData;
 import com.javatican.stock.model.WarrantTrade;
 import com.javatican.stock.util.StockUtils;
 
@@ -40,6 +45,10 @@ public class StrategyService {
 	@Autowired
 	StockItemDAO stockItemDAO;
 	@Autowired
+	StockItemDataDAO stockItemDataDAO;
+	@Autowired
+	StockItemWeeklyDataDAO stockItemWeeklyDataDAO;
+	@Autowired
 	CallWarrantTradeSummaryDAO callWarrantTradeSummaryDAO;
 	@Autowired
 	PutWarrantTradeSummaryDAO putWarrantTradeSummaryDAO;
@@ -51,6 +60,8 @@ public class StrategyService {
 	PutWarrantSelectStrategy1DAO putWarrantSelectStrategy1DAO;
 	@Autowired
 	Sma20SelectStrategy2DAO sma20SelectStrategy2DAO;
+	@Autowired
+	PriceBreakUpSelectStrategy3DAO priceBreakUpSelectStrategy3DAO;
 
 	public Map<String, TreeMap<String, Double>> getStatsDataForCallWarrantSelectStrategy1(int holdPeriod) {
 		if (callWarrantSelectStrategy1DAO.existsForCombinedResult(holdPeriod)) {
@@ -272,8 +283,91 @@ public class StrategyService {
 		sma20SelectStrategy2DAO.saveStatsData(dateString, statsMap);
 	}
 
-	public LinkedHashMap<String, List<Number>> loadSma20SelectStrategy2StatsData(String dateString) throws StockException {
+	public LinkedHashMap<String, List<Number>> loadSma20SelectStrategy2StatsData(String dateString)
+			throws StockException {
 		return sma20SelectStrategy2DAO.loadStatsData(dateString);
+	}
+
+	public void preparePriceBreakUpSelectStrategy3() throws StockException {
+		// get all symbols that have call warrants
+		List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+		for (String stockSymbol : symbolList) {
+			if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
+				continue;
+			List<StockItemData> sidList = stockItemDataDAO.load(stockSymbol);
+			List<StockItemWeeklyData> siwdList = stockItemWeeklyDataDAO.load(stockSymbol);
+			TreeMap<Date, Integer> statsMap = calculatePriceBreakUpStats(sidList, siwdList);
+			priceBreakUpSelectStrategy3DAO.save(stockSymbol, statsMap);
+		}
+	}
+
+	public Map<String, Integer> getStatsDataForPriceBreakUpSelectStrategy3(String dateString) {
+		if (priceBreakUpSelectStrategy3DAO.resultExistsForDate(dateString)) {
+			try {
+				return priceBreakUpSelectStrategy3DAO.loadResult(dateString);
+			} catch (StockException e) {
+				logger.warn("Error loading StatsData for priceBreakUpSelectStrategy3 of date:" + dateString);
+				return null;
+			}
+		} else {
+			Map<String, Integer> resultMap = new HashMap<>();
+			List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+			for (String stockSymbol : symbolList) {
+				if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
+					continue;
+				try {
+					TreeMap<Date, Integer> statsMap = priceBreakUpSelectStrategy3DAO.load(stockSymbol);
+					Date current = StockUtils.stringSimpleToDate(dateString).get();
+					if (statsMap.containsKey(current)) {
+						List<Date> keyList = new ArrayList<>(statsMap.keySet());
+						if (keyList.indexOf(current) == 0)
+							continue;
+						Date previous = keyList.get(keyList.indexOf(current) - 1);
+						Integer countCurrent = statsMap.get(current);
+						Integer countPrevious = statsMap.get(previous);
+						resultMap.put(stockSymbol, countCurrent - countPrevious);
+					} else {
+						continue;
+					}
+
+				} catch (StockException e) {
+					logger.warn("Error loading Stats Data for priceBreakUpSelectStrategy3 of symbol:" + stockSymbol);
+					continue;
+				}
+			}
+			try {
+				priceBreakUpSelectStrategy3DAO.saveResult(dateString, resultMap);
+			} catch (StockException e) {
+				logger.warn("Error saving result data for priceBreakUpSelectStrategy3 of  date:" + dateString);
+			}
+			return resultMap;
+		}
+	}
+
+	/*
+	 * The statsMap is a TreeMap with key of trading date and value of an integer
+	 * represents the number of times the highest price of the target trading date
+	 * breaks above the highest price of each past week.
+	 */
+	private TreeMap<Date, Integer> calculatePriceBreakUpStats(List<StockItemData> sidList,
+			List<StockItemWeeklyData> siwdList) {
+		TreeMap<Date, Integer> statsMap = new TreeMap<>();
+		for (StockItemData sid : sidList) {
+			Double hPrice = sid.getStockPrice().getHigh();
+			Date d = sid.getTradingDate();
+			int count = 0;
+			for (StockItemWeeklyData siwd : siwdList) {
+				if (siwd.getTradingDate().before(d)) {
+					if (siwd.getStockPrice().getHigh() <= hPrice) {
+						count++;
+					}
+				} else {
+					break;
+				}
+			}
+			statsMap.put(d, Integer.valueOf(count));
+		}
+		return statsMap;
 	}
 
 }

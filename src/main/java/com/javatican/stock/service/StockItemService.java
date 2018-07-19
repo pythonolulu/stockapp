@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,12 +40,15 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockItemLogDAO;
+import com.javatican.stock.dao.StockItemWeeklyDataDAO;
 import com.javatican.stock.dao.StockPriceDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
+import com.javatican.stock.dao.WeeklyStockPriceDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockItemLog;
+import com.javatican.stock.model.StockItemWeeklyData;
 import com.javatican.stock.model.StockPrice;
 import com.javatican.stock.util.StockUtils;
 
@@ -70,6 +74,8 @@ public class StockItemService {
 	@Autowired
 	StockPriceDAO stockPriceDAO;
 	@Autowired
+	WeeklyStockPriceDAO weeklyStockPriceDAO;
+	@Autowired
 	StockItemDAO stockItemDAO;
 	@Autowired
 	StockItemLogDAO stockItemLogDAO;
@@ -79,6 +85,8 @@ public class StockItemService {
 	TradingDateDAO tradingDateDAO;
 	@Autowired
 	StockItemDataDAO stockItemDataDAO;
+	@Autowired
+	StockItemWeeklyDataDAO stockItemWeeklyDataDAO;
 	@Autowired
 	StockItemHelper stockItemHelper;
 
@@ -448,11 +456,16 @@ public class StockItemService {
 			if (sil.getSymbol().startsWith("IX") || sil.getSymbol().startsWith("TXF"))
 				continue;
 			Date latestDate = calculateAndSaveKDForSymbol(sil.getSymbol());
-			//stockItemHelper.updateStatsDateForItem(sil, latestDate);
+			// stockItemHelper.updateStatsDateForItem(sil, latestDate);
 			stockItemHelper.updateStatsDateForItem(sil.getSymbol(), latestDate);
 		}
 	}
-
+	public void calculateAndSaveWeeklyKDForAll() throws StockException {
+		List<StockItem> siList = stockItemDAO.findAll();
+		for (StockItem si : siList) {
+			calculateAndSaveWeeklyKDForSymbol(si.getSymbol()); 
+		}
+	}
 	/*
 	 * Calculate RSV and KD values for the specified stock item
 	 */
@@ -522,6 +535,85 @@ public class StockItemService {
 		stockItemDataDAO.save(symbol, sidList);
 		return latestDate;
 	}
+
+	/*
+	 * Calculate RSV and KD values for the specified stock item
+	 */
+	public void calculateAndSaveWeeklyKDForSymbol(String symbol) {
+		List<StockPrice> spList = null;
+		try {
+			spList = weeklyStockPriceDAO.load(symbol);
+		} catch(Exception ex) {
+			logger.warn("Error loading weekly price data for symbol:"+symbol);
+			return ;
+		}
+		// Date latestDate = spList.get(spList.size() - 1).getTradingDate();
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		stats.setWindowSize(9);
+		//
+		List<StockItemWeeklyData> siwdList = new ArrayList<>();
+		spList.stream().forEach(sp -> siwdList.add(new StockItemWeeklyData(sp.getTradingDate(), sp)));
+
+		siwdList.stream().forEach(siwd -> {
+			stats.addValue(siwd.getStockPrice().getHigh());
+			siwd.setHigh(stats.getMax());
+		});
+		stats.clear();
+		siwdList.stream().forEach(siwd -> {
+			stats.addValue(siwd.getStockPrice().getLow());
+			siwd.setLow(stats.getMin());
+		});
+		siwdList.stream().forEach(siwd -> {
+			if (siwd.getHigh() - siwd.getLow() < 0.001) {
+				siwd.setRsv(100.0);
+			} else {
+				siwd.setRsv(StockUtils.roundDoubleDp2(
+						100 * (siwd.getStockPrice().getClose() - siwd.getLow()) / (siwd.getHigh() - siwd.getLow())));
+			}
+		});
+		IntStream.range(0, siwdList.size()).forEach(idx -> {
+			StockItemWeeklyData siwd = siwdList.get(idx);
+			double k;
+			double d;
+			if (idx == 0) {
+				k = 50.0 * 2 / 3 + siwd.getRsv() / 3;
+				d = 50.0 * 2 / 3 + k / 3.0;
+			} else {
+				k = siwdList.get(idx - 1).getK() * 2 / 3 + siwd.getRsv() / 3.0;
+				d = siwdList.get(idx - 1).getD() * 2 / 3 + k / 3;
+			}
+			siwd.setK(StockUtils.roundDoubleDp2(k));
+			siwd.setD(StockUtils.roundDoubleDp2(d));
+		});
+		// simple moving average
+		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(24);
+		// CircularFifoQueue<Double> queue = new
+		// CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
+		siwdList.stream().forEach(sid -> {
+			queue.add(sid.getStockPrice().getClose());
+			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
+			if (values.length == 24) {
+				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, 20, 4)));
+				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, 16, 8)));
+				sid.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, 12, 12)));
+				sid.setSma24(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 24)));
+			} else if (values.length >= 12) {
+				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+				sid.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 12, 12)));
+			} else if (values.length >= 8) {
+				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+			} else if (values.length >= 4) {
+				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+			}
+		});
+		try {
+			stockItemWeeklyDataDAO.save(symbol, siwdList);
+		} catch (StockException e) {
+			logger.warn("Error saving weekly stats data for symbol:"+symbol);
+		}
+	}
 	// public void migrateData() {
 	// List<StockItem> siList = stockItemDAO.findAll();
 	// List<StockItemLog> silList = new ArrayList<>();
@@ -536,4 +628,90 @@ public class StockItemService {
 	// }
 	// stockItemLogDAO.saveAll(silList);
 	// }
+
+	public void prepareWeeklyStockPriceForAll() {
+		List<Date> tdList = tradingDateDAO.findAllTradingDate();
+		List<String> symbolList = stockItemDAO.getAllSymbols();
+		// weeklySpMap: key is the dateString , value is a StockPrice (store weekly
+		// price)
+		TreeMap<String, StockPrice> weeklySpMap;
+		for (String symbol : symbolList) {
+			weeklySpMap = new TreeMap<>();
+			List<StockPrice> spList;
+			// load daily price
+			try {
+				spList = stockPriceDAO.load(symbol);
+			} catch (StockException e) {
+				logger.warn("Error loading stock price for symbol:" + symbol);
+				continue;
+			}
+			for (StockPrice sp : spList) {
+				// get its last day of the week(not necessarily Friday, because of holidays)
+				// logger.info(sp.toString());
+				Date lastTradingDateOfWeek = getLastTradingDateOfWeek(sp.getTradingDate(), tdList);
+				String dateString = StockUtils.dateToSimpleString(lastTradingDateOfWeek);
+				StockPrice weeklySp = weeklySpMap.get(dateString);
+				if (weeklySp == null) {
+					weeklySp = new StockPrice();
+					weeklySpMap.put(dateString, weeklySp);
+					weeklySp.setTradingDate(lastTradingDateOfWeek);
+					// set open/high/low prices
+					weeklySp.setOpen(sp.getOpen());
+					weeklySp.setHigh(sp.getHigh());
+					weeklySp.setLow(sp.getLow());
+				}
+				if (sp.getTradingDate().equals(lastTradingDateOfWeek)) {
+					// set close price
+					weeklySp.setClose(sp.getClose());
+				}
+				// update other fields except open/close
+				updateWeeklyPrice(weeklySp, sp);
+			}
+			// save weekly price for item
+			try {
+				weeklyStockPriceDAO.save(symbol, new ArrayList<>(weeklySpMap.values()));
+			} catch (StockException e) {
+				logger.warn("Error saving weekly stock price for symbol:" + symbol);
+				continue;
+			}
+
+		}
+	}
+
+	/*
+	 * update values except open and close price fields
+	 * 
+	 */
+	private void updateWeeklyPrice(StockPrice weeklySp, StockPrice sp) {
+		if (sp.getHigh() > weeklySp.getHigh()) {
+			weeklySp.setHigh(sp.getHigh());
+		}
+		if (sp.getLow() < weeklySp.getLow()) {
+			weeklySp.setLow(sp.getLow());
+		}
+		weeklySp.setTransaction(weeklySp.getTransaction() + sp.getTransaction());
+		weeklySp.setTradeVolume(weeklySp.getTradeVolume() + sp.getTradeVolume());
+		weeklySp.setTradeValue(weeklySp.getTradeValue() + sp.getTradeValue());
+	}
+
+	private Date getLastTradingDateOfWeek(Date tradingDate, List<Date> tdList) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(tradingDate);
+		// dayOfWeek starts from 1(Sunday)
+		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		// first set to Saturday(sometimes TWSE will open on Sat.)
+		cal.add(Calendar.DAY_OF_WEEK, 7 - dayOfWeek);
+		// logger.info(cal.getTime().toString());
+		//
+		for (int i = 0; i <= (7 - dayOfWeek); i++) {
+			Date d = cal.getTime();
+			// logger.info(d.toString());
+			if (tdList.contains(d)) {
+				return d;
+			}
+			cal.add(Calendar.DAY_OF_WEEK, -1);
+		}
+		return null;
+	}
+
 }

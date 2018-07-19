@@ -21,7 +21,7 @@ import com.javatican.stock.model.StockItemData;
 
 @Repository("stockItemDataDAO")
 public class StockItemDataDAO {
-	private static final Logger logger = LoggerFactory.getLogger(StockItemDataDAO.class);
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 	private static final String RESOURCE_FILE_PATH = "file:./download/stats/%s_stats.json";

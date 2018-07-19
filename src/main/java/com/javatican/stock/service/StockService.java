@@ -86,7 +86,7 @@ public class StockService {
 	 * This shall be run after every trading date.
 	 */
 	public void updateTradingDateAndValue() throws StockException {
-		String dateString = StockUtils.todayDateString();
+		String dateString = StockUtils.todayDateString(); 
 		downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
 	}
 

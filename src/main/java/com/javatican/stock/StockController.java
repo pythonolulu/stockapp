@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.assertj.core.internal.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -776,7 +777,7 @@ public class StockController {
 	}
 
 	@GetMapping("/sma20SelectStrategy2")
-	public ModelAndView sma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force, 
+	public ModelAndView sma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
@@ -796,8 +797,8 @@ public class StockController {
 					double latestPriceAboveSma20 = strategyService.getLatestPriceAboveSma20(sidList);
 					double latestK9 = strategyService.getLatestK9(sidList);
 					double latestD9 = strategyService.getLatestD9(sidList);
-					resultMap.put(si.getSymbol(), Arrays.<Number>asList(daysAboveSma20, daysSma20GoingUp, latestPriceAboveSma20,
-							latestK9, latestD9));
+					resultMap.put(si.getSymbol(), Arrays.<Number>asList(daysAboveSma20, daysSma20GoingUp,
+							latestPriceAboveSma20, latestK9, latestD9));
 				}
 			}
 			// sort according to daysAboveSma20
@@ -824,7 +825,7 @@ public class StockController {
 		// create stock charts
 		chartService.createGraphs2(statsMap.keySet(), force);
 		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
-		if(realtimeQuote){
+		if (realtimeQuote) {
 			RealtimeMarketInfo mri;
 			try {
 				mri = realtimeQuoteService.getInfo(statsMap.keySet());
@@ -836,8 +837,8 @@ public class StockController {
 				e.printStackTrace();
 			}
 		}
-			//
-		mav.addObject("realtimeMap",realtimeMap);
+		//
+		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
 		mav.addObject("statsMap", statsMap);
 		mav.addObject("siMap", siMap);
@@ -870,4 +871,94 @@ public class StockController {
 
 	}
 
+	@GetMapping("/prepareWeeklyStockPriceForAll")
+	public ResponseMessage prepareWeeklyStockPriceForAll() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.prepareWeeklyStockPriceForAll();
+			mes.setCategory("Success");
+			mes.setText("Weekly stock price has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Weekly stock price fails to be updated.");
+		}
+		return mes;
+	}
+
+	@GetMapping("/calculateAndSaveWeeklyKDForAll")
+	public ResponseMessage calculateAndSaveWeeklyKDForAll() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockItemService.calculateAndSaveWeeklyKDForAll();
+			mes.setCategory("Success");
+			mes.setText("Weekly stats data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Weekly stats data fails to be updated.");
+		}
+		return mes;
+	}
+
+	@GetMapping("/preparePriceBreakUpSelectStrategy3")
+	public ResponseMessage preparePriceBreakUpSelectStrategy3() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService.preparePriceBreakUpSelectStrategy3();
+			mes.setCategory("Success");
+			mes.setText("Price break up select strategy stats data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Price break up select strategy stats data fails to be prepared.");
+		}
+		return mes;
+	}
+
+	@GetMapping("/priceBreakUpSelectStrategy3")
+	public ModelAndView priceBreakUpSelectStrategy3(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
+			@RequestParam(value = "tradingDate", required = false) String dateString) {
+		Date date = null;
+		if (dateString == null) {
+			date = stockService.getLatestTradingDate();
+			dateString = StockUtils.dateToSimpleString(date);
+		} else {
+			date = StockUtils.stringSimpleToDate(dateString).get();
+		}
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/priceBreakUpSelectStrategy3");
+		Map<String, Integer> dataMap = strategyService.getStatsDataForPriceBreakUpSelectStrategy3(dateString);
+		LinkedHashMap<String, Integer> statsMap = new LinkedHashMap<>();
+		dataMap.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(selectCount)
+				.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
+		// create stock charts
+		chartService.createGraphs2(statsMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(statsMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("tradingDate", date);
+		mav.addObject("statsMap", statsMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
 }
