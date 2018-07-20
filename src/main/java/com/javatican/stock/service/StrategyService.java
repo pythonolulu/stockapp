@@ -1,6 +1,7 @@
 package com.javatican.stock.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantSelectStrategy1DAO;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.PriceBreakUpSelectStrategy3DAO;
+import com.javatican.stock.dao.PriceBreakUpSelectStrategy4DAO;
 import com.javatican.stock.dao.PutWarrantSelectStrategy1DAO;
 import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.Sma20SelectStrategy2DAO;
@@ -62,6 +64,8 @@ public class StrategyService {
 	Sma20SelectStrategy2DAO sma20SelectStrategy2DAO;
 	@Autowired
 	PriceBreakUpSelectStrategy3DAO priceBreakUpSelectStrategy3DAO;
+	@Autowired
+	PriceBreakUpSelectStrategy4DAO priceBreakUpSelectStrategy4DAO;
 
 	public Map<String, TreeMap<String, Double>> getStatsDataForCallWarrantSelectStrategy1(int holdPeriod) {
 		if (callWarrantSelectStrategy1DAO.existsForCombinedResult(holdPeriod)) {
@@ -296,8 +300,20 @@ public class StrategyService {
 				continue;
 			List<StockItemData> sidList = stockItemDataDAO.load(stockSymbol);
 			List<StockItemWeeklyData> siwdList = stockItemWeeklyDataDAO.load(stockSymbol);
-			TreeMap<Date, Integer> statsMap = calculatePriceBreakUpStats(sidList, siwdList);
+			TreeMap<Date, Integer> statsMap = calculatePriceBreakUpStatsStrategy3(sidList, siwdList);
 			priceBreakUpSelectStrategy3DAO.save(stockSymbol, statsMap);
+		}
+	}
+
+	public void preparePriceBreakUpSelectStrategy4() throws StockException {
+		// get all symbols that have call warrants
+		List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+		for (String stockSymbol : symbolList) {
+			if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
+				continue;
+			List<StockItemData> sidList = stockItemDataDAO.load(stockSymbol);
+			TreeMap<Date, List<Number>> statsMap = calculatePriceBreakUpStatsStrategy4(sidList);
+			priceBreakUpSelectStrategy4DAO.save(stockSymbol, statsMap);
 		}
 	}
 
@@ -325,7 +341,8 @@ public class StrategyService {
 						Date previous = keyList.get(keyList.indexOf(current) - 1);
 						Integer countCurrent = statsMap.get(current);
 						Integer countPrevious = statsMap.get(previous);
-						resultMap.put(stockSymbol, countCurrent - countPrevious);
+						if (countCurrent<countPrevious) continue;
+						resultMap.put(stockSymbol, (int) (countCurrent - 0.5*countPrevious));
 					} else {
 						continue;
 					}
@@ -344,12 +361,62 @@ public class StrategyService {
 		}
 	}
 
+	public Map<String, Integer> getStatsDataForPriceBreakUpSelectStrategy4(String dateString) {
+		if (priceBreakUpSelectStrategy4DAO.resultExistsForDate(dateString)) {
+			try {
+				return priceBreakUpSelectStrategy4DAO.loadResult(dateString);
+			} catch (StockException e) {
+				logger.warn("Error loading StatsData for priceBreakUpSelectStrategy4 of date:" + dateString);
+				return null;
+			}
+		} else {
+			Map<String, Integer> resultMap = new HashMap<>();
+			List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+			for (String stockSymbol : symbolList) {
+				if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
+					continue;
+				try {
+					TreeMap<Date, List<Number>> statsMap = priceBreakUpSelectStrategy4DAO.load(stockSymbol);
+					Date current = StockUtils.stringSimpleToDate(dateString).get();
+					if (statsMap.containsKey(current)) {
+						List<Date> keyList = new ArrayList<>(statsMap.keySet());
+						if (keyList.indexOf(current) == 0)
+							continue;
+						Date previous = keyList.get(keyList.indexOf(current) - 1);
+						List<Number> dataCurrent = statsMap.get(current);
+						List<Number> dataPrevious = statsMap.get(previous);
+						if (dataCurrent.get(2).doubleValue() < dataPrevious.get(1).doubleValue())
+							continue;
+						if ((dataPrevious.get(1).doubleValue() == dataPrevious.get(0).doubleValue()))
+							continue;
+						int score = (int) (100 * (dataCurrent.get(2).doubleValue() - dataPrevious.get(2).doubleValue())
+								/ (dataPrevious.get(1).doubleValue() - dataPrevious.get(0).doubleValue()));
+
+						resultMap.put(stockSymbol, score);
+					} else {
+						continue;
+					}
+
+				} catch (StockException e) {
+					logger.warn("Error loading Stats Data for priceBreakUpSelectStrategy4 of symbol:" + stockSymbol);
+					continue;
+				}
+			}
+			try {
+				priceBreakUpSelectStrategy4DAO.saveResult(dateString, resultMap);
+			} catch (StockException e) {
+				logger.warn("Error saving result data for priceBreakUpSelectStrategy4 of  date:" + dateString);
+			}
+			return resultMap;
+		}
+	}
+
 	/*
 	 * The statsMap is a TreeMap with key of trading date and value of an integer
 	 * represents the number of times the highest price of the target trading date
 	 * breaks above the highest price of each past week.
 	 */
-	private TreeMap<Date, Integer> calculatePriceBreakUpStats(List<StockItemData> sidList,
+	private TreeMap<Date, Integer> calculatePriceBreakUpStatsStrategy3(List<StockItemData> sidList,
 			List<StockItemWeeklyData> siwdList) {
 		TreeMap<Date, Integer> statsMap = new TreeMap<>();
 		for (StockItemData sid : sidList) {
@@ -366,6 +433,25 @@ public class StrategyService {
 				}
 			}
 			statsMap.put(d, Integer.valueOf(count));
+		}
+		return statsMap;
+	}
+
+	private TreeMap<Date, List<Number>> calculatePriceBreakUpStatsStrategy4(List<StockItemData> sidList) {
+		TreeMap<Date, List<Number>> statsMap = new TreeMap<>();
+		for (StockItemData sid : sidList) {
+			Double max = sidList.get(0).getStockPrice().getHigh();
+			Double min = sidList.get(0).getStockPrice().getLow();
+			int index = sidList.indexOf(sid);
+			for (int i = 1; i <= index; i++) {
+				if (sidList.get(i).getStockPrice().getHigh() > max) {
+					max = sidList.get(i).getStockPrice().getHigh();
+				}
+				if (sidList.get(i).getStockPrice().getLow() < min) {
+					min = sidList.get(i).getStockPrice().getLow();
+				}
+			}
+			statsMap.put(sid.getTradingDate(), Arrays.<Number>asList(min, max, sid.getStockPrice().getHigh()));
 		}
 		return statsMap;
 	}

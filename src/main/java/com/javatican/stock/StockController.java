@@ -907,15 +907,29 @@ public class StockController {
 		try {
 			strategyService.preparePriceBreakUpSelectStrategy3();
 			mes.setCategory("Success");
-			mes.setText("Price break up select strategy stats data has been prepared.");
+			mes.setText("Price break up select strategy 3 stats data has been prepared.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
-			mes.setText("Price break up select strategy stats data fails to be prepared.");
+			mes.setText("Price break up select strategy 3 stats data fails to be prepared.");
 		}
 		return mes;
 	}
 
+	@GetMapping("/preparePriceBreakUpSelectStrategy4")
+	public ResponseMessage preparePriceBreakUpSelectStrategy4() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService.preparePriceBreakUpSelectStrategy4();
+			mes.setCategory("Success");
+			mes.setText("Price break up select strategy 4 stats data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Price break up select strategy 4 stats data fails to be prepared.");
+		}
+		return mes;
+	}
 	@GetMapping("/priceBreakUpSelectStrategy3")
 	public ModelAndView priceBreakUpSelectStrategy3(
 			@RequestParam(value = "force", defaultValue = "false") boolean force,
@@ -933,6 +947,52 @@ public class StockController {
 		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
 		ModelAndView mav = new ModelAndView("stock/priceBreakUpSelectStrategy3");
 		Map<String, Integer> dataMap = strategyService.getStatsDataForPriceBreakUpSelectStrategy3(dateString);
+		LinkedHashMap<String, Integer> statsMap = new LinkedHashMap<>();
+		dataMap.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(selectCount)
+				.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
+		// create stock charts
+		chartService.createGraphs2(statsMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(statsMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("tradingDate", date);
+		mav.addObject("statsMap", statsMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+
+	@GetMapping("/priceBreakUpSelectStrategy4")
+	public ModelAndView priceBreakUpSelectStrategy4(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
+			@RequestParam(value = "tradingDate", required = false) String dateString) {
+		Date date = null;
+		if (dateString == null) {
+			date = stockService.getLatestTradingDate();
+			dateString = StockUtils.dateToSimpleString(date);
+		} else {
+			date = StockUtils.stringSimpleToDate(dateString).get();
+		}
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/priceBreakUpSelectStrategy4");
+		Map<String, Integer> dataMap = strategyService.getStatsDataForPriceBreakUpSelectStrategy4(dateString);
 		LinkedHashMap<String, Integer> statsMap = new LinkedHashMap<>();
 		dataMap.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(selectCount)
 				.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
