@@ -44,7 +44,7 @@ public class StockUtils {
 		DecimalFormat df = new DecimalFormat(TWO_DEC_DOUBLE_FORMAT);
 		return Double.valueOf(df.format(value));
 	}
-	
+
 	public static double roundDoubleDp1(double value) {
 		DecimalFormat df = new DecimalFormat(ONE_DEC_DOUBLE_FORMAT);
 		return Double.valueOf(df.format(value));
@@ -53,6 +53,36 @@ public class StockUtils {
 	public static double roundDoubleDp0(double value) {
 		DecimalFormat df = new DecimalFormat(ZERO_DEC_DOUBLE_FORMAT);
 		return Double.valueOf(df.format(value));
+	}
+
+	public static Date calculateAuditDate(int year, int season) {
+		Calendar cal = Calendar.getInstance();
+		cal.clear();
+		int month;
+		int day;
+		switch (season) {
+		case 1:
+			month = 3;
+			day = 31;
+			break;
+		case 2:
+			month = 6;
+			day = 30;
+			break;
+		case 3:
+			month = 9;
+			day = 30;
+			break;
+		case 4:
+			month = 12;
+			day = 31;
+			break;
+		default:
+			month = 12;
+			day = 31;
+		}
+		cal.set(year, month - 1, day, 0, 0, 0);
+		return cal.getTime();
 	}
 
 	/*
@@ -187,7 +217,9 @@ public class StockUtils {
 	public static String getNextNTradingDate(String currentDateStr, int n, List<Date> dateList) {
 		Date currentDate = StockUtils.stringSimpleToDate(currentDateStr).get();
 		Date targetDate = getNextNTradingDate(currentDate, n, dateList);
-		if(targetDate==null) return null;
-		else return StockUtils.dateToSimpleString(targetDate);
+		if (targetDate == null)
+			return null;
+		else
+			return StockUtils.dateToSimpleString(targetDate);
 	}
 }

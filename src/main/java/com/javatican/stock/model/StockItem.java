@@ -44,7 +44,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @NamedEntityGraphs({ @NamedEntityGraph(name = "StockItem.stbt", attributeNodes = @NamedAttributeNode("stbt")),
 		@NamedEntityGraph(name = "StockItem.stbf", attributeNodes = @NamedAttributeNode("stbf")),
 		@NamedEntityGraph(name = "StockItem.cwts", attributeNodes = @NamedAttributeNode("cwts")),
-		@NamedEntityGraph(name = "StockItem.pwts", attributeNodes = @NamedAttributeNode("pwts")) })
+		@NamedEntityGraph(name = "StockItem.pwts", attributeNodes = @NamedAttributeNode("pwts")),
+		@NamedEntityGraph(name = "StockItem.fi", attributeNodes = @NamedAttributeNode("fi")) })
 public class StockItem {
 
 	@Id
@@ -70,7 +71,7 @@ public class StockItem {
 	 */
 	@Column(name = "price", nullable = true)
 	private Double price = 0.0;
-	
+
 	@JsonIgnore
 	@Column(name = "valid", nullable = true)
 	private boolean valid = true;
@@ -94,6 +95,10 @@ public class StockItem {
 	@JsonIgnore
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<DealerTradeSummary> dts;
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "stockItem")
+	private Collection<FinancialInfo> fi;
 
 	// //TODO remove this
 	// @JsonIgnore
@@ -182,9 +187,12 @@ public class StockItem {
 		return dts;
 	}
 
+	public Collection<FinancialInfo> getFi() {
+		return fi;
+	}
+
 	public boolean isValid() {
 		return valid;
 	}
-
 
 }

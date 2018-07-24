@@ -55,7 +55,7 @@ public class MarginService {
 	StockItemDAO stockItemDAO;
 
 	/*
-	 * update  margin and sbl trade data (download and save the new available data)
+	 * update margin and sbl trade data (download and save the new available data)
 	 */
 	public void updateData() throws StockException {
 		Date latest = marginSblWithSymbolDAO.getLatestTradingDate();
@@ -74,33 +74,35 @@ public class MarginService {
 	}
 
 	public void extractMarginData() throws StockException {
-		List<Date> dateList = marginSblWithSymbolDAO.getDataDateList(); 
+		List<Date> dateList = marginSblWithSymbolDAO.getDataDateList();
 		List<String> symbolList = stockItemDAO.getAllSymbols();
 		Map<String, List<MarginSblWithDate>> mswdMap = new TreeMap<>();
-		symbolList.stream().forEach(symbol->{
+		symbolList.stream().forEach(symbol -> {
 			List<MarginSblWithDate> mswdList = new ArrayList<>();
-			mswdMap.put(symbol,  mswdList);
+			mswdMap.put(symbol, mswdList);
 		});
-		for(Date date: dateList) {
+		for (Date date : dateList) {
 			List<MarginSblWithSymbol> mswsList = marginSblWithSymbolDAO.load(date);
-			for(MarginSblWithSymbol msws: mswsList) {
+			for (MarginSblWithSymbol msws : mswsList) {
 				String symbol = msws.getSymbol();
 				List<MarginSblWithDate> mswdList = mswdMap.get(symbol);
-				if(mswdList==null) continue;
+				if (mswdList == null)
+					continue;
 				MarginSblWithDate mswd = new MarginSblWithDate(date, msws);
 				mswdList.add(mswd);
 			}
 		}
-		//save data
-		mswdMap.keySet().stream().forEach(symbol->{
+		// save data
+		mswdMap.keySet().stream().forEach(symbol -> {
 			List<MarginSblWithDate> mswdList = mswdMap.get(symbol);
 			try {
 				marginSblWithDateDAO.save(symbol, mswdList);
 			} catch (StockException e) {
-				logger.warn("Error saving Margin and SBL data for symbol:"+symbol);
+				logger.warn("Error saving Margin and SBL data for symbol:" + symbol);
 			}
 		});
 	}
+
 	/*
 	 * download and save data for a list of TradingDate instances.
 	 */
@@ -116,8 +118,14 @@ public class MarginService {
 			try (InputStream inStream = new URL(strUrl).openStream();) {
 				Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
 				Elements tables = doc.select("body > div > table");
+				if (tables == null || tables.isEmpty()) {
+					continue;
+				}
 				// read overall margin trade data(1st table)
 				Elements trs = tables.get(0).select("tbody > tr");
+				if (trs == null || trs.isEmpty()) {
+					continue;
+				}
 				MarginTrade mt = new MarginTrade(td.getDate());
 				// 1st row
 				Elements tds = trs.get(0).select("td");

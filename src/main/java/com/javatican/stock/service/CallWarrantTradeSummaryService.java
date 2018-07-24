@@ -71,9 +71,9 @@ public class CallWarrantTradeSummaryService {
 	/*
 	 * manual downloads history warrant trade data (only run once)
 	 */
-	private void prepareData() throws StockException {
-		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2018/03/31").get(),
-				StockUtils.stringToDate("2018/07/06").get());
+	public void prepareData() throws StockException {
+		List<TradingDate> tdList = tradingDateDAO.findBetween(StockUtils.stringToDate("2017/12/01").get(),
+				StockUtils.stringToDate("2017/12/31").get());
 		//downloadAndSave(tdList);
 		downloadAndSaveWT(tdList);
 
