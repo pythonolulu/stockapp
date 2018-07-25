@@ -41,53 +41,52 @@ public class FinancialService {
 	FinancialInfoDAO financialInfoDAO;
 
 	/*
-	 * run every season, check twse official publish dates
+	 * run every season, check twse official publish dates (change year/season
+	 * accordingly). Parameter checkExists: normally set to false, but sometimes the
+	 * same year/season data need to be re-download, then set this to true to avoid
+	 * duplicate error
 	 */
-	public void updateData() throws StockException {
+	public void updateData(boolean checkExists) {
 		List<StockItem> siList = stockItemDAO.findAll();
-		int year = 2015;
-		int season = 4;
-		downloadAndSave(siList, year, season);
-	}
-
-	public void updateData(String symbol) throws StockException {
-		int year = 2016;
-		int season = 4;
-		StockItem si = stockItemDAO.findBySymbol(symbol);
-		downloadAndSave(si, year, season);
+		int year = 2017;
+		int season = 2;
+		downloadAndSave(siList, year, season, checkExists, true);
 	}
 
 	/*
-	 *  
+	 * download all data for symbol
 	 */
-	public void prepareData() throws StockException {
-		List<StockItem> siList = stockItemDAO.findAll();
-		downloadAndSave(siList);
+	public void updateData(String symbol) throws StockException {
+		StockItem si = stockItemDAO.findBySymbol(symbol);
+		downloadAndSaveAllFor(si);
 	}
 
-	private void downloadAndSave(List<StockItem> siList) throws StockException {
+	private void downloadAndSaveAllFor(StockItem si) throws StockException {
 		List<FinancialInfo> fiList = new ArrayList<>();
 		List<Integer> years = Arrays.asList(2013, 2014, 2015, 2016, 2017);
 		List<Integer> seasons = Arrays.asList(1, 2, 3, 4);
-		for (StockItem si : siList) {
-			for (Integer year : years) {
-				for (Integer season : seasons) {
-					FinancialInfo fi = downloadCombined(null, si, year, season);
-					try {
-						Thread.sleep(stockConfig.getSleepTime());
-					} catch (InterruptedException ex) {
-					}
-					if (fi == null)
-						continue;
-					fiList.add(fi);
+
+		for (Integer year : years) {
+			for (Integer season : seasons) {
+				FinancialInfo fi = downloadCombined(null, si, year, season);
+				try {
+					Thread.sleep(stockConfig.getSleepTime());
+				} catch (InterruptedException ex) {
 				}
+				if (fi == null)
+					continue;
+				fiList.add(fi);
 			}
 		}
+		// for the latest season 2018-1
+		FinancialInfo fi = downloadCombined(null, si, 2018, 1);
+		if (fi == null)
+			fiList.add(fi);
 		financialInfoDAO.saveAll(fiList);
 	}
 
 	/*
-	 * download and save data for FinancialInfo
+	 * download and save data for symbol for year/season
 	 */
 	private void downloadAndSave(StockItem si, int year, int season) throws StockException {
 		FinancialInfo fi = financialInfoDAO.getByYearAndSeasonAndSymbol(year, season, si.getSymbol());
@@ -100,35 +99,56 @@ public class FinancialService {
 	}
 
 	/*
-	 * download and save data for FinancialInfo
+	 * download and save data for stock items in the list. Parameters: checkExists:
+	 * set to true to avoid duplicate error, retry: set to true if previous failed
+	 * downloads need to be retried.
 	 */
-	private void downloadAndSave(List<StockItem> siList, int year, int season) throws StockException {
+	private void downloadAndSave(List<StockItem> siList, int year, int season, boolean checkExists, boolean retry) {
 		List<FinancialInfo> fiList = new ArrayList<>();
+		// load ignore list of symbols.
 		List<String> ignoreSymbolList = financialInfoDAO.loadIgnoreList();
+		List<StockItem> retrySymbolList = new ArrayList<>();
 		for (StockItem si : siList) {
+			// exclude those ETFs
 			if (si.getSymbol().length() > 4 || si.getSymbol().startsWith("0"))
 				continue;
-			if (ignoreSymbolList.contains(si.getSymbol()))
+			if (ignoreSymbolList != null && ignoreSymbolList.contains(si.getSymbol()))
 				continue;
-			if (financialInfoDAO.existsByYearAndSeasonAndSymbol(year, season, si.getSymbol())) {
+			if (checkExists && financialInfoDAO.existsByYearAndSeasonAndSymbol(year, season, si.getSymbol())) {
 				continue;
 			}
-			FinancialInfo fi = downloadCombined(null, si, year, season);
+			FinancialInfo fi = null;
+			try {
+				fi = downloadCombined(null, si, year, season);
+			} catch (StockException e) {
+				if (retry) {
+					retrySymbolList.add(si);
+				}
+			}
 			try {
 				Thread.sleep(stockConfig.getSleepTime());
 			} catch (InterruptedException ex) {
 			}
 			if (fi == null) {
-				ignoreSymbolList.add(si.getSymbol());
 				continue;
 			}
 			fiList.add(fi);
 		}
 		financialInfoDAO.saveAll(fiList);
+		if (retry && !retrySymbolList.isEmpty()) {
+			downloadAndSave(retrySymbolList, year, season, false, false);
+		}
 
 	}
 
-	private FinancialInfo downloadCombined(FinancialInfo fi, StockItem si, Integer year, Integer season) {
+	/*
+	 * if FinancialInfo parameter is not null, it will download the data and update
+	 * the instance. if the parameter is null, it will create a new instance. The
+	 * method will try to download the financial report using 'C' type of reportId,
+	 * which is of combined financial report
+	 */
+	private FinancialInfo downloadCombined(FinancialInfo fi, StockItem si, Integer year, Integer season)
+			throws StockException {
 		logger.info("update combined financial info data for symbol:" + si.getSymbol());
 		Map<String, String> reqParams = new HashMap<>();
 		reqParams.put("step", "1");
@@ -153,6 +173,7 @@ public class FinancialService {
 				logger.warn("no tr in result_table");
 				return null;
 			}
+			// if fi is null, create a new instance.
 			if (fi == null) {
 				fi = new FinancialInfo(si.getSymbol(), StockUtils.calculateAuditDate(year, season), year, season);
 				fi.setStockItem(si);
@@ -160,7 +181,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of result_table");
+					// logger.warn("no td in tr of result_table");
 					continue;
 				}
 				checkAndRetrieveForBalanceSheet(tds, fi);
@@ -180,7 +201,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of main_table 0");
+					// logger.warn("no td in tr of main_table 0");
 					continue;
 				}
 				checkAndRetrieveForIncomeStatement(tds, fi);
@@ -194,7 +215,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of main_table 1");
+					// logger.warn("no td in tr of main_table 1");
 					continue;
 				}
 				checkAndRetrieveForCashFlowStatement(tds, fi);
@@ -204,11 +225,15 @@ public class FinancialService {
 			return fi;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
+			throw new StockException(e);
 		}
 	}
 
-	private FinancialInfo downloadIndividual(FinancialInfo fi, StockItem si, Integer year, Integer season) {
+	/*
+	 * download the financial info data using 'individual' report (reportID='A').
+	 */
+	private FinancialInfo downloadIndividual(FinancialInfo fi, StockItem si, Integer year, Integer season)
+			throws StockException {
 		logger.info("download individual financial info data for symbol:" + si.getSymbol());
 		Map<String, String> reqParams = new HashMap<>();
 		reqParams.put("step", "1");
@@ -241,7 +266,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of result_table");
+					// logger.warn("no td in tr of result_table");
 					continue;
 				}
 				checkAndRetrieveForBalanceSheet(tds, fi);
@@ -261,7 +286,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of main_table 0");
+					// logger.warn("no td in tr of main_table 0");
 					continue;
 				}
 				checkAndRetrieveForIncomeStatement(tds, fi);
@@ -275,7 +300,7 @@ public class FinancialService {
 			for (Element tr : trs) {
 				Elements tds = tr.select("td");
 				if (tds == null || tds.isEmpty()) {
-					//logger.warn("no td in tr of main_table 1");
+					// logger.warn("no td in tr of main_table 1");
 					continue;
 				}
 				checkAndRetrieveForCashFlowStatement(tds, fi);
@@ -285,7 +310,7 @@ public class FinancialService {
 			return fi;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
+			throw new StockException(e);
 		}
 	}
 
@@ -362,6 +387,9 @@ public class FinancialService {
 		double netCashOperating = fi.getNetCashOperating();
 		double netCashInvesting = fi.getNetCashInvesting();
 		fi.setFreeCashFlow(StockUtils.roundDoubleDp4(netCashOperating + netCashInvesting));
+		if (fi.getLiabilitiesAndEquity() == 0.0) {
+			fi.setLiabilitiesAndEquity(fi.getAssetsTotal());
+		}
 	}
 
 	private void checkAndRetrieveForBalanceSheet(Elements tds, FinancialInfo fi) {
@@ -387,17 +415,17 @@ public class FinancialService {
 			fi.setAssetsPpe(valueD);
 		} else if (label.equals("非流動資產合計")) {
 			fi.setAssetsNonCurrent(valueD);
-		} else if (label.equals("資產總計")) {
+		} else if (label.equals("資產總計") || label.equals("資產總額")) {
 			fi.setAssetsTotal(valueD);
 		} else if (label.equals("流動負債合計")) {
 			fi.setLiabilitiesCurrent(valueD);
 		} else if (label.equals("非流動負債合計")) {
 			fi.setLiabilitiesNonCurrent(valueD);
-		} else if (label.equals("負債總計")) {
+		} else if (label.equals("負債總計") || label.equals("負債總額")) {
 			fi.setLiabilitiesTotal(valueD);
 		} else if (label.equals("股本合計")) {
 			fi.setCapitalStockParValue(valueD);
-		} else if (label.equals("歸屬於母公司業主之權益合計") || label.equals("權益總計") || label.equals("權益總額") ) {
+		} else if (label.equals("歸屬於母公司業主之權益合計") || label.equals("權益總計") || label.equals("權益總額")) {
 			fi.setEquityShareholdersParent(valueD);
 		} else if (label.equals("負債及權益總計")) {
 			fi.setLiabilitiesAndEquity(valueD);

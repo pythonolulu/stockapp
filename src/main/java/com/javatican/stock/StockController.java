@@ -367,12 +367,14 @@ public class StockController {
 	}
 
 	@GetMapping("/updateFinancialInfo")
-	public ResponseMessage prepareFinancialInfo(@RequestParam(value = "symbol", required = false) String symbol) {
+	public ResponseMessage updateFinancialInfo(
+			@RequestParam(value = "symbol", required = false) String symbol,
+			@RequestParam(value = "checkExists", required = false, defaultValue="true") boolean checkExists) {
 
 		ResponseMessage mes = new ResponseMessage();
 		try {
 			if (symbol == null) {
-				financialService.updateData();
+				financialService.updateData(checkExists);
 			} else {
 				financialService.updateData(symbol);
 			}

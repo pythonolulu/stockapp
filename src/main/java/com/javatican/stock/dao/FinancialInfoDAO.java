@@ -53,14 +53,14 @@ public class FinancialInfoDAO {
 		}
 	}
 
-	public List<String> loadIgnoreList() throws StockException {
+	public List<String> loadIgnoreList() {
 		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH));
 		try (InputStream st = resource.getInputStream();) {
 			List<String> igList = objectMapper.readValue(st, new TypeReference<List<String>>() {
 			});
 			return igList;
 		} catch (Exception ex) {
-			throw new StockException(ex);
+			return null;
 		}
 	}
 
