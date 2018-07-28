@@ -27,12 +27,10 @@ public class PutWarrantSelectStrategy1DAO {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-	private static final String RESOURCE_FILE_PATH = "file:./strategy/1/put/%s_%s.json";
-	private static final String COMBINED_RESOURCE_FILE_PATH = "file:./strategy/1c/put/%s.json";
+	private static final String RAW_STATS_RESOURCE_FILE_PATH = "file:./strategy/1_raw/put/%s_%s.json";
+	private static final String STATS_RESOURCE_FILE_PATH = "file:./strategy/1/put/%s.json";
 	@Autowired
 	private ResourceLoader resourceLoader;
-	// @Autowired
-	// private ResourcePatternResolver resourcePatternResolver;
 
 	static {
 		objectMapper.setDateFormat(df);
@@ -41,80 +39,73 @@ public class PutWarrantSelectStrategy1DAO {
 	public PutWarrantSelectStrategy1DAO() {
 	}
 
-	public boolean existsForCombinedResult(int holdPeriod) {
-		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+	public boolean statsDataExistsFor(int holdPeriod) {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
 		return resource.exists();
 	}
 
-	public void saveCombinedResult(int holdPeriod, Map<String, TreeMap<String, Double>> statsMap)
-			throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+	public void saveStatsData(int holdPeriod, Map<String, TreeMap<String, Double>> statsMap) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, statsMap);
-			logger.info("Finish saving combined strategy '1' data of holdPeriod: " + holdPeriod + " days");
+			logger.info("Finish saving stats data of holdPeriod: " + holdPeriod + " days");
 		} catch (Exception ex) {
-			logger.warn(
-					"Errror while trying to save put warrant select strategy '1' data of holdPeriod: " + holdPeriod);
+			logger.warn("Errror while trying to save stats data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
 
-	public Map<String, TreeMap<String, Double>> loadCombinedResult(int holdPeriod) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(COMBINED_RESOURCE_FILE_PATH, holdPeriod));
+	public Map<String, TreeMap<String, Double>> loadStatsData(int holdPeriod) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
 		try (InputStream st = resource.getInputStream();) {
 			Map<String, TreeMap<String, Double>> statsMap = objectMapper.readValue(st,
 					new TypeReference<Map<String, TreeMap<String, Double>>>() {
 					});
 			return statsMap;
 		} catch (Exception ex) {
-			logger.warn(
-					"Errror while trying to load put warrant select strategy '1' data of holdPeriod: " + holdPeriod);
+			logger.warn("Errror while trying to load stats data of holdPeriod: " + holdPeriod);
 			throw new StockException(ex);
 		}
 	}
 
-	public void save(String stockSymbol, int holdPeriod, TreeMap<String, Double> upPercentMap) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
+	public void saveRawStatsData(String stockSymbol, int holdPeriod, TreeMap<String, Double> rawStatsMap)
+			throws StockException {
+		Resource resource = resourceLoader
+				.getResource(String.format(RAW_STATS_RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
-			objectMapper.writeValue(st, upPercentMap);
-			logger.info("Finish saving put warrant strategy '1' data of holdPeriod: " + holdPeriod + " days for stock:"
-					+ stockSymbol);
+			objectMapper.writeValue(st, rawStatsMap);
+			logger.info("Finish saving raw stats data of holdPeriod: " + holdPeriod + " days for stock:" + stockSymbol);
 		} catch (IOException ex) {
-			logger.warn("Errror while trying to save put warrant select strategy '1' data of holdPeriod: " + holdPeriod
-					+ " days for stock:" + stockSymbol);
+			logger.warn("Errror while trying to save raw stats data of holdPeriod: " + holdPeriod + " days for stock:"
+					+ stockSymbol);
 			throw new StockException(ex);
 		}
 	}
 
-	public TreeMap<String, Double> load(String stockSymbol, int holdPeriod) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
+	public TreeMap<String, Double> loadRawStatsData(String stockSymbol, int holdPeriod) throws StockException {
+		Resource resource = resourceLoader
+				.getResource(String.format(RAW_STATS_RESOURCE_FILE_PATH, stockSymbol, holdPeriod));
 		try (InputStream st = resource.getInputStream();) {
-			TreeMap<String, Double> upPercentMap = objectMapper.readValue(st,
+			TreeMap<String, Double> rawStatsMap = objectMapper.readValue(st,
 					new TypeReference<TreeMap<String, Double>>() {
 					});
-			return upPercentMap;
+			return rawStatsMap;
 		} catch (Exception ex) {
-			logger.warn("Errror while trying to load put warrant select strategy '1' data of holdPeriod: " + holdPeriod
-					+ " days for stock:" + stockSymbol);
+			logger.warn("Errror while trying to load raw stats data of holdPeriod: " + holdPeriod + " days for stock:"
+					+ stockSymbol);
 			throw new StockException(ex);
 		}
 	}
 
-	public TreeMap<String, Double> loadBetweenDate(String stockSymbol, int holdPeriod, Date start, Date end)
+	public TreeMap<String, Double> loadRawStatsDataBetweenDate(String stockSymbol, int holdPeriod, Date start, Date end)
 			throws StockException {
-
-		TreeMap<String, Double> upPercentMap = this.load(stockSymbol, holdPeriod);
-		// return upPercentMap.entrySet().stream()
-		// .filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start)
-		// >= 0
-		// && StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
-		// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		TreeMap<String, Double> resultMap = new TreeMap<>();
-		upPercentMap.entrySet().stream()
+		TreeMap<String, Double> rawStatsMap = this.loadRawStatsData(stockSymbol, holdPeriod);
+		TreeMap<String, Double> filteredMap = new TreeMap<>();
+		rawStatsMap.entrySet().stream()
 				.filter(e -> StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(start) >= 0
 						&& StockUtils.stringSimpleToDate(e.getKey()).get().compareTo(end) <= 0)
-				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
-		return resultMap;
+				.forEach(e -> filteredMap.put(e.getKey(), e.getValue()));
+		return filteredMap;
 
 	}
 }

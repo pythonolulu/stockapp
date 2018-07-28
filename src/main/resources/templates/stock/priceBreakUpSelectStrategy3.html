@@ -46,7 +46,7 @@
 							<span th:if="${#maps.containsKey(realtimeMap, item.key)}" th:object="${realtimeMap.get(item.key)}"
 								th:text="|*{v}張|"> 1600張</span> 
 					 	</td>
-					    <td th:text="${item.value}">5</td> 
+					    <td th:text="${#numbers.formatDecimal(item.value,1,'COMMA',1,'POINT')}">5.1</td> 
 					    <td><a target='_blank' th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key},CHT_CAT=DATE)}">
 					 		<img th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key}+' graph'" height="64" width="64"/>
 				 		</a></td>

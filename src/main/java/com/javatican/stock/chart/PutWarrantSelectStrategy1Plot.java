@@ -39,7 +39,7 @@ public abstract class PutWarrantSelectStrategy1Plot implements JPlot {
 	@Override
 	public Plot getPlot(StockItem stockItem) {
 		try {
-			this.upPercentMap = putWarrantSelectStrategy1DAO.load(stockItem.getSymbol(), getHoldPeriod());
+			this.upPercentMap = putWarrantSelectStrategy1DAO.loadRawStatsData(stockItem.getSymbol(), getHoldPeriod());
 			if (upPercentMap.isEmpty())
 				return null;
 			return createPlot();

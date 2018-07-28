@@ -26,12 +26,10 @@ public class PriceBreakUpSelectStrategy4DAO {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-	private static final String ORIGINAL_RESOURCE_FILE_PATH = "file:./strategy/4/breakup/%s.json";
-	private static final String RESULT_RESOURCE_FILE_PATH = "file:./strategy/4r/breakup/%s.json";
+	private static final String RAW_STATS_RESOURCE_FILE_PATH = "file:./strategy/4_raw/breakup/%s.json";
+	private static final String STATS_RESOURCE_FILE_PATH = "file:./strategy/4/breakup/%s.json";
 	@Autowired
 	private ResourceLoader resourceLoader;
-	// @Autowired
-	// private ResourcePatternResolver resourcePatternResolver;
 
 	static {
 		objectMapper.setDateFormat(df);
@@ -40,78 +38,65 @@ public class PriceBreakUpSelectStrategy4DAO {
 	public PriceBreakUpSelectStrategy4DAO() {
 	}
 
-	/*
-	 * 'result' here means: the data stores the 'difference' of breakup 'times'
-	 * between the target trading date and its previous date . The map is a Map with
-	 * key of a string 'stock symbol' and value of an integer represents the
-	 * difference b/w the number of times the highest price of the target date
-	 * breaks above the highest price for each past week and that of its previous
-	 * trading date.
-	 */
-	public boolean resultExistsForDate(String dateString) {
-		Resource resource = resourceLoader.getResource(String.format(RESULT_RESOURCE_FILE_PATH, dateString));
+	public boolean statsDataExistsForDate(String dateString) {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString));
 		return resource.exists();
 	}
 
-	public void saveResult(String dateString, Map<String, Integer> resultMap) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(RESULT_RESOURCE_FILE_PATH, dateString));
-		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
-			objectMapper.writeValue(st, resultMap);
-			logger.info("Finish saving price break up strategy '3' data of date: " + dateString);
-		} catch (Exception ex) {
-			logger.warn("Errror while trying to save price break up strategy '3' data of date: " + dateString);
-			throw new StockException(ex);
-		}
-	}
-
-	public Map<String, Integer> loadResult(String dateString) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(RESULT_RESOURCE_FILE_PATH, dateString));
-		try (InputStream st = resource.getInputStream();) {
-			Map<String, Integer> resultMap = objectMapper.readValue(st, new TypeReference<Map<String, Integer>>() {
-			});
-			return resultMap;
-		} catch (Exception ex) {
-			logger.warn("Errror while trying to load price break up strategy '3' data of date: " + dateString);
-			throw new StockException(ex);
-		}
-	}
-
-	/*
-	 * The 'original' means it stores the raw 'count' data for each trading date.
-	 * The statsMap is a TreeMap with key of trading date and value of an integer
-	 * represents the number of times the highest price of the target trading date
-	 * breaks above the highest price of each past week.
-	 */
-	public void save(String stockSymbol, TreeMap<Date, List<Number>> statsMap) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(ORIGINAL_RESOURCE_FILE_PATH, stockSymbol));
+	public void saveStatsData(String dateString, Map<String, Integer> statsMap) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, statsMap);
-			logger.info("Finish saving price break up strategy '4' data for stock:" + stockSymbol);
+			logger.info("Finish saving stats data of date: " + dateString);
 		} catch (Exception ex) {
-			logger.warn("Errror while trying to save price break up strategy '4' data for stock:" + stockSymbol);
+			logger.warn("Errror while trying to save stats data of date: " + dateString);
 			throw new StockException(ex);
 		}
 	}
 
-	public TreeMap<Date, List<Number>> load(String stockSymbol) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(ORIGINAL_RESOURCE_FILE_PATH, stockSymbol));
+	public Map<String, Integer> loadStatsData(String dateString) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString));
 		try (InputStream st = resource.getInputStream();) {
-			TreeMap<Date, List<Number>> statsMap = objectMapper.readValue(st,
-					new TypeReference<TreeMap<Date, List<Number>>>() {
-					});
+			Map<String, Integer> statsMap = objectMapper.readValue(st, new TypeReference<Map<String, Integer>>() {
+			});
 			return statsMap;
 		} catch (Exception ex) {
-			logger.warn("Errror while trying to save price break up strategy '4' data for stock:" + stockSymbol);
+			logger.warn("Errror while trying to load stats data of date: " + dateString);
 			throw new StockException(ex);
 		}
 	}
 
-	public TreeMap<Date, List<Number>> loadBetweenDate(String stockSymbol, Date start, Date end) throws StockException {
-		TreeMap<Date, List<Number>> statsMap = this.load(stockSymbol);
-		TreeMap<Date, List<Number>> resultMap = new TreeMap<>();
-		statsMap.entrySet().stream().filter(e -> e.getKey().compareTo(start) >= 0 && e.getKey().compareTo(end) <= 0)
-				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
-		return resultMap;
+	public void saveRawStatsData(String stockSymbol, TreeMap<Date, List<Number>> rawStatsMap) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(RAW_STATS_RESOURCE_FILE_PATH, stockSymbol));
+		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
+			objectMapper.writeValue(st, rawStatsMap);
+			logger.info("Finish saving raw stats data for stock:" + stockSymbol);
+		} catch (Exception ex) {
+			logger.warn("Errror while trying to save raw stats data for stock:" + stockSymbol);
+			throw new StockException(ex);
+		}
+	}
+
+	public TreeMap<Date, List<Number>> loadRawStatsData(String stockSymbol) throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(RAW_STATS_RESOURCE_FILE_PATH, stockSymbol));
+		try (InputStream st = resource.getInputStream();) {
+			TreeMap<Date, List<Number>> rawStatsMap = objectMapper.readValue(st,
+					new TypeReference<TreeMap<Date, List<Number>>>() {
+					});
+			return rawStatsMap;
+		} catch (Exception ex) {
+			logger.warn("Errror while trying to save raw stats data for stock:" + stockSymbol);
+			throw new StockException(ex);
+		}
+	}
+
+	public TreeMap<Date, List<Number>> loadRawStatsDataBetweenDate(String stockSymbol, Date start, Date end)
+			throws StockException {
+		TreeMap<Date, List<Number>> rawStatsMap = this.loadRawStatsData(stockSymbol);
+		TreeMap<Date, List<Number>> filteredMap = new TreeMap<>();
+		rawStatsMap.entrySet().stream().filter(e -> e.getKey().compareTo(start) >= 0 && e.getKey().compareTo(end) <= 0)
+				.forEach(e -> filteredMap.put(e.getKey(), e.getValue()));
+		return filteredMap;
 
 	}
 }
