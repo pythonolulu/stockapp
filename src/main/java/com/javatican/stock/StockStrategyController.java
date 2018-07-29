@@ -2,11 +2,13 @@ package com.javatican.stock;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -30,11 +32,13 @@ import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.ChartService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.RealtimeQuoteService;
+import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StrategyService;
 import com.javatican.stock.service.StrategyService2;
 import com.javatican.stock.service.StrategyService3;
 import com.javatican.stock.service.StrategyService4;
+import com.javatican.stock.service.StrategyService5;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -45,6 +49,8 @@ public class StockStrategyController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private StockService stockService;
+	@Autowired
+	private StockItemService stockItemService;
 	@Autowired
 	private ChartService chartService;
 	@Autowired
@@ -59,6 +65,8 @@ public class StockStrategyController {
 	private StrategyService3 strategyService3;
 	@Autowired
 	private StrategyService4 strategyService4;
+	@Autowired
+	private StrategyService5 strategyService5;
 	@Autowired
 	RealtimeQuoteService realtimeQuoteService;
 
@@ -262,67 +270,27 @@ public class StockStrategyController {
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
 			@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		// int totalDatePeriod = (int) stockService.tradingDateCount();
 		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
 		ModelAndView mav;
 		// statsMap: key is the symbol, value is a tree map with key of date string and
 		// value of double(warrant price up percentage)
-		Map<String, TreeMap<String, Double>> statsMap = strategyService
-				.getStatsDataForCallWarrantSelectStrategy1(holdPeriod);
+		Map<String, List<Number>> statsMap = strategyService.getStatsDataCallW(dateString, holdPeriod, dataDatePeriod);
 		if (statsMap != null) {
-			// all the stock items with call warrants(used for getting its item name)
 			Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
-			// upProbabilityMap: store the probability of the warrant price going up
-			// key is the symbol string and value is a double of probability
-			Map<String, Double> upProbabilityMap = new HashMap<>();
-			// upPercentAccMap: store the accumulated price up percentages
-			// key: symbol string, value is a double of accumulated percentage
-			Map<String, Double> upPercentAccMap = new HashMap<>();
-			// dataCountMap: store the count of actual data points used for the calculation
-			// for up probability and percent accumulation
-			// key : symbol string, value is a long for the data count
-			Map<String, Long> dataCountMap = new HashMap<>();
-			for (String symbol : statsMap.keySet()) {
-				// upPercentMap contains price up percentages of warrant on each trading date
-				// for the stock symbol
-				// key : date string, value: a double of up percentage
-				TreeMap<String, Double> upPercentMap = statsMap.get(symbol);
-				// filteredUpPercentMap: store filtered result of upPercentMap (only select the
-				// latest 'dataDatePeriod' trading dates)
-				final TreeMap<String, Double> filteredUpPercentMap;
-				if (upPercentMap.size() > dataDatePeriod) {
-					filteredUpPercentMap = new TreeMap<>();
-					// below is not compiling because collect(Collectors.toMap()) method will
-					// return a Map object, can not be casted to a TreeMap
-					//
-					// filteredUpPercentMap =
-					// upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
-					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-					upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
-							.forEach(e -> filteredUpPercentMap.put(e.getKey(), e.getValue()));
-				} else {
-					filteredUpPercentMap = upPercentMap;
-				}
-				long size = filteredUpPercentMap.size();
-				if (size == 0)
-					continue;
-				long up_size = filteredUpPercentMap.values().stream().filter(value -> value > 0.0).count();
-				double acc_percent = filteredUpPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
-
-				upProbabilityMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
-				upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
-				dataCountMap.put(symbol, size);
-			}
 			mav = new ModelAndView("stock/callWarrantSelectStrategy1");
 			//
-			LinkedHashMap<String, Double> resultMap = new LinkedHashMap<>();
-			upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-					.limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+			LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+			statsMap.entrySet().stream().sorted((e1, e2) -> {
+				double acc_percent_1 = e1.getValue().get(2).doubleValue();
+				double acc_percent_2 = e2.getValue().get(2).doubleValue();
+				return (acc_percent_1 > acc_percent_2) ? -1 : 1;
+			}).limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 
 			resultMap.entrySet().stream().forEach(entry -> {
-				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName()
-						+ "), avg percentage:" + entry.getValue() + ", win percentage:"
-						+ upProbabilityMap.get(entry.getKey()) + ", data count:" + dataCountMap.get(entry.getKey()));
+				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), data count:"
+						+ entry.getValue().get(0) + ", up ratio:" + entry.getValue().get(1)
+						+ ", accumulated percentage:" + entry.getValue().get(2));
 			});
 
 			// create stock charts
@@ -343,9 +311,7 @@ public class StockStrategyController {
 			}
 			//
 			mav.addObject("realtimeMap", realtimeMap);
-			mav.addObject("upPercentAccMap", resultMap);
-			mav.addObject("upProbabilityMap", upProbabilityMap);
-			mav.addObject("dataCountMap", dataCountMap);
+			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
 			mav.addObject("tradingDate", date);
 			mav.addObject("dataDatePeriod", dataDatePeriod);
@@ -377,67 +343,25 @@ public class StockStrategyController {
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
 			@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		// int totalDatePeriod = (int) stockService.tradingDateCount();
 		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
 		ModelAndView mav;
-		// statsMap: key is the symbol, value is a tree map with key of date string and
-		// value of double(warrant price up percentage)
-		Map<String, TreeMap<String, Double>> statsMap = strategyService
-				.getStatsDataForPutWarrantSelectStrategy1(holdPeriod);
+		Map<String, List<Number>> statsMap = strategyService.getStatsDataPutW(dateString, holdPeriod, dataDatePeriod);
 		if (statsMap != null) {
-			// all the stock items with put warrants(used for getting its item name)
 			Map<String, StockItem> siMap = putWarrantTradeSummaryService.getStockItemsWithPutWarrant();
-			// upProbabilityMap: store the probability of the warrant price going up
-			// key is the symbol string and value is a double of probability
-			Map<String, Double> upProbabilityMap = new HashMap<>();
-			// upPercentAccMap: store the accumulated price up percentages
-			// key: symbol string, value is a double of accumulated percentage
-			Map<String, Double> upPercentAccMap = new HashMap<>();
-			// dataCountMap: store the count of actual data points used for the calculation
-			// for up probability and percent accumulation
-			// key : symbol string, value is a long for the data count
-			Map<String, Long> dataCountMap = new HashMap<>();
-			for (String symbol : statsMap.keySet()) {
-				// upPercentMap contains price up percentages of warrant on each trading date
-				// for the stock symbol
-				// key : date string, value: a double of up percentage
-				TreeMap<String, Double> upPercentMap = statsMap.get(symbol);
-				// filteredUpPercentMap: store filtered result of upPercentMap (only select the
-				// latest 'dataDatePeriod' trading dates)
-				final TreeMap<String, Double> filteredUpPercentMap;
-				if (upPercentMap.size() > dataDatePeriod) {
-					filteredUpPercentMap = new TreeMap<>();
-					// below is not compiling because collect(Collectors.toMap()) method will
-					// return a Map object, can not be casted to a TreeMap
-					//
-					// filteredUpPercentMap =
-					// upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
-					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-					upPercentMap.entrySet().stream().skip(upPercentMap.size() - dataDatePeriod)
-							.forEach(e -> filteredUpPercentMap.put(e.getKey(), e.getValue()));
-				} else {
-					filteredUpPercentMap = upPercentMap;
-				}
-				long size = filteredUpPercentMap.size();
-				long up_size = filteredUpPercentMap.values().stream().filter(value -> value > 0.0).count();
-				double acc_percent = filteredUpPercentMap.values().stream().reduce(0.0, (a, b) -> a + b);
-				if (size == 0)
-					continue;
-				upProbabilityMap.put(symbol, StockUtils.roundDoubleDp4((double) up_size / size));
-				upPercentAccMap.put(symbol, StockUtils.roundDoubleDp4(acc_percent));
-				dataCountMap.put(symbol, size);
-
-			}
 			mav = new ModelAndView("stock/putWarrantSelectStrategy1");
 			//
-			LinkedHashMap<String, Double> resultMap = new LinkedHashMap<>();
-			upPercentAccMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-					.limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+			LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+			statsMap.entrySet().stream().sorted((e1, e2) -> {
+				double acc_percent_1 = e1.getValue().get(2).doubleValue();
+				double acc_percent_2 = e2.getValue().get(2).doubleValue();
+				return (acc_percent_1 > acc_percent_2) ? -1 : 1;
+			}).limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 
 			resultMap.entrySet().stream().forEach(entry -> {
-				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName()
-						+ "), avg percentage:" + entry.getValue() + ", win percentage:"
-						+ upProbabilityMap.get(entry.getKey()) + ", data count:" + dataCountMap.get(entry.getKey()));
+				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), data count:"
+						+ entry.getValue().get(0) + ", up ratio:" + entry.getValue().get(1)
+						+ ", accumulated percentage:" + entry.getValue().get(2));
 			});
 
 			// create stock charts
@@ -458,15 +382,13 @@ public class StockStrategyController {
 			}
 			//
 			mav.addObject("realtimeMap", realtimeMap);
-			mav.addObject("upPercentAccMap", resultMap);
-			mav.addObject("upProbabilityMap", upProbabilityMap);
-			mav.addObject("dataCountMap", dataCountMap);
+			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
 			mav.addObject("tradingDate", date);
 			mav.addObject("dataDatePeriod", dataDatePeriod);
 			mav.addObject("selectCount", selectCount);
 			mav.addObject("holdPeriod", holdPeriod);
-			// stockItems with call and put warrants
+			// stockItems with put and put warrants
 			mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 			// mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		} else {
@@ -616,17 +538,17 @@ public class StockStrategyController {
 		// get all the stockItem with call warrants
 		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
 		ModelAndView mav = new ModelAndView("stock/priceBreakUpSelectStrategy3");
-		Map<String, Double> dataMap = strategyService3.getStatsData(dateString);
-		LinkedHashMap<String, Double> statsMap = new LinkedHashMap<>();
-		dataMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(selectCount)
-				.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
+		Map<String, Double> statsMap = strategyService3.getStatsData(dateString);
+		LinkedHashMap<String, Double> resultMap = new LinkedHashMap<>();
+		statsMap.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(selectCount)
+				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 		// create stock charts
-		chartService.createGraphs2(statsMap.keySet(), force);
+		chartService.createGraphs2(resultMap.keySet(), force);
 		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
 		if (realtimeQuote) {
 			RealtimeMarketInfo mri;
 			try {
-				mri = realtimeQuoteService.getInfo(statsMap.keySet());
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
 				for (StockItemMarketInfo simi : mri.getMsgArray()) {
 					realtimeMap.put(simi.getC(), simi);
 				}
@@ -638,7 +560,7 @@ public class StockStrategyController {
 		//
 		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
-		mav.addObject("statsMap", statsMap);
+		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
 		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
@@ -662,17 +584,17 @@ public class StockStrategyController {
 		// get all the stockItem with call warrants
 		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
 		ModelAndView mav = new ModelAndView("stock/priceBreakUpSelectStrategy4");
-		Map<String, Integer> dataMap = strategyService4.getStatsData(dateString);
-		LinkedHashMap<String, Integer> statsMap = new LinkedHashMap<>();
-		dataMap.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(selectCount)
-				.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
+		Map<String, Integer> statsMap = strategyService4.getStatsData(dateString);
+		LinkedHashMap<String, Integer> resultMap = new LinkedHashMap<>();
+		statsMap.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(selectCount)
+				.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 		// create stock charts
-		chartService.createGraphs2(statsMap.keySet(), force);
+		chartService.createGraphs2(resultMap.keySet(), force);
 		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
 		if (realtimeQuote) {
 			RealtimeMarketInfo mri;
 			try {
-				mri = realtimeQuoteService.getInfo(statsMap.keySet());
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
 				for (StockItemMarketInfo simi : mri.getMsgArray()) {
 					realtimeMap.put(simi.getC(), simi);
 				}
@@ -684,11 +606,114 @@ public class StockStrategyController {
 		//
 		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
-		mav.addObject("statsMap", statsMap);
+		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
 		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+
+	@GetMapping("/prepareFinancialSelectStrategy5")
+	public ResponseMessage prepareFinancialSelectStrategy5() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService5.prepareRawStatsData();
+			mes.setCategory("Success");
+			mes.setText("Financial select strategy 5 stats data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Financial select strategy 5 stats data fails to be prepared.");
+		}
+		return mes;
+	}
+
+	private Comparator<? super Entry<String, Map<String, List<Number>>>> getComparator(String sortKey) {
+		if (sortKey.equals("PER")) {
+			return (e1, e2) -> {
+				double per_1 = e1.getValue().get("per").get(0).doubleValue();
+				double per_2 = e2.getValue().get("per").get(0).doubleValue();
+				return (per_1 > per_2) ? 1 : -1;
+			};
+		} else if (sortKey.equals("PBR")) {
+			return (e1, e2) -> {
+				double pbr_1 = e1.getValue().get("pbr").get(0).doubleValue();
+				double pbr_2 = e2.getValue().get("pbr").get(0).doubleValue();
+				return (pbr_1 > pbr_2) ? 1 : -1;
+			};
+		} else {
+			return (e1, e2) -> {
+				double fcfy_1 = e1.getValue().get("fcfy_avg").get(0).doubleValue();
+				double fcfy_2 = e2.getValue().get("fcfy_avg").get(0).doubleValue();
+				return (fcfy_1 > fcfy_2) ? -1 : 1;
+			};
+		}
+	}
+
+	@GetMapping("/financialSelectStrategy5")
+	public ModelAndView financialSelectStrategy5(@RequestParam(value = "year", defaultValue = "2017") int year,
+			@RequestParam(value = "period", defaultValue = "3") int period,
+			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
+			@RequestParam(value = "sortKey", defaultValue = "PER") String sortKey,
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
+		// sortKey can only be 'PER'(Price-Earning-Ratio), 'PBR'(Price-Book-Ratio),
+		// 'FCFY'(Free-Cash-Flow-Yield)
+		ModelAndView mav;
+		Map<String, Map<String, List<Number>>> statsMap = strategyService5.getStatsData(year, period);
+		if (statsMap != null) {
+			Map<String, StockItem> siMap = stockItemService.findAllStockItemsAsMap();
+			mav = new ModelAndView("stock/financialSelectStrategy5");
+			//
+			LinkedHashMap<String, Map<String, List<Number>>> resultMap = new LinkedHashMap<>();
+			statsMap.entrySet().stream().filter(e -> {
+				List<Number> fcfyList = e.getValue().get("fcfy_i");
+				for (Number fcfy : fcfyList) {
+					if (fcfy.doubleValue() < 0) {
+						return false;
+					}
+				}
+				if(e.getValue().get("per").get(0).doubleValue()<=0) {
+					return false;
+				}
+				return true;
+			}).sorted(getComparator(sortKey)).limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+
+			resultMap.entrySet().stream().forEach(entry -> {
+				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), avg yield:"
+						+ entry.getValue().get("fcfy_avg").get(0).doubleValue());
+			});
+
+			// create stock charts
+			chartService.createGraphs2(resultMap.keySet(), force);
+			//
+			Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+			if (realtimeQuote) {
+				RealtimeMarketInfo mri;
+				try {
+					mri = realtimeQuoteService.getInfo(resultMap.keySet());
+					for (StockItemMarketInfo simi : mri.getMsgArray()) {
+						realtimeMap.put(simi.getC(), simi);
+					}
+				} catch (StockException e) {
+					logger.warn("Error getting realtime quote!");
+					e.printStackTrace();
+				}
+			}
+			//
+			mav.addObject("realtimeMap", realtimeMap);
+			mav.addObject("resultMap", resultMap);
+			mav.addObject("siMap", siMap);
+			mav.addObject("year", year);
+			mav.addObject("period", period);
+			mav.addObject("selectCount", selectCount);
+			// stockItems with put and put warrants
+			mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+			mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		} else {
+			mav = new ModelAndView("stock/error");
+		}
 		return mav;
 	}
 }

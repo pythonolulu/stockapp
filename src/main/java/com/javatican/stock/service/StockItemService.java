@@ -460,12 +460,14 @@ public class StockItemService {
 			stockItemHelper.updateStatsDateForItem(sil.getSymbol(), latestDate);
 		}
 	}
+
 	public void calculateAndSaveWeeklyKDForAll() throws StockException {
 		List<StockItem> siList = stockItemDAO.findAll();
 		for (StockItem si : siList) {
-			calculateAndSaveWeeklyKDForSymbol(si.getSymbol()); 
+			calculateAndSaveWeeklyKDForSymbol(si.getSymbol());
 		}
 	}
+
 	/*
 	 * Calculate RSV and KD values for the specified stock item
 	 */
@@ -543,9 +545,9 @@ public class StockItemService {
 		List<StockPrice> spList = null;
 		try {
 			spList = weeklyStockPriceDAO.load(symbol);
-		} catch(Exception ex) {
-			logger.warn("Error loading weekly price data for symbol:"+symbol);
-			return ;
+		} catch (Exception ex) {
+			logger.warn("Error loading weekly price data for symbol:" + symbol);
+			return;
 		}
 		// Date latestDate = spList.get(spList.size() - 1).getTradingDate();
 		DescriptiveStatistics stats = new DescriptiveStatistics();
@@ -611,7 +613,7 @@ public class StockItemService {
 		try {
 			stockItemWeeklyDataDAO.save(symbol, siwdList);
 		} catch (StockException e) {
-			logger.warn("Error saving weekly stats data for symbol:"+symbol);
+			logger.warn("Error saving weekly stats data for symbol:" + symbol);
 		}
 	}
 	// public void migrateData() {
@@ -714,4 +716,11 @@ public class StockItemService {
 		return null;
 	}
 
+	public List<StockItem> findAllStockItems() {
+		return stockItemDAO.findAll();
+	}
+
+	public Map<String, StockItem> findAllStockItemsAsMap() {
+		return stockItemDAO.findAllAsMap();
+	}
 }

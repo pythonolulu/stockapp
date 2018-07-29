@@ -63,9 +63,7 @@ public class StockItemDAO {
 
 	public Map<String, StockItem> findAllAsMap() {
 		Map<String, StockItem> siMap = new TreeMap<>();
-		//TODO check this.
 		List<StockItem> siList = findAll();
-		//List<StockItem> siList = getAllStockItems();
 		siList.stream().forEach(si -> siMap.put(si.getSymbol(), si));
 		return siMap;
 	}

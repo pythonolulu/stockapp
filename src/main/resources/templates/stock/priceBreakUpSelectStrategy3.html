@@ -16,7 +16,7 @@
 				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
 		</h2>
 		
-		<div th:unless="${#maps.isEmpty(statsMap)}">
+		<div th:unless="${#maps.isEmpty(resultMap)}">
 			<table class="table table-striped">
 				<thead>
 					<tr>
@@ -31,7 +31,7 @@
 					</tr>
 				</thead>
 				<tbody>
-				    <tr th:each="item : ${statsMap}" >
+				    <tr th:each="item : ${resultMap}" >
 				      	<th scope="row" th:text="${#ids.seq('')}">1</th>
 				      	<td><a target='_blank' href="http://tw.stock.yahoo.com/q/ta?s=2317" 
 					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key})}" th:text="${item.key}">2317</a></td>
@@ -64,7 +64,7 @@
 				</tbody>
 			</table>
 		</div>
-		<div th:if="${#maps.isEmpty(statsMap)}">
+		<div th:if="${#maps.isEmpty(resultMap)}">
 			<p>无记录</p>
 		</div>
 	</div>

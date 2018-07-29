@@ -1,11 +1,11 @@
 package com.javatican.stock.dao;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -28,7 +28,7 @@ public class PutWarrantSelectStrategy1DAO {
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 	private static final String RAW_STATS_RESOURCE_FILE_PATH = "file:./strategy/1_raw/put/%s_%s.json";
-	private static final String STATS_RESOURCE_FILE_PATH = "file:./strategy/1/put/%s.json";
+	private static final String STATS_RESOURCE_FILE_PATH = "file:./strategy/1/put/%s_%s_%s.json";
 	@Autowired
 	private ResourceLoader resourceLoader;
 
@@ -39,31 +39,38 @@ public class PutWarrantSelectStrategy1DAO {
 	public PutWarrantSelectStrategy1DAO() {
 	}
 
-	public boolean statsDataExistsFor(int holdPeriod) {
-		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
+	public boolean statsDataExistsFor(String dateString, int holdPeriod, int dataDatePeriod) {
+		Resource resource = resourceLoader
+				.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString, holdPeriod, dataDatePeriod));
 		return resource.exists();
 	}
 
-	public void saveStatsData(int holdPeriod, Map<String, TreeMap<String, Double>> statsMap) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
+	public void saveStatsData(String dateString, int holdPeriod, int dataDatePeriod, Map<String, List<Number>> statsMap)
+			throws StockException {
+		Resource resource = resourceLoader
+				.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString, holdPeriod, dataDatePeriod));
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, statsMap);
-			logger.info("Finish saving stats data of holdPeriod: " + holdPeriod + " days");
+			logger.info("Finish saving stats data of date:" + dateString + ", holdPeriod:" + holdPeriod
+					+ ", dataDatePeriod:" + dataDatePeriod);
 		} catch (Exception ex) {
-			logger.warn("Errror while trying to save stats data of holdPeriod: " + holdPeriod);
+			logger.warn("Errror while trying to save stats data of date" + dateString + ", holdPeriod:" + holdPeriod
+					+ ", dataDatePeriod:" + dataDatePeriod);
 			throw new StockException(ex);
 		}
 	}
 
-	public Map<String, TreeMap<String, Double>> loadStatsData(int holdPeriod) throws StockException {
-		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, holdPeriod));
+	public Map<String, List<Number>> loadStatsData(String dateString, int holdPeriod, int dataDatePeriod)
+			throws StockException {
+		Resource resource = resourceLoader.getResource(String.format(STATS_RESOURCE_FILE_PATH, dateString, holdPeriod, dataDatePeriod));
 		try (InputStream st = resource.getInputStream();) {
-			Map<String, TreeMap<String, Double>> statsMap = objectMapper.readValue(st,
-					new TypeReference<Map<String, TreeMap<String, Double>>>() {
+			Map<String, List<Number>>  statsMap = objectMapper.readValue(st,
+					new TypeReference<Map<String, List<Number>>>() {
 					});
 			return statsMap;
 		} catch (Exception ex) {
-			logger.warn("Errror while trying to load stats data of holdPeriod: " + holdPeriod);
+			logger.warn("Errror while trying to load stats data of date" + dateString + ", holdPeriod:" + holdPeriod
+					+ ", dataDatePeriod:" + dataDatePeriod);
 			throw new StockException(ex);
 		}
 	}
@@ -75,7 +82,7 @@ public class PutWarrantSelectStrategy1DAO {
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, rawStatsMap);
 			logger.info("Finish saving raw stats data of holdPeriod: " + holdPeriod + " days for stock:" + stockSymbol);
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			logger.warn("Errror while trying to save raw stats data of holdPeriod: " + holdPeriod + " days for stock:"
 					+ stockSymbol);
 			throw new StockException(ex);
@@ -99,6 +106,7 @@ public class PutWarrantSelectStrategy1DAO {
 
 	public TreeMap<String, Double> loadRawStatsDataBetweenDate(String stockSymbol, int holdPeriod, Date start, Date end)
 			throws StockException {
+
 		TreeMap<String, Double> rawStatsMap = this.loadRawStatsData(stockSymbol, holdPeriod);
 		TreeMap<String, Double> filteredMap = new TreeMap<>();
 		rawStatsMap.entrySet().stream()

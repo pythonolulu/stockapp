@@ -29,7 +29,7 @@ public class FinancialInfoDAO {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-	private static final String RESOURCE_FILE_PATH = "file:./settingData/ignoreListForFinancialInfoData.json";
+	private static final String IGNORE_LIST_RESOURCE_FILE_PATH = "file:./settingData/ignoreListForFinancialInfoData.json";
 	@Autowired
 	private ResourceLoader resourceLoader;
 
@@ -44,7 +44,7 @@ public class FinancialInfoDAO {
 	}
 
 	public void saveIgnoreList(List<String> igList) throws StockException {
-		Resource resource = resourceLoader.getResource(RESOURCE_FILE_PATH);
+		Resource resource = resourceLoader.getResource(IGNORE_LIST_RESOURCE_FILE_PATH);
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, igList);
 			logger.info("Finish saving ignore list for financial info download.");
@@ -54,7 +54,7 @@ public class FinancialInfoDAO {
 	}
 
 	public List<String> loadIgnoreList() {
-		Resource resource = resourceLoader.getResource(String.format(RESOURCE_FILE_PATH));
+		Resource resource = resourceLoader.getResource(String.format(IGNORE_LIST_RESOURCE_FILE_PATH));
 		try (InputStream st = resource.getInputStream();) {
 			List<String> igList = objectMapper.readValue(st, new TypeReference<List<String>>() {
 			});

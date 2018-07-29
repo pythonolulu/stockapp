@@ -1,8 +1,10 @@
 package com.javatican.stock.service;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantSelectStrategy1DAO;
@@ -25,6 +28,7 @@ import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockItemWeeklyDataDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.WarrantTradeDAO;
+import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.WarrantTrade;
 import com.javatican.stock.util.StockUtils;
@@ -54,32 +58,124 @@ public class StrategyService {
 	@Autowired
 	PutWarrantSelectStrategy1DAO putWarrantSelectStrategy1DAO;
 
-	public Map<String, TreeMap<String, Double>> getStatsDataForCallWarrantSelectStrategy1(int holdPeriod) {
-		if (callWarrantSelectStrategy1DAO.statsDataExistsFor(holdPeriod)) {
+	public Map<String, List<Number>> getStatsDataCallW(String dateString, int holdPeriod, int dataDatePeriod) {
+		if (callWarrantSelectStrategy1DAO.statsDataExistsFor(dateString, holdPeriod, dataDatePeriod)) {
 			try {
-				return callWarrantSelectStrategy1DAO.loadStatsData(holdPeriod);
+				return callWarrantSelectStrategy1DAO.loadStatsData(dateString, holdPeriod, dataDatePeriod);
 			} catch (StockException e) {
-				logger.warn("Error loading StatsData for callWarrantSelectStrategy1 of holdPeriod:" + holdPeriod);
+				logger.warn("Error loading stats data for Strategy 1 of date:" + dateString + ", holdPeriod:"
+						+ holdPeriod + ", dataDatePeriod:" + dataDatePeriod);
 				return null;
 			}
 		} else {
-			return null;
-		}
-	}
-
-	public Map<String, TreeMap<String, Double>> getStatsDataForPutWarrantSelectStrategy1(int holdPeriod) {
-		if (putWarrantSelectStrategy1DAO.statsDataExistsFor(holdPeriod)) {
+			Date date = tradingDateDAO.getLatestTradingDate();
+			// all the stock items with call warrants(used for getting its item name)
+			Map<String, StockItem> siMap = callWarrantTradeSummaryDAO.getStockItemsWithCallWarrant();
+			Map<String, List<Number>> statsMap = new HashMap<>();
+			for (String stockSymbol : siMap.keySet()) {
+				TreeMap<String, Double> rawStatsData;
+				try {
+					rawStatsData = callWarrantSelectStrategy1DAO.loadRawStatsData(stockSymbol, holdPeriod);
+				} catch (StockException e1) {
+					logger.warn("No raw stats data for symbol:" + stockSymbol);
+					continue;
+				}
+				// filteredMap: store filtered result of rawStatsData (only select the
+				// latest 'dataDatePeriod' trading dates)
+				final TreeMap<String, Double> filteredMap;
+				if (rawStatsData.size() > dataDatePeriod) {
+					filteredMap = new TreeMap<>();
+					// below is not compiling because collect(Collectors.toMap()) method will
+					// return a Map object, can not be casted to a TreeMap
+					//
+					// filteredMap =
+					// rawStatsData.entrySet().stream().skip(rawStatsData.size() - dataDatePeriod)
+					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+					rawStatsData.entrySet().stream().skip(rawStatsData.size() - dataDatePeriod)
+							.forEach(e -> filteredMap.put(e.getKey(), e.getValue()));
+				} else {
+					filteredMap = rawStatsData;
+				}
+				long size = filteredMap.size();
+				if (size == 0)
+					continue;
+				long up_size = filteredMap.values().stream().filter(value -> value > 0.0).count();
+				double acc_percent = filteredMap.values().stream().reduce(0.0, (a, b) -> a + b);
+				// value is a List<Number>: store data size, up ratio, accumulated percentage
+				statsMap.put(stockSymbol, Arrays.asList(size, StockUtils.roundDoubleDp4((double) up_size / size),
+						StockUtils.roundDoubleDp4(acc_percent)));
+			}
 			try {
-				return putWarrantSelectStrategy1DAO.loadStatsData(holdPeriod);
+				callWarrantSelectStrategy1DAO.saveStatsData(dateString, holdPeriod, dataDatePeriod, statsMap);
 			} catch (StockException e) {
-				logger.warn("Error loading StatsData for putWarrantSelectStrategy1 of holdPeriod:" + holdPeriod);
+				e.printStackTrace();
+				logger.warn("Error saving stats data of date:" + dateString + ", holdPeriod:" + holdPeriod
+						+ ", dataDatePeriod:" + dataDatePeriod);
+			}
+			return statsMap;
+		}
+
+	}
+  
+
+	public Map<String, List<Number>> getStatsDataPutW(String dateString, int holdPeriod, int dataDatePeriod) {
+		if (putWarrantSelectStrategy1DAO.statsDataExistsFor(dateString, holdPeriod, dataDatePeriod)) {
+			try {
+				return putWarrantSelectStrategy1DAO.loadStatsData(dateString, holdPeriod, dataDatePeriod);
+			} catch (StockException e) {
+				logger.warn("Error loading stats data for Strategy 1 of date:" + dateString + ", holdPeriod:"
+						+ holdPeriod + ", dataDatePeriod:" + dataDatePeriod);
 				return null;
 			}
 		} else {
-			return null;
+			Date date = tradingDateDAO.getLatestTradingDate();
+			// all the stock items with put warrants(used for getting its item name)
+			Map<String, StockItem> siMap = putWarrantTradeSummaryDAO.getStockItemsWithPutWarrant();
+			Map<String, List<Number>> statsMap = new HashMap<>();
+			for (String stockSymbol : siMap.keySet()) {
+				TreeMap<String, Double> rawStatsData;
+				try {
+					rawStatsData = putWarrantSelectStrategy1DAO.loadRawStatsData(stockSymbol, holdPeriod);
+				} catch (StockException e1) {
+					logger.warn("No raw stats data for symbol:" + stockSymbol);
+					continue;
+				}
+				// filteredMap: store filtered result of rawStatsData (only select the
+				// latest 'dataDatePeriod' trading dates)
+				final TreeMap<String, Double> filteredMap;
+				if (rawStatsData.size() > dataDatePeriod) {
+					filteredMap = new TreeMap<>();
+					// below is not compiling because collect(Collectors.toMap()) method will
+					// return a Map object, can not be casted to a TreeMap
+					//
+					// filteredMap =
+					// rawStatsData.entrySet().stream().skip(rawStatsData.size() - dataDatePeriod)
+					// .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+					rawStatsData.entrySet().stream().skip(rawStatsData.size() - dataDatePeriod)
+							.forEach(e -> filteredMap.put(e.getKey(), e.getValue()));
+				} else {
+					filteredMap = rawStatsData;
+				}
+				long size = filteredMap.size();
+				if (size == 0)
+					continue;
+				long up_size = filteredMap.values().stream().filter(value -> value > 0.0).count();
+				double acc_percent = filteredMap.values().stream().reduce(0.0, (a, b) -> a + b);
+				// value is a List<Number>: store size, up_size/size, acc_percent
+				statsMap.put(stockSymbol, Arrays.asList(size, StockUtils.roundDoubleDp4((double) up_size / size),
+						StockUtils.roundDoubleDp4(acc_percent)));
+			}
+			try {
+				putWarrantSelectStrategy1DAO.saveStatsData(dateString, holdPeriod, dataDatePeriod, statsMap);
+			} catch (StockException e) {
+				e.printStackTrace();
+				logger.warn("Error saving stats data of date:" + dateString + ", holdPeriod:" + holdPeriod
+						+ ", dataDatePeriod:" + dataDatePeriod);
+			}
+			return statsMap;
 		}
-	}
 
+	}
 	/*
 	 * Buy a call warrant(with the largest trade value for the specific target
 	 * stock) on each trading date and hold for a 'holdPeriod' day period, calculate
@@ -143,12 +239,10 @@ public class StrategyService {
 				rawStatsMap.put(dString, upPercent);
 			}
 		}
-		// write upPercentMap to file for each stock item
+		// write to file for each stock item
 		for (String symbol : statsMap.keySet()) {
 			callWarrantSelectStrategy1DAO.saveRawStatsData(symbol, holdPeriod, statsMap.get(symbol));
 		}
-		// write combined result
-		callWarrantSelectStrategy1DAO.saveStatsData(holdPeriod, statsMap);
 	}
 
 	public void prepareRawStatsDataForPutW(int holdPeriod) throws StockException {
@@ -208,13 +302,11 @@ public class StrategyService {
 				upPercentMap.put(dString, upPercent);
 			}
 		}
-		// write upPercentMap to file for each stock item
+		// write to file for each stock item
 		for (String symbol : statsMap.keySet()) {
 			TreeMap<String, Double> upPercentMap = statsMap.get(symbol);
 			putWarrantSelectStrategy1DAO.saveRawStatsData(symbol, holdPeriod, upPercentMap);
 		}
-		// write combined result
-		putWarrantSelectStrategy1DAO.saveStatsData(holdPeriod, statsMap);
 	}
 
 }
