@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title th:text="|关注个股名单 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">关注个股名单 - 2018/08/02</title>
+<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
+	rel="stylesheet"></link>
+<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
+<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<div class="container">
+		<h2>
+			<span
+				th:text="'关注个股名单'"> 关注个股名单</span>
+			 - <span
+				th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+		</h2>
+		
+		<div th:unless="${#maps.isEmpty(dataMap)}">
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th scope="col">代码(名称）</th>
+						<th th:if="${#maps.size(realtimeMap)>0}" scope="col">即時價格</th>
+						<th scope="col">缩图</th>
+						<th scope="col">线图</th>
+						<th scope="col">權證</th>
+						<th scope="col">动作</th>
+						<th scope="col">备注</th>
+					</tr>
+				</thead>
+				<tbody>
+				    <tr th:each="item : ${dataMap}" >
+				      	<th scope="row" th:text="${#ids.seq('')}">1</th>
+				      	<td><a target='_blank' href="http://tw.stock.yahoo.com/q/ta?s=2317" 
+					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key.symbol})}" th:text="${item.key.symbol}">2317</a>
+					    （<a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
+					 	th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key.symbol})}" th:text="${item.key.name}">鸿海</a>）</td>
+					 	<td th:if="${#maps.size(realtimeMap)>0}">
+					 		<span th:if="${#maps.containsKey(realtimeMap, item.key.symbol)}" th:object="${realtimeMap.get(item.key.symbol)}"
+								th:text="*{z}"> 85</span>
+							<span th:if="${#maps.containsKey(realtimeMap, item.key.symbol)}" th:object="${realtimeMap.get(item.key.symbol)}"
+								th:text="|*{#numbers.formatDecimal(100*priceChangeP,1,'COMMA',1,'POINT')}%|"
+								th:class="*{priceChangeP>0}?'text-danger':'text-success'"> -1.5%</span>
+							<span th:if="${#maps.containsKey(realtimeMap, item.key.symbol)}" th:object="${realtimeMap.get(item.key.symbol)}"
+								th:text="|*{v}張|"> 1600張</span> 
+					 	</td>
+					    
+					    <td><a target='_blank' th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key.symbol},CHT_CAT=DATE)}">
+					 		<img th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key.symbol},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key.symbol}+' graph'" height="64" width="64"/>
+				 		</a></td>
+					    <td><a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
+					 		主图
+				 		</a><a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
+					 		副图
+				 		</a></td>
+					    <td><a th:if="${#lists.contains(swcwList, item.key.symbol)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key.symbol})}">
+					 		<img th:src="@{/icons/call.jpeg}" th:alt="'認購權證'" height="16" width="16"/>
+				 		</a><a th:if="${#lists.contains(swpwList, item.key.symbol)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key.symbol})}">
+					 		<img th:src="@{/icons/put.jpeg}" th:alt="'認售權證'" height="16" width="16"/>
+				 		</a></td>
+				 		<td>
+				 			<a th:href="@{/stock/watchList/{watchItemId}/delete(watchItemId=${item.value.id})}" th:text="'删除'">移除</a>		    
+				 		</td>
+				 		<td>
+					 		<table class="table table-striped">	 
+					      		<tr th:each="logItem : ${item.value.wl}" >	
+									<th scope="row" th:text="${#dates.format(logItem.logDate,'yyyy/MM/dd')}"></th>
+									<td th:text="${logItem.content}"></td>
+								</tr>
+								<tr>
+								<td colspan="2">
+								<form action="#" th:action="@{/stock/{watchItemId}/addWatchLog(watchItemId=${item.value.id})}" th:object="${wl}" method="post">
+									 <input type="text" th:field="*{content}"/>
+									 <input type="submit" value="Submit" th:value="'新增备注'"/>
+								</form>
+								</td>
+								<tr>
+					      	</table>
+				 		</td>
+				 		
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div th:if="${#maps.isEmpty(dataMap)}">
+			<p>无记录</p>
+		</div>
+	</div>
+</body>
+</html>	
+			
+			 
+		

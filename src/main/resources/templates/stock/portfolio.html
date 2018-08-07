@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title
+	th:text="|Portfolio 明细 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">Portfolio
+	明细 - 2018/08/02</title>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+	integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+	crossorigin="anonymous"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+	integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+	crossorigin="anonymous"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+	integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+	crossorigin="anonymous"></script>
+
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-11">
+				<h2>
+					<span th:text="'Portfolio 明细'"> Portfolio 明细</span> - <span
+						th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/08/02</span>
+				</h2>
+			</div>
+			<div class="col-1">
+				<span> <a th:href="@{/stock/portfolio/create}" th:text="'新增'"></a></span>
+			</div>
+		</div>
+		<div th:unless="${#lists.isEmpty(piList)}" class="row">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th scope="col">明细</th>
+						<th scope="col">动作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="item : ${piList}" th:class="${item.isClosed?'bg-secondary':_}">
+						<th scope="row" th:text="${#ids.seq('')}">1</th>
+						<td>
+							<table class="table table-striped">
+								<tr>
+									<th scope="col">代码</th>
+									<th scope="col">权证代码</th>
+									<th scope="col">买进日期</th>
+									<th scope="col">卖出日期</th>
+									<th scope="col">买进价格</th>
+									<th scope="col">卖出价格</th>
+								</tr>
+								<tr>
+									<td th:text="|${item.symbol}(${item.stockItem.name})|"></td>
+									<td th:text="${item.warrantSymbol}"></td>
+									<td th:text="${#dates.format(item.tradingDate,'yyyy/MM/dd')}"></td>
+									<td th:text="${#dates.format(item.closeDate,'yyyy/MM/dd')}"></td>
+									<td th:text="${item.price}"></td>
+									<td th:text="${item.closePrice}"></td>
+								</tr>
+								<tr>
+									<th scope="col">交易数量</th>
+									<th scope="col">买进金额</th>
+									<th scope="col">卖出金额</th>
+									<th scope="col">净利(损)</th>
+									<th scope="col">权证</th>
+									<th scope="col">融券</th>
+								</tr>
+								<tr>
+									<td th:text="${item.quantity}"></td>
+									<td th:text="${item.buyValue}"></td>
+									<td th:text="${item.sellValue}"></td>
+									<td th:text="${item.profit}"></td>
+									<td th:text="${item.isWarrant?'是':'否'}"></td>
+									<td th:text="${item.isShort?'是':'否'}"></td>
+								</tr>
+
+							</table>
+						</td>
+						<td><a th:if="${!item.isClosed}"
+							th:href="@{/stock/portfolio/{id}/update(id=${item.id})}"
+							th:text="'更新'"></a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div th:if="${#lists.isEmpty(piList)}" class="row">
+			<p>无记录</p>
+		</div>
+	</div>
+</body>
+</html>
+
+

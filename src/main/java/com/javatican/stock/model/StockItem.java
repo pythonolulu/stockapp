@@ -1,20 +1,16 @@
 package com.javatican.stock.model;
 
 import java.util.Collection;
-import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedEntityGraphs;
-import javax.persistence.NamedAttributeNode;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 		@NamedEntityGraph(name = "StockItem.cwts", attributeNodes = @NamedAttributeNode("cwts")),
 		@NamedEntityGraph(name = "StockItem.pwts", attributeNodes = @NamedAttributeNode("pwts")),
 		@NamedEntityGraph(name = "StockItem.fi", attributeNodes = @NamedAttributeNode("fi")) })
-public class StockItem {
+public class StockItem implements Comparable<StockItem> {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -100,6 +96,10 @@ public class StockItem {
 	@OneToMany(mappedBy = "stockItem")
 	private Collection<FinancialInfo> fi;
 
+	@JsonIgnore
+	@OneToMany(mappedBy = "stockItem")
+	private Collection<PortfolioItem> pi;
+	
 	// //TODO remove this
 	// @JsonIgnore
 	// @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy =
@@ -191,8 +191,16 @@ public class StockItem {
 		return fi;
 	}
 
+	public Collection<PortfolioItem> getPi() {
+		return pi;
+	}
 	public boolean isValid() {
 		return valid;
+	}
+
+	@Override
+	public int compareTo(StockItem si) {
+		return this.symbol.compareTo(si.getSymbol());
 	}
 
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,6 +24,7 @@ import com.javatican.stock.StockException;
  * 	?ex_ch=tse_3008.tw|tse_2317.tw|tse_2330.tw&json=1&delay=0&_=1531705877469
  */
 import com.javatican.stock.model.RealtimeMarketInfo;
+import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.RealtimeMarketInfo.StockItemMarketInfo;
 import com.javatican.stock.util.StockUtils;
 
@@ -39,6 +41,10 @@ public class RealtimeQuoteService {
 	public RealtimeQuoteService() {
 	}
 
+	public RealtimeMarketInfo getInfo2(Collection<StockItem> siCollection) throws StockException {
+		Collection<String> symbolCollection = siCollection.stream().map(StockItem::getSymbol).collect(Collectors.toList());
+		return getInfo(symbolCollection);
+	}
 	public RealtimeMarketInfo getInfo(Collection<String> symbolCollection) throws StockException {
 		List<String> symbolList = new ArrayList<>(symbolCollection);
 		RealtimeMarketInfo rmi = null;

@@ -169,6 +169,10 @@ public class StockItemService {
 		return si;
 	}
 
+	public StockItem getStockItem(String symbol) {
+		return stockItemDAO.findBySymbol(symbol);
+	}
+
 	/*
 	 * create a StockItem
 	 */

@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.labels.HighLowItemLabelGenerator;
 import org.jfree.chart.plot.DatasetRenderingOrder;
@@ -58,6 +59,8 @@ public class PricePlot implements JPlot{
 		candlestickRenderer.setSeriesVisibleInLegend(0, false);
 		// Create candlestickSubplot
 		XYPlot candlestickSubplot = new XYPlot(priceDataset, null, priceAxis, candlestickRenderer);
+
+		candlestickSubplot.setRangeAxisLocation(0, AxisLocation.BOTTOM_OR_RIGHT);
 		candlestickSubplot.setBackgroundPaint(Color.WHITE);
 		// create SMA renderer
 		XYLineAndShapeRenderer smaRenderer = new XYLineAndShapeRenderer();

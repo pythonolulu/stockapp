@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.javatican.stock.member.FormCommand;
 import com.javatican.stock.model.RealtimeMarketInfo;
 import com.javatican.stock.model.RealtimeMarketInfo.StockItemMarketInfo;
 import com.javatican.stock.model.StockItem;
@@ -100,6 +102,7 @@ public class StockStrategyController {
 		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService
 				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateList);
 		//
+		mav.addObject("command", new FormCommand());
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);
@@ -459,6 +462,8 @@ public class StockStrategyController {
 			}
 		}
 		//
+
+		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
 		mav.addObject("statsMap", statsMap);
@@ -634,19 +639,52 @@ public class StockStrategyController {
 			return (e1, e2) -> {
 				double per_1 = e1.getValue().get("per").get(0).doubleValue();
 				double per_2 = e2.getValue().get("per").get(0).doubleValue();
-				return (per_1 > per_2) ? 1 : -1;
+				return (per_1 > per_2) ? 1 : ((per_1 < per_2) ? -1 : 0);
 			};
 		} else if (sortKey.equals("PBR")) {
 			return (e1, e2) -> {
 				double pbr_1 = e1.getValue().get("pbr").get(0).doubleValue();
 				double pbr_2 = e2.getValue().get("pbr").get(0).doubleValue();
-				return (pbr_1 > pbr_2) ? 1 : -1;
+				return (pbr_1 > pbr_2) ? 1 : ((pbr_1 < pbr_2) ? -1 : 0);
+			};
+		} else if (sortKey.equals("PM")) {
+			return (e1, e2) -> {
+				double pm_1 = e1.getValue().get("pm_avg").get(0).doubleValue();
+				double pm_2 = e2.getValue().get("pm_avg").get(0).doubleValue();
+				return (pm_1 > pm_2) ? -1 : ((pm_1 < pm_2) ? 1 : 0);
 			};
 		} else {
 			return (e1, e2) -> {
 				double fcfy_1 = e1.getValue().get("fcfy_avg").get(0).doubleValue();
 				double fcfy_2 = e2.getValue().get("fcfy_avg").get(0).doubleValue();
-				return (fcfy_1 > fcfy_2) ? -1 : 1;
+				return (fcfy_1 > fcfy_2) ? -1 : ((fcfy_1 < fcfy_2) ? 1 : 0);
+			};
+		}
+	}
+
+	private Predicate<? super Entry<String, Map<String, List<Number>>>> getFilterPredicate(String filterKey) {
+		if (filterKey.equals("PM")) {
+			return e -> {
+				List<Number> pmList = e.getValue().get("pm_i");
+				double pm_prev = pmList.get(pmList.size() - 1).doubleValue();
+				for (int i = pmList.size() - 2; i >= 0; i--) {
+					double pm_current = pmList.get(i).doubleValue();
+					if (pm_current <= pm_prev) {
+						return false;
+					}
+					pm_prev = pm_current;
+				}
+				return true;
+			};
+		} else {
+			return e -> {
+				List<Number> fcfyList = e.getValue().get("fcfy_i");
+				for (Number fcfy : fcfyList) {
+					if (fcfy.doubleValue() < 0) {
+						return false;
+					}
+				}
+				return true;
 			};
 		}
 	}
@@ -656,10 +694,18 @@ public class StockStrategyController {
 			@RequestParam(value = "period", defaultValue = "3") int period,
 			@RequestParam(value = "selectCount", defaultValue = "50") int selectCount,
 			@RequestParam(value = "sortKey", defaultValue = "PER") String sortKey,
+			@RequestParam(value = "filterKey", defaultValue = "FCFY") String filterKey,
 			@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		// sortKey can only be 'PER'(Price-Earning-Ratio), 'PBR'(Price-Book-Ratio),
-		// 'FCFY'(Free-Cash-Flow-Yield)
+		// sortKey can only be
+		// 1. 'PER'(Price-Earning-Ratio),
+		// 2. 'PBR'(Price-Book-Ratio),
+		// 3. 'PM'(Profit-Margin),
+		// 4. 'FCFY'(Free-Cash-Flow-Yield)
+
+		// filterKey can only be
+		// 1. 'FCFY'(Free-Cash-Flow-Yield) all positive
+		// 2. 'PM' (Profit-Margin) increasing through years.
 		ModelAndView mav;
 		Map<String, Map<String, List<Number>>> statsMap = strategyService5.getStatsData(year, period);
 		if (statsMap != null) {
@@ -667,18 +713,16 @@ public class StockStrategyController {
 			mav = new ModelAndView("stock/financialSelectStrategy5");
 			//
 			LinkedHashMap<String, Map<String, List<Number>>> resultMap = new LinkedHashMap<>();
+			// filter and sort
+			// filter: first filter those per is positive and then apply the filterKey
+			// setting
 			statsMap.entrySet().stream().filter(e -> {
-				List<Number> fcfyList = e.getValue().get("fcfy_i");
-				for (Number fcfy : fcfyList) {
-					if (fcfy.doubleValue() < 0) {
-						return false;
-					}
-				}
-				if(e.getValue().get("per").get(0).doubleValue()<=0) {
+				if (e.getValue().get("per").get(0).doubleValue() <= 0) {
 					return false;
 				}
 				return true;
-			}).sorted(getComparator(sortKey)).limit(selectCount).forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+			}).filter(getFilterPredicate(filterKey)).sorted(getComparator(sortKey)).limit(selectCount)
+					.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
 
 			resultMap.entrySet().stream().forEach(entry -> {
 				logger.info("Symbol:" + entry.getKey() + "(" + siMap.get(entry.getKey()).getName() + "), avg yield:"

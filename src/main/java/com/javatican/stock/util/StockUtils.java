@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,6 +17,8 @@ import java.util.Optional;
 
 import org.javatuples.Pair;
 import org.jsoup.nodes.Document;
+
+import com.javatican.stock.model.PortfolioItem;
 
 public class StockUtils {
 
@@ -91,6 +94,15 @@ public class StockUtils {
 	public static String todayDateString() {
 		Calendar cal = Calendar.getInstance();
 		return format.format(cal.getTime());
+	}
+
+	public static Date todayWithoutTime() {
+		Calendar cal = Calendar.getInstance();
+		try {
+			return format.parse(format.format(cal.getTime()));
+		} catch (ParseException e) {
+			return null;
+		}
 	}
 
 	/*
@@ -221,5 +233,41 @@ public class StockUtils {
 			return null;
 		else
 			return StockUtils.dateToSimpleString(targetDate);
+	}
+
+	public static void copyPortfolioItemFields(PortfolioItem pi, PortfolioItem original) {
+
+		original.setPrice(pi.getPrice());
+		original.setClosePrice(pi.getClosePrice());
+		original.setQuantity(pi.getQuantity());
+		original.setCloseQuantity(pi.getCloseQuantity());
+		original.setTradingDate(pi.getTradingDate());
+		original.setCloseDate(pi.getCloseDate());
+		original.setIsShort(pi.getIsShort());
+		original.setWarrantSymbol(pi.getWarrantSymbol());
+		// symbol can not change
+		if (pi.getPrice() != null && pi.getQuantity() != null) {
+			original.setBuyValue(pi.getPrice() * pi.getQuantity());
+		} else {
+			original.setBuyValue(null);
+		}
+		//TODO need to do with closeQuantity less than quantity
+		if (pi.getClosePrice() != null && pi.getCloseQuantity() != null) {
+			original.setSellValue(pi.getClosePrice() * pi.getCloseQuantity());
+		} else {
+			original.setSellValue(null);
+		}
+		if (original.getCloseDate() != null) {
+			original.setIsClosed(true);
+			original.setProfit(original.getSellValue() - original.getBuyValue());
+		}
+		//
+		if (pi.getWarrantSymbol() != null) {
+			original.setIsWarrant(true);
+		} else {
+			original.setIsWarrant(false);
+		}
+		//
+
 	}
 }

@@ -72,8 +72,12 @@ public class StrategyService5 {
 					TreeMap<Integer, List<Number>> rawStatsMap = financialSelectStrategy5DAO
 							.loadRawStatsData(stockSymbol);
 					Map<String, List<Number>> dataMap = new HashMap<>();
+					// fcfy: free cash flow yield
 					List<Number> fcfyList = new ArrayList<>();
+					// profit margin
+					List<Number> pmList = new ArrayList<>();
 					double fcfy_sum = 0.0;
+					double pm_sum = 0.0;
 					for (int y = year; y > year - period; y--) {
 						if (rawStatsMap.containsKey(y)) {
 							try {
@@ -81,7 +85,10 @@ public class StrategyService5 {
 								double yield = rawStatsMap.get(y).get(0).doubleValue()
 										/ rawStatsMap.get(y).get(3).doubleValue();
 								fcfyList.add(StockUtils.roundDoubleDp4(yield));
+								double pm = rawStatsMap.get(y).get(6).doubleValue();
+								pmList.add(StockUtils.roundDoubleDp4(pm));
 								fcfy_sum += yield;
+								pm_sum += pm;
 							} catch (Exception ex) {
 								continue outer;
 							}
@@ -89,22 +96,25 @@ public class StrategyService5 {
 							continue outer;
 						}
 					}
-					double average_fcfy = StockUtils.roundDoubleDp4(fcfy_sum / period);
-					//free cash flow yield individual
+					// individual free cash flow yield
 					dataMap.put("fcfy_i", fcfyList);
-					//free cash flow yield average
-					dataMap.put("fcfy_avg",Arrays.<Number>asList(average_fcfy));
-					//每股净值 net asset value per share of target 'year' 
-					double nav = rawStatsMap.get(year).get(4).doubleValue(); 
-					dataMap.put("nav",Arrays.<Number>asList(StockUtils.roundDoubleDp2(nav)));
-					//每股盈馀 eps of target 'year' 
-					double eps = rawStatsMap.get(year).get(5).doubleValue(); 
-					dataMap.put("eps",Arrays.<Number>asList(StockUtils.roundDoubleDp2(eps)));
-					//股价净值比(PBR) price/nav 
+					// average free cash flow yield
+					dataMap.put("fcfy_avg", Arrays.<Number>asList(StockUtils.roundDoubleDp4(fcfy_sum / period)));
+					// individual profit margin
+					dataMap.put("pm_i", pmList);
+					// average profit margin
+					dataMap.put("pm_avg", Arrays.<Number>asList(StockUtils.roundDoubleDp4(pm_sum / period)));
+					// 每股净值 net asset value per share of target 'year'
+					double nav = rawStatsMap.get(year).get(4).doubleValue();
+					dataMap.put("nav", Arrays.<Number>asList(StockUtils.roundDoubleDp2(nav)));
+					// 每股盈馀 eps of target 'year'
+					double eps = rawStatsMap.get(year).get(5).doubleValue();
+					dataMap.put("eps", Arrays.<Number>asList(StockUtils.roundDoubleDp2(eps)));
+					// 股价净值比(PBR) price/nav
 					double price = siMap.get(stockSymbol).getPrice();
-					dataMap.put("pbr",Arrays.<Number>asList(StockUtils.roundDoubleDp2(price/nav)));
-					//本益比(PER) price/eps 
-					dataMap.put("per",Arrays.<Number>asList(StockUtils.roundDoubleDp2(price/eps)));
+					dataMap.put("pbr", Arrays.<Number>asList(StockUtils.roundDoubleDp2(price / nav)));
+					// 本益比(PER) price/eps
+					dataMap.put("per", Arrays.<Number>asList(StockUtils.roundDoubleDp2(price / eps)));
 					statsMap.put(stockSymbol, dataMap);
 				} catch (StockException e) {
 					logger.warn("Error loading stats data for  Strategy 5 of symbol:" + stockSymbol);
@@ -138,10 +148,12 @@ public class StrategyService5 {
 			// 3: liabilities and equity
 			// 4: net asset value per share
 			// 5: eps
+			// 6: profit margin
 			rawStatsMap.put(entry.getKey(),
 					Arrays.asList(entry.getValue().getFreeCashFlow(), entry.getValue().getLiabilitiesTotal(),
 							entry.getValue().getEquityShareholdersParent(), entry.getValue().getLiabilitiesAndEquity(),
-							entry.getValue().getNetAssetValuePerShare(), entry.getValue().getEps()));
+							entry.getValue().getNetAssetValuePerShare(), entry.getValue().getEps(),
+							entry.getValue().getProfitMargin()));
 		}
 		return rawStatsMap;
 	}

@@ -146,7 +146,7 @@ public class StockService {
 					try {
 						Thread.sleep(stockConfig.getSleepTime());
 					} catch (InterruptedException ex) {
-					}
+					} 
 				}
 			}
 		} catch (Exception ex) {

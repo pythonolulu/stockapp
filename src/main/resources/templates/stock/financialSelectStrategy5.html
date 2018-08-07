@@ -24,8 +24,8 @@
 						<th th:if="${#maps.size(realtimeMap)>0}" scope="col">即時價格</th>
 						<th scope="col">本益比</th>
 						<th scope="col">股价净值比</th>
-						<th scope="col">报酬率平均值</th>
-						<th scope="col">个别报酬率</th>
+						<th scope="col">自由现金流报酬率</th>
+						<th scope="col">毛利率</th>
 						<th scope="col">缩图</th>
 						<th scope="col">主要线图</th>
 						<th scope="col">决策分析线图</th>
@@ -51,8 +51,11 @@
 					 	</td>
 					 	<td th:text="|${#numbers.formatDecimal(item.value['per'][0],1,'COMMA',1,'POINT')}|">11</td>  
 					    <td th:text="|${#numbers.formatDecimal(item.value['pbr'][0],1,'COMMA',2,'POINT')}|">1.5</td>  
-					    <td th:text="|${#numbers.formatDecimal(item.value['fcfy_avg'][0]*100,1,'COMMA',1,'POINT')}%|">250%</td>  
-					    <td><span th:each="fcfy: ${item.value['fcfy_i']}" th:text="|[${#numbers.formatDecimal(fcfy*100,1,'COMMA',1,'POINT')}%]|">
+					    <td><span th:text="|${#numbers.formatDecimal(item.value['fcfy_avg'][0]*100,1,'COMMA',1,'POINT')}%|">12%</span>
+					    <span th:each="fcfy: ${item.value['fcfy_i']}" th:text="|[${#numbers.formatDecimal(fcfy*100,1,'COMMA',1,'POINT')}%]|">
+					    </span></td>  
+					    <td><span th:text="|${#numbers.formatDecimal(item.value['pm_avg'][0]*100,1,'COMMA',1,'POINT')}%|">12%</span>
+					    <span th:each="pm: ${item.value['pm_i']}" th:text="|[${#numbers.formatDecimal(pm*100,1,'COMMA',1,'POINT')}%]|">
 					    </span></td>
 					    <td><a target='_blank' th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key},CHT_CAT=DATE)}">
 					 		<img th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key}+' graph'" height="64" width="64"/>
