@@ -746,6 +746,7 @@ public class StockStrategyController {
 				}
 			}
 			//
+			mav.addObject("command", new FormCommand());
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);

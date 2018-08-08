@@ -237,27 +237,27 @@ public class StockUtils {
 
 	public static void copyPortfolioItemFields(PortfolioItem pi, PortfolioItem original) {
 
-		original.setPrice(pi.getPrice());
-		original.setClosePrice(pi.getClosePrice());
-		original.setQuantity(pi.getQuantity());
-		original.setCloseQuantity(pi.getCloseQuantity());
-		original.setTradingDate(pi.getTradingDate());
-		original.setCloseDate(pi.getCloseDate());
+		original.setBuyPrice(pi.getBuyPrice());
+		original.setSellPrice(pi.getSellPrice());
+		original.setBuyQuantity(pi.getBuyQuantity());
+		original.setSellQuantity(pi.getSellQuantity());
+		original.setBuyDate(pi.getBuyDate());
+		original.setSellDate(pi.getSellDate());
 		original.setIsShort(pi.getIsShort());
 		original.setWarrantSymbol(pi.getWarrantSymbol());
 		// symbol can not change
-		if (pi.getPrice() != null && pi.getQuantity() != null) {
-			original.setBuyValue(pi.getPrice() * pi.getQuantity());
+		if (pi.getBuyPrice() != null && pi.getBuyQuantity() != null) {
+			original.setBuyValue(pi.getBuyPrice() * pi.getBuyQuantity());
 		} else {
 			original.setBuyValue(null);
 		}
-		//TODO need to do with closeQuantity less than quantity
-		if (pi.getClosePrice() != null && pi.getCloseQuantity() != null) {
-			original.setSellValue(pi.getClosePrice() * pi.getCloseQuantity());
+		// TODO need to do with closeQuantity less than quantity
+		if (pi.getSellPrice() != null && pi.getSellQuantity() != null) {
+			original.setSellValue(pi.getSellPrice() * pi.getSellQuantity());
 		} else {
 			original.setSellValue(null);
 		}
-		if (original.getCloseDate() != null) {
+		if (original.getSellDate() != null) {
 			original.setIsClosed(true);
 			original.setProfit(original.getSellValue() - original.getBuyValue());
 		}

@@ -2,8 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <title
-	th:text="|Portfolio 明细 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">Portfolio
-	明细 - 2018/08/02</title>
+	th:text="|投资明细 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">投资明细 - 2018/08/02</title>
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -31,7 +30,7 @@
 		<div class="row">
 			<div class="col-11">
 				<h2>
-					<span th:text="'Portfolio 明细'"> Portfolio 明细</span> - <span
+					<span th:text="'投资明细'"> 投资明细</span> - <span
 						th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/08/02</span>
 				</h2>
 			</div>
@@ -64,13 +63,13 @@
 								<tr>
 									<td th:text="|${item.symbol}(${item.stockItem.name})|"></td>
 									<td th:text="${item.warrantSymbol}"></td>
-									<td th:text="${#dates.format(item.tradingDate,'yyyy/MM/dd')}"></td>
-									<td th:text="${#dates.format(item.closeDate,'yyyy/MM/dd')}"></td>
-									<td th:text="${item.price}"></td>
-									<td th:text="${item.closePrice}"></td>
+									<td th:text="${#dates.format(item.buyDate,'yyyy/MM/dd')}"></td>
+									<td th:text="${#dates.format(item.sellDate,'yyyy/MM/dd')}"></td>
+									<td th:text="${item.buyPrice}"></td>
+									<td th:text="${item.sellPrice}"></td>
 								</tr>
 								<tr>
-									<th scope="col">交易数量</th>
+									<th scope="col">买进数量</th>
 									<th scope="col">买进金额</th>
 									<th scope="col">卖出金额</th>
 									<th scope="col">净利(损)</th>
@@ -78,7 +77,7 @@
 									<th scope="col">融券</th>
 								</tr>
 								<tr>
-									<td th:text="${item.quantity}"></td>
+									<td th:text="${item.buyQuantity}"></td>
 									<td th:text="${item.buyValue}"></td>
 									<td th:text="${item.sellValue}"></td>
 									<td th:text="${item.profit}"></td>

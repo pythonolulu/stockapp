@@ -26,38 +26,37 @@ public class PortfolioItem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
-	//@NullOrNotBlank(message="{portfolioItem.symbol.message}")
-	@NotNull(message="{portfolioItem.symbol.message}")
+
+	// @NullOrNotBlank(message="{portfolioItem.symbol.message}")
+	@NotNull
 	@Column(name = "symbol", nullable = false)
 	private String symbol;
 
 	@Column(name = "warrant_symbol", nullable = true)
 	private String warrantSymbol;
-	
-	@NotNull(message="{portfolioItem.tradingDate.message}")
-	@DateTimeFormat(pattern="yyyy-MM-dd")
-	@Column(name = "trading_date", nullable = true)
-	private Date tradingDate;
 
-	@DateTimeFormat(pattern="yyyy-MM-dd")
-	@Column(name = "close_date", nullable = true)
-	private Date closeDate;
-	
+	@NotNull
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@Column(name = "buy_date", nullable = true)
+	private Date buyDate;
 
-	@NotNull(message="{portfolioItem.price.message}")
-	@Column(name = "price", nullable = true)
-	private Double price = null;
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@Column(name = "sell_date", nullable = true)
+	private Date sellDate;
 
-	@Column(name = "close_price", nullable = true)
-	private Double closePrice = null;
+	@NotNull
+	@Column(name = "buy_price", nullable = true)
+	private Double buyPrice = null;
 
-	@NotNull(message="{portfolioItem.quantity.message}")
-	@Column(name = "quantity", nullable = true)
-	private Double quantity = null;
+	@Column(name = "sell_price", nullable = true)
+	private Double sellPrice = null;
 
-	@Column(name = "close_quantity", nullable = true)
-	private Double closeQuantity = null;
+	@NotNull
+	@Column(name = "buy_quantity", nullable = true)
+	private Double buyQuantity = null;
+
+	@Column(name = "sell_quantity", nullable = true)
+	private Double sellQuantity = null;
 
 	@Column(name = "buy_value", nullable = true)
 	private Double buyValue = null;
@@ -82,14 +81,6 @@ public class PortfolioItem {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private SiteUser siteUser;
-
-	public Double getCloseQuantity() {
-		return closeQuantity;
-	}
-
-	public void setCloseQuantity(Double closeQuantity) {
-		this.closeQuantity = closeQuantity;
-	}
 
 	public SiteUser getSiteUser() {
 		return siteUser;
@@ -121,44 +112,52 @@ public class PortfolioItem {
 		this.symbol = symbol;
 	}
 
-	public Date getTradingDate() {
-		return tradingDate;
+	public Date getBuyDate() {
+		return buyDate;
 	}
 
-	public void setTradingDate(Date tradingDate) {
-		this.tradingDate = tradingDate;
+	public void setBuyDate(Date buyDate) {
+		this.buyDate = buyDate;
 	}
 
-	public Date getCloseDate() {
-		return closeDate;
+	public Date getSellDate() {
+		return sellDate;
 	}
 
-	public void setCloseDate(Date closeDate) {
-		this.closeDate = closeDate;
+	public void setSellDate(Date sellDate) {
+		this.sellDate = sellDate;
 	}
 
-	public Double getPrice() {
-		return price;
+	public Double getBuyPrice() {
+		return buyPrice;
 	}
 
-	public void setPrice(Double price) {
-		this.price = price;
+	public void setBuyPrice(Double buyPrice) {
+		this.buyPrice = buyPrice;
 	}
 
-	public Double getClosePrice() {
-		return closePrice;
+	public Double getSellPrice() {
+		return sellPrice;
 	}
 
-	public void setClosePrice(Double closePrice) {
-		this.closePrice = closePrice;
+	public void setSellPrice(Double sellPrice) {
+		this.sellPrice = sellPrice;
 	}
 
-	public Double getQuantity() {
-		return quantity;
+	public Double getBuyQuantity() {
+		return buyQuantity;
 	}
 
-	public void setQuantity(Double quantity) {
-		this.quantity = quantity;
+	public void setBuyQuantity(Double buyQuantity) {
+		this.buyQuantity = buyQuantity;
+	}
+
+	public Double getSellQuantity() {
+		return sellQuantity;
+	}
+
+	public void setSellQuantity(Double sellQuantity) {
+		this.sellQuantity = sellQuantity;
 	}
 
 	public Double getProfit() {
@@ -216,6 +215,7 @@ public class PortfolioItem {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public Double getBuyValue() {
 		return buyValue;
 	}

@@ -28,35 +28,35 @@
 	        <input type="text" class="form-control" id="warrantSymbol" th:field="*{warrantSymbol}"/>
         </div>
         <div class="form-group">
-	        <label for="tradingDate">买进日期</label>
-	        <input type="date" class="form-control" id="tradingDate" th:field="*{tradingDate}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('tradingDate')}" th:errors="*{tradingDate}"></span>
+	        <label for="buyDate">买进日期</label>
+	        <input type="date" class="form-control" id="buyDate" th:field="*{buyDate}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('buyDate')}" th:errors="*{buyDate}"></span>
         </div>
         <div class="form-group">
-	        <label for="closeDate">卖出日期</label>
-	        <input type="date" class="form-control" id="closeDate" th:field="*{closeDate}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('closeDate')}" th:errors="*{closeDate}"></span>
+	        <label for="sellDate">卖出日期</label>
+	        <input type="date" class="form-control" id="sellDate" th:field="*{sellDate}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('sellDate')}" th:errors="*{sellDate}"></span>
         </div>
 		<div class="form-group">
-	        <label for="price">买进价格</label>
-	        <input type="text" class="form-control" id="price" th:field="*{price}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
+	        <label for="buyPrice">买进价格</label>
+	        <input type="text" class="form-control" id="buyPrice" th:field="*{buyPrice}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('buyPrice')}" th:errors="*{buyPrice}"></span>
         </div>
 		<div class="form-group">
-	        <label for="closePrice">卖出价格</label>
-	        <input type="text" class="form-control" id="closePrice" th:field="*{closePrice}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('closePrice')}" th:errors="*{closePrice}"></span>
+	        <label for="sellPrice">卖出价格</label>
+	        <input type="text" class="form-control" id="sellPrice" th:field="*{sellPrice}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('sellPrice')}" th:errors="*{sellPrice}"></span>
         
         </div>
         <div class="form-group">
-	        <label for="quantity">交易数量</label>
-	        <input type="text" class="form-control" id="quantity" th:field="*{quantity}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></span>
+	        <label for="buyQuantity">买进数量</label>
+	        <input type="text" class="form-control" id="buyQuantity" th:field="*{buyQuantity}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('buyQuantity')}" th:errors="*{buyQuantity}"></span>
         </div>
         <div class="form-group">
-	        <label for="closeQuantity">卖出数量</label>
-	        <input type="text" class="form-control" id="closeQuantity" th:field="*{closeQuantity}"/>
-	        <span class="text-danger" th:if="${#fields.hasErrors('closeQuantity')}" th:errors="*{closeQuantity}"></span>
+	        <label for="sellQuantity">卖出数量</label>
+	        <input type="text" class="form-control" id="sellQuantity" th:field="*{sellQuantity}"/>
+	        <span class="text-danger" th:if="${#fields.hasErrors('sellQuantity')}" th:errors="*{sellQuantity}"></span>
         </div>
 		<div class="form-check">
 		    <input class="form-check-input" type="checkbox"  id="isShort" th:field="*{isShort}"/>
