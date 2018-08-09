@@ -403,7 +403,7 @@ public class StockService {
 		return stockPriceChangeDAO.loadBottom(tradingDate);
 	}
 
-	public void preparePerformers(String dateString, int size) throws StockException {
+	public void updatePerformers(String dateString, int size) throws StockException {
 		List<StockPriceChange> spcList = downloadAndSavePriceData(dateString);
 		List<StockPriceChange> topList = spcList.stream().filter(spc -> spc.getChangePercent() > 0)
 				.sorted(Comparator.comparing(StockPriceChange::getChangePercent).reversed()).limit(size)

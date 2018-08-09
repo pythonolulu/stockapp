@@ -235,39 +235,4 @@ public class StockUtils {
 			return StockUtils.dateToSimpleString(targetDate);
 	}
 
-	public static void copyPortfolioItemFields(PortfolioItem pi, PortfolioItem original) {
-
-		original.setBuyPrice(pi.getBuyPrice());
-		original.setSellPrice(pi.getSellPrice());
-		original.setBuyQuantity(pi.getBuyQuantity());
-		original.setSellQuantity(pi.getSellQuantity());
-		original.setBuyDate(pi.getBuyDate());
-		original.setSellDate(pi.getSellDate());
-		original.setIsShort(pi.getIsShort());
-		original.setWarrantSymbol(pi.getWarrantSymbol());
-		// symbol can not change
-		if (pi.getBuyPrice() != null && pi.getBuyQuantity() != null) {
-			original.setBuyValue(pi.getBuyPrice() * pi.getBuyQuantity());
-		} else {
-			original.setBuyValue(null);
-		}
-		// TODO need to do with closeQuantity less than quantity
-		if (pi.getSellPrice() != null && pi.getSellQuantity() != null) {
-			original.setSellValue(pi.getSellPrice() * pi.getSellQuantity());
-		} else {
-			original.setSellValue(null);
-		}
-		if (original.getSellDate() != null) {
-			original.setIsClosed(true);
-			original.setProfit(original.getSellValue() - original.getBuyValue());
-		}
-		//
-		if (pi.getWarrantSymbol() != null) {
-			original.setIsWarrant(true);
-		} else {
-			original.setIsWarrant(false);
-		}
-		//
-
-	}
 }

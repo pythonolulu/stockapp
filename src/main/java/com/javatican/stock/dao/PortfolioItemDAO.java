@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import com.javatican.stock.model.PortfolioItem;
 import com.javatican.stock.model.SiteUser;
+import com.javatican.stock.model.WatchItem;
 import com.javatican.stock.repository.PortfolioItemRepository;
 
 @Repository("PortfolioItemDAO")
@@ -23,6 +24,10 @@ public class PortfolioItemDAO {
 
 	public Iterable<PortfolioItem> saveAll(List<PortfolioItem> piList) {
 		return portfolioItemRepository.saveAll(piList);
+	}
+
+	public void delete(PortfolioItem pi) {
+		portfolioItemRepository.delete(pi);
 	}
 	/*
 	 * get the stockItem relationship 

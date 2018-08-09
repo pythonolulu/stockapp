@@ -313,6 +313,7 @@ public class StockStrategyController {
 				}
 			}
 			//
+			mav.addObject("command", new FormCommand());
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
@@ -384,6 +385,7 @@ public class StockStrategyController {
 				}
 			}
 			//
+			mav.addObject("command", new FormCommand());
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
@@ -563,6 +565,7 @@ public class StockStrategyController {
 			}
 		}
 		//
+		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
 		mav.addObject("resultMap", resultMap);
@@ -609,6 +612,7 @@ public class StockStrategyController {
 			}
 		}
 		//
+		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
 		mav.addObject("tradingDate", date);
 		mav.addObject("resultMap", resultMap);

@@ -17,6 +17,7 @@ import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.model.PortfolioItem;
 import com.javatican.stock.model.SiteUser;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.model.WatchItem;
 
 @Service("portfolioService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
@@ -35,6 +36,9 @@ public class PortfolioService {
 		return portfolioItemDAO.save(pi);
 	}
 
+	public void delete(PortfolioItem pi) {
+		portfolioItemDAO.delete(pi);
+	}
 	public Iterable<PortfolioItem> saveAll(List<PortfolioItem> piList) {
 		return portfolioItemDAO.saveAll(piList);
 	}

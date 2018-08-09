@@ -19,26 +19,27 @@
 		</h2>
 		
 		<div th:unless="${#maps.isEmpty(resultMap)}">
+		<form action="#" th:action="@{/stock/addToWatchList}"  method="post">
 			<table class="table table-striped">
 				<thead>
 					<tr>
 						<th>#</th>
 						<th scope="col">代码</th>
+						<th scope="col"></th>
 						<th scope="col">名称</th>
 						<th th:if="${#maps.size(realtimeMap)>0}" scope="col">即時價格</th>
 						<th scope="col">累计涨幅</th>
 						<th scope="col">上涨机率</th>
 						<th scope="col">资料数</th>
 						<th scope="col">缩图</th>
-						<th scope="col">主要线图</th>
-						<th scope="col">决策分析线图</th>
-						<th scope="col">認購權證</th>
-						<th scope="col">認售權證</th>
+						<th scope="col">线图</th>
+						<th scope="col">權證</th>
 					</tr>
 				</thead>
 				<tbody>
 				    <tr th:each="item : ${resultMap}" >
 				      	<th scope="row" th:text="${#ids.seq('')}">1</th>
+				      	<td><input type="checkbox" th:field="${command.symbols}" th:value="${item.key}" /></td>
 				      	<td><a target='_blank' href="http://tw.stock.yahoo.com/q/ta?s=2317" 
 					 	th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key})}" th:text="${item.key}">2317</a></td>
 					    <td><a target='_blank' href="http://norway.twsthr.info/StockHolders.aspx?stock=2317" 
@@ -60,20 +61,20 @@
 					 		<img th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key},timekind=0,timeblock=120,volume=0)}" th:alt="${item.key}+' graph'" height="64" width="64"/>
 				 		</a></td>
 					    <td><a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key}+'.png')}">
-					 		主要线图
-				 		</a></td>
-				 		<td><a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key}+'.png')}">
-					 		决策分析线图
+					 		主图
+				 		</a><a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key}+'.png')}">
+					 		副图
 				 		</a></td>
 					    <td><a th:if="${#lists.contains(swcwList, item.key)}" target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
 					 		<img th:src="@{/icons/call.jpeg}" th:alt="'認購權證'" height="16" width="16"/>
-				 		</a></td>
-					    <td><a target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
+				 		</a><a target='_blank'  th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
 					 		<img th:src="@{/icons/put.jpeg}" th:alt="'認售權證'" height="16" width="16"/>
 				 		</a></td>
 					</tr>
 				</tbody>
 			</table>
+			<input type="submit" value="Submit" th:value="'加入自选股'"/> <input type="reset" value="Reset" th:value="'重设'"/>
+			</form>
 		</div>
 		<div th:if="${#maps.isEmpty(resultMap)}">
 			<p>无记录</p>

@@ -22,6 +22,7 @@ public interface WatchItemRepository extends JpaRepository<WatchItem, Long> {
 	 * getBySymbolAndSiteUser() also fetch WatchLog and StockItem relationships
 	 */
 	@EntityGraph(value = "WatchItem.wl_stockItem", type = EntityGraphType.LOAD)
+	@Query("select s from WatchItem s left join s.wl t where s.symbol=?1 and s.siteUser=?2 order by t.logDate desc")
 	WatchItem getBySymbolAndSiteUser(String symbol, SiteUser su);
 
 	@Query("select s from WatchItem s where s.siteUser=?1 order by s.symbol")
@@ -31,7 +32,7 @@ public interface WatchItemRepository extends JpaRepository<WatchItem, Long> {
 	 * getBySiteUserOrderBySymbol() also fetch WatchLog and StockItem relationships
 	 */
 	@EntityGraph(value = "WatchItem.wl_stockItem", type = EntityGraphType.LOAD)
-	@Query("select s from WatchItem s where s.siteUser=?1 order by s.symbol")
+	@Query("select s from WatchItem s left join s.wl t where s.siteUser=?1 order by s.symbol, t.logDate desc")
 	List<WatchItem> getBySiteUserOrderBySymbol(SiteUser su);
 
 	@Query("select s.symbol from WatchItem s where s.siteUser=?1 order by s.symbol")

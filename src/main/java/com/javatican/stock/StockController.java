@@ -126,15 +126,15 @@ public class StockController {
 	/*
 	 * 2.3. handler for downloading and saving top performers
 	 */
-	@GetMapping("/preparePerformers")
-	public ResponseMessage prepareTopAndBottomPerformers(
+	@GetMapping("/updatePerformers")
+	public ResponseMessage updateTopAndBottomPerformers(
 			@RequestParam(value = "tradingDate", required = false) String dateString) {
 		if (dateString == null) {
 			dateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 		}
 		ResponseMessage mes = new ResponseMessage();
 		try {
-			stockService.preparePerformers(dateString, 50);
+			stockService.updatePerformers(dateString, 50);
 			mes.setCategory("Success");
 			mes.setText("Stock price change for top/bottom 50 stocks have been saved.");
 		} catch (Exception ex) {

@@ -35,7 +35,6 @@ public class PortfolioItem {
 	@Column(name = "warrant_symbol", nullable = true)
 	private String warrantSymbol;
 
-	@NotNull
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	@Column(name = "buy_date", nullable = true)
 	private Date buyDate;
@@ -44,14 +43,12 @@ public class PortfolioItem {
 	@Column(name = "sell_date", nullable = true)
 	private Date sellDate;
 
-	@NotNull
 	@Column(name = "buy_price", nullable = true)
 	private Double buyPrice = null;
 
 	@Column(name = "sell_price", nullable = true)
 	private Double sellPrice = null;
 
-	@NotNull
 	@Column(name = "buy_quantity", nullable = true)
 	private Double buyQuantity = null;
 

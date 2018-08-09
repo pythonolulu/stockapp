@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title
-	th:text="|投资明细 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">投资明细 - 2018/08/02</title>
+<title th:text="|投资明细 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">投资明细
+	- 2018/08/02</title>
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -48,7 +48,8 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr th:each="item : ${piList}" th:class="${item.isClosed?'bg-secondary':_}">
+					<tr th:each="item : ${piList}"
+						th:class="${item.isClosed?'bg-warning':_}">
 						<th scope="row" th:text="${#ids.seq('')}">1</th>
 						<td>
 							<table class="table table-striped">
@@ -69,7 +70,7 @@
 									<td th:text="${item.sellPrice}"></td>
 								</tr>
 								<tr>
-									<th scope="col">买进数量</th>
+									<th scope="col">交易数量</th>
 									<th scope="col">买进金额</th>
 									<th scope="col">卖出金额</th>
 									<th scope="col">净利(损)</th>
@@ -77,19 +78,21 @@
 									<th scope="col">融券</th>
 								</tr>
 								<tr>
-									<td th:text="${item.buyQuantity}"></td>
+									<td
+										th:text="${item.isShort? item.sellQuantity: item.buyQuantity}"></td>
 									<td th:text="${item.buyValue}"></td>
 									<td th:text="${item.sellValue}"></td>
 									<td th:text="${item.profit}"></td>
 									<td th:text="${item.isWarrant?'是':'否'}"></td>
 									<td th:text="${item.isShort?'是':'否'}"></td>
 								</tr>
-
 							</table>
 						</td>
 						<td><a th:if="${!item.isClosed}"
 							th:href="@{/stock/portfolio/{id}/update(id=${item.id})}"
-							th:text="'更新'"></a></td>
+							th:text="'更新'"></a> <a
+							th:href="@{/stock/portfolio/{id}/delete(id=${item.id})}"
+							th:text="'移除'">移除</a></td>
 					</tr>
 				</tbody>
 			</table>
