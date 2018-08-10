@@ -127,9 +127,10 @@ public class StrategyService3 {
 					if (siwd.getTradingDate().before(d)) {
 						if (siwd.getStockPrice().getHigh() <= hPrice) {
 							score += ((double) (siwdList.indexOf(siwd) + 1)) / siwdList.size();
-						} else if (siwd.getStockPrice().getLow() >= hPrice) {
-							score -= ((double) (siwdList.indexOf(siwd) + 1)) / siwdList.size();
-						}
+						} 
+						//else if (siwd.getStockPrice().getLow() >= hPrice) {
+						//	score -= ((double) (siwdList.indexOf(siwd) + 1)) / siwdList.size();
+						//}
 					} else {
 						break;
 					}
