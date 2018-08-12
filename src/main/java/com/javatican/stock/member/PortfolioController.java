@@ -30,6 +30,7 @@ import com.javatican.stock.service.PortfolioService;
 import com.javatican.stock.service.SiteUserService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
+import com.javatican.stock.util.StockUtils;
 
 @Controller
 @RequestMapping("stock/*")
@@ -71,6 +72,7 @@ public class PortfolioController {
 		//
 		mav.addObject("piList", piList);
 		mav.addObject("tradingDate", date);
+		mav.addObject("title", "投资明细 - "+StockUtils.dateToStringSeparatedBySlash(date));
 		return mav;
 	}
 

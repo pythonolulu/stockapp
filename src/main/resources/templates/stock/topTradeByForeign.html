@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<title>投信买卖热门股-Top 30 stocks</title>
-<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
-	rel="stylesheet"></link>
-<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
-<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
-</head>
+<head th:insert="~{stock/header :: header}"></head>
 <body>
 	<div class="container">
 		<h2>
-			投信买卖热门股 - <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+			外资买卖热门股 - <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
 		</h2>
 		<div th:unless="${#maps.isEmpty(dataMap)}">
 			<form action="#" th:action="@{/stock/addToWatchList}"  method="post">
@@ -33,10 +27,10 @@
 						 		<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'" height="16" width="16"/>
 					 		</a>
 					 		<a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
-						 		主要线图
+						 		主图
 					 		</a>
 					 		<a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
-						 		决策分析线图
+						 		副图
 					 		</a>
 					 	</td>
 					 </tr>
@@ -53,20 +47,25 @@
 					 	<td th:each="tDate : ${dateList}" th:object="${item.value.get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.sell/1000,1,'COMMA',0,'POINT')}:'0'">1200,000</td>
 					 </tr>
 					 <tr>
-					 	<th>Diff(张):</th>
-					 	<td th:each="tDate : ${dateList}" th:object="${item.value.get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.diff/1000,1,'COMMA',0,'POINT')}:'0'"
-					 		th:class="${#object!=null && #object.diff>0}?'text-danger':'text-success'">-200,000</td>
-					 </tr>		
-					 <tr>
-					 	<th>K:</th>
-					 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.k,1,'COMMA',2,'POINT')}:'0'"
-					 		th:class="${#object!=null && #object.k>50}?'text-info':'text-muted'">50.0</td>
-					 </tr>	
-					 <tr>
-					 	<th>D:</th>
-					 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.d,1,'COMMA',2,'POINT')}:'0'"
-					 		th:class="${#object!=null && #object.d>50}?'text-info':'text-muted'">40.0</td>
-					 </tr>
+						<th>Diff(张):</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${item.value.get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.diff/1000,1,'COMMA',0,'POINT')}:'0'"
+							th:class="${#object!=null && #object.diff>0}?'text-white bg-danger':(${#object!=null && #object.diff<0}?'text-white bg-success':'text-muted')">-200,000</td>
+					</tr>
+					<tr>
+						<th>K:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.k,1,'COMMA',2,'POINT')}:'0'"
+							th:class="${#object!=null && #object.k>80}?'text-danger bg-dark': (${#object!=null && #object.k<20}?'text-success bg-dark':'text-muted')">50.0</td>
+					</tr>
+					<tr>
+						<th>D:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.d,1,'COMMA',2,'POINT')}:'0'">40.0</td>
+					</tr>
 					 <tr>
 					 	<th>Close price:</th>
 					 	<td th:each="tDate : ${dateList}" th:object="${statsMap.get(item.key).get(tDate)}" th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.close,1,'COMMA',2,'POINT')}:'0'"

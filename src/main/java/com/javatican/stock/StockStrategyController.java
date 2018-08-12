@@ -29,6 +29,7 @@ import com.javatican.stock.model.RealtimeMarketInfo.StockItemMarketInfo;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
+import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.ChartService;
@@ -73,11 +74,12 @@ public class StockStrategyController {
 	RealtimeQuoteService realtimeQuoteService;
 
 	/*
-	 * a. handler for calculating the top 30 stocks traded by Trust for the
-	 * specified trading date.
+	 * a. handler for calculating the top stocks traded by Trust for the specified
+	 * trading date.
 	 */
-	@GetMapping("/top30ByTrust")
-	public ModelAndView getTop30ByTrust(@RequestParam(value = "tradingDate", required = false) String dateString,
+	@GetMapping("/topTradeByTrust")
+	public ModelAndView getTopTradeByTrust(@RequestParam(value = "tradingDate", required = false) String dateString,
+			@RequestParam(value = "selectCount", defaultValue = "30") int selectCount,
 			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		Date date;
 		if (dateString == null) {
@@ -90,19 +92,63 @@ public class StockStrategyController {
 		// key: stockItem
 		// value: a map with key of date string and value StockTradeByTrust object
 		LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> dataMap = stockService
-				.getTop30StockItemTradeByTrust(date, dateLength);
+				.getTopStockItemTradeByTrust(date, dateLength, selectCount);
 		// create stock charts
 		chartService.createGraphs(dataMap.keySet(), force);
 		// also return trading date list
 		List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
 		List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
 				.collect(Collectors.toList());
-		ModelAndView mav = new ModelAndView("stock/top30ByTrust");
+		ModelAndView mav = new ModelAndView("stock/topTradeByTrust");
 		// prepare K/D values
 		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService
 				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateList);
 		//
 		mav.addObject("command", new FormCommand());
+		mav.addObject("title", "投信买卖热门股 - " + StockUtils.dateToStringSeparatedBySlash(date));
+		mav.addObject("tradingDate", date);
+		mav.addObject("dateList", dList);
+		mav.addObject("dataMap", dataMap);
+		mav.addObject("statsMap", statsMap);
+		// stockItems with call and put warrants
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+
+	/*
+	 * a. handler for calculating the top stocks traded by Trust for the specified
+	 * trading date.
+	 */
+	@GetMapping("/topTradeByForeign")
+	public ModelAndView getTopTradeByForeign(@RequestParam(value = "tradingDate", required = false) String dateString,
+			@RequestParam(value = "selectCount", defaultValue = "30") int selectCount,
+			@RequestParam(value = "force", defaultValue = "false") boolean force) {
+		Date date;
+		if (dateString == null) {
+			date = stockService.getLatestTradingDate();
+		} else {
+			date = StockUtils.stringSimpleToDate(dateString).get();
+		}
+		// show 10 data points for each stock item
+		int dateLength = 10;
+		// key: stockItem
+		// value: a map with key of date string and value StockTradeByTrust object
+		LinkedHashMap<StockItem, TreeMap<String, StockTradeByForeign>> dataMap = stockService
+				.getTopStockItemTradeByForeign(date, dateLength, selectCount);
+		// create stock charts
+		chartService.createGraphs(dataMap.keySet(), force);
+		// also return trading date list
+		List<Date> dateList = stockService.getLatestNTradingDateDesc(dateLength);
+		List<String> dList = dateList.stream().map(td -> StockUtils.dateToStringSeparatedBySlash(td))
+				.collect(Collectors.toList());
+		ModelAndView mav = new ModelAndView("stock/topTradeByForeign");
+		// prepare K/D values
+		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = stockService
+				.getStockItemStatsData(new ArrayList<StockItem>(dataMap.keySet()), dateList);
+		//
+		mav.addObject("command", new FormCommand());
+		mav.addObject("title", "外资买卖热门股 - " + StockUtils.dateToStringSeparatedBySlash(date));
 		mav.addObject("tradingDate", date);
 		mav.addObject("dateList", dList);
 		mav.addObject("dataMap", dataMap);

@@ -29,12 +29,14 @@ import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockPriceChangeDAO;
+import com.javatican.stock.dao.StockTradeByForeignDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
+import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.model.TradingValue;
@@ -59,6 +61,8 @@ public class StockService {
 	TradingValueDAO tradingValueDAO;
 	@Autowired
 	StockTradeByTrustDAO stockTradeByTrustDAO;
+	@Autowired
+	StockTradeByForeignDAO stockTradeByForeignDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
 	@Autowired
@@ -86,7 +90,7 @@ public class StockService {
 	 * This shall be run after every trading date.
 	 */
 	public void updateTradingDateAndValue() throws StockException {
-		String dateString = StockUtils.todayDateString(); 
+		String dateString = StockUtils.todayDateString();
 		downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
 	}
 
@@ -146,7 +150,7 @@ public class StockService {
 					try {
 						Thread.sleep(stockConfig.getSleepTime());
 					} catch (InterruptedException ex) {
-					} 
+					}
 				}
 			}
 		} catch (Exception ex) {
@@ -222,8 +226,8 @@ public class StockService {
 		return tradingDateDAO.getLatestTradingDate();
 	}
 
-	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> getTop30StockItemTradeByTrust(Date tradingDate,
-			int dateLength) {
+	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByTrust>> getTopStockItemTradeByTrust(Date tradingDate,
+			int dateLength, int selectCount) {
 		// 1. get the stbt list for the specified date
 		List<StockTradeByTrust> stbtList = stockTradeByTrustDAO.getByTradingDate(tradingDate);
 		// 2. sort the stbt list by (buy+sell)*price amount in descending order
@@ -236,7 +240,7 @@ public class StockService {
 			double amt1 = price1 * (stbt1.getBuy() + stbt1.getSell());
 			double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
 			return -1 * Double.compare(amt1, amt2);
-		}).limit(30).map(stbt -> stbt.getStockItem()).collect(Collectors.toList());
+		}).limit(selectCount).map(stbt -> stbt.getStockItem()).collect(Collectors.toList());
 		// 3. query the latest 10 trading dates
 		List<Date> dList = tradingDateDAO.findLatestNTradingDateDesc(dateLength);
 		// 4. map object to return to caller
@@ -256,23 +260,57 @@ public class StockService {
 		return dataMap;
 	}
 
-	public List<StockItemData> getStockItemStatsData(StockItem si){
+	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByForeign>> getTopStockItemTradeByForeign(Date tradingDate,
+			int dateLength, int selectCount) {
+		// 1. get the stbf list for the specified date
+		List<StockTradeByForeign> stbfList = stockTradeByForeignDAO.getByTradingDate(tradingDate);
+		// 2. sort the stbf list by (buy+sell)*price amount in descending order
+		// and select the top items and collect its stockItem relationship objects
+		// (note that the stockItem object has its 'stbf' relationship retrieved from
+		// DB.)
+		List<StockItem> siList = stbfList.stream().sorted((stbf1, stbf2) -> {
+			double price1 = stbf1.getStockItem().getPrice();
+			double price2 = stbf2.getStockItem().getPrice();
+			double amt1 = price1 * (stbf1.getBuy() + stbf1.getSell());
+			double amt2 = price2 * (stbf2.getBuy() + stbf2.getSell());
+			return -1 * Double.compare(amt1, amt2);
+		}).limit(selectCount).map(stbf -> stbf.getStockItem()).collect(Collectors.toList());
+		// 3. query the latest 10 trading dates
+		List<Date> dList = tradingDateDAO.findLatestNTradingDateDesc(dateLength);
+		// 4. map object to return to caller
+		// key is the stockItem
+		// value is a sub-map object with key of trading date and value of
+		// StockTradeByForeign object
+		LinkedHashMap<StockItem, TreeMap<String, StockTradeByForeign>> dataMap = new LinkedHashMap<>();
+		// 5. filter the 'stbf' collection using latest 10 trading dates list.
+		// and create the sub-map object
+		siList.stream().forEach(si -> {
+			TreeMap<String, StockTradeByForeign> map = new TreeMap<>();
+			si.getStbf().stream().filter(stbf -> dList.contains(stbf.getTradingDate()))
+					.forEach(stbf -> map.put(StockUtils.dateToStringSeparatedBySlash(stbf.getTradingDate()), stbf));
+			dataMap.put(si, map);
+		});
+		return dataMap;
+	}
+
+	public List<StockItemData> getStockItemStatsData(StockItem si) {
 		try {
 			return stockItemDataDAO.load(si.getSymbol());
 		} catch (StockException e) {
-			logger.warn("Error loading stock item stats data for symbol:"+si.getSymbol());
+			logger.warn("Error loading stock item stats data for symbol:" + si.getSymbol());
 			return null;
 		}
 	}
-	public List<StockItemData> getStockItemStatsData(String symbol){
+
+	public List<StockItemData> getStockItemStatsData(String symbol) {
 		try {
 			return stockItemDataDAO.load(symbol);
 		} catch (StockException e) {
-			logger.warn("Error loading stock item stats data for symbol:"+symbol);
+			logger.warn("Error loading stock item stats data for symbol:" + symbol);
 			return null;
 		}
 	}
-	
+
 	public LinkedHashMap<StockItem, TreeMap<String, StockItemData>> getStockItemStatsData(List<StockItem> siList,
 			List<Date> dateList) {
 		LinkedHashMap<StockItem, TreeMap<String, StockItemData>> statsMap = new LinkedHashMap<>();

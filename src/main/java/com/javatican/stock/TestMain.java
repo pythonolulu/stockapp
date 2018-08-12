@@ -10,14 +10,17 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,18 +60,54 @@ import org.jsoup.select.Elements;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.javatican.stock.model.RealtimeMarketInfo;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
+import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
 public class TestMain {
 	public static void main(String[] args) throws IOException {
+		List<String> commandList = new ArrayList<>(Arrays.asList("updateData", "updateTrustData", "updateForeignData",
+				"updatePerformers", "createStockPrices", "updateMissingPriceField", "updatePriceDataForAll",
+				"calculateAndSaveKDForAll", "updateCallWarrantData", "updatePutWarrantData", "updateDealerData",
+				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1",
+				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
+				"extractMarginData"));
+		Set<String> finishedSet = new HashSet<>();
+		ObjectMapper objectMapper = new ObjectMapper();
+		final String STOCK_GET_URL = "http://localhost:8080/stock/%s";
+		String strUrl = null;
+		for (int i = 0; i < 3; i++) {
+			commandList.removeAll(finishedSet);
+			for (String command : commandList) {
+				strUrl = String.format(STOCK_GET_URL, command);
+				Document doc = Jsoup.connect(strUrl).ignoreContentType(true).timeout(0).get();
+				String json = doc.text();
+				// logger.info(json);
+				if (json == null || json.equals("")) {
+					System.out.println("Error getting response.");
+					break;
+				}
+				ResponseMessage rm = objectMapper.readValue(json, new TypeReference<ResponseMessage>() {
+				});
+				System.out.println(rm);
+				if (rm.getCategory().equals("Fail")) {
+					break;
+				}
+				finishedSet.add(command);
+			}
+		}
+	}
+
+	public static void main_a(String[] args) throws IOException {
 		Date today = new Date();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(today);
 		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
 		System.out.println(dayOfWeek);
 	}
+
 	public static void main9(String[] args) throws IOException {
 		final String TWSE_REALTIME_QUOTE_GET_URL = "http://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s&json=1&delay=0&_=%s";
 

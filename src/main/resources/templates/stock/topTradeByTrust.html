@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{stock/header :: header}"></head>
+<body>
+	<div class="container">
+		<h2>
+			投信买卖热门股 - <span th:text="${#dates.format(tradingDate,'yyyy/MM/dd')}">2018/06/06</span>
+		</h2>
+		<div th:unless="${#maps.isEmpty(dataMap)}">
+			<form action="#" th:action="@{/stock/addToWatchList}" method="post">
+				<table th:each="item : ${dataMap}" class="table table-striped">
+					<tr>
+						<td colspan="11"><input type="checkbox"
+							th:field="${command.symbols}" th:value="${item.key.symbol}" /> <span
+							th:text="${#ids.seq('#')}">#1</span> <a target='_blank'
+							href="http://tw.stock.yahoo.com/q/ta?s=2317"
+							th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key.symbol})}"
+							th:text="${item.key.symbol}">2317</a> <a target='_blank'
+							href="http://norway.twsthr.info/StockHolders.aspx?stock=2317"
+							th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key.symbol})}"
+							th:text="${item.key.name}">Hong Hai</a> <a target='_blank'
+							th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key.symbol},CHT_CAT=DATE)}">
+								<img
+								th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key.symbol},timekind=0,timeblock=120,volume=0)}"
+								th:alt="${item.key.symbol}+' graph'" height="64" width="64" />
+						</a> <a th:if="${#lists.contains(swcwList, item.key.symbol)}"
+							target='_blank'
+							th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key.symbol})}">
+								<img th:src="@{/icons/call.jpeg}" th:alt="'call warrant'"
+								height="16" width="16" />
+						</a> <a th:if="${#lists.contains(swpwList, item.key.symbol)}"
+							target='_blank'
+							th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key.symbol})}">
+								<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'"
+								height="16" width="16" />
+						</a> <a target='_blank'
+							th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
+								主图 </a> <a target='_blank'
+							th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key.symbol}+'.png')}">
+								副图 </a></td>
+					</tr>
+					<tr>
+						<th>Date:</th>
+						<td th:each="tDate : ${dateList}" th:text="${tDate}">2018/06/06</td>
+					</tr>
+					<tr>
+						<th>Buy(张):</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${item.value.get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.buy/1000,1,'COMMA',0,'POINT')}:'0'">1000,000</td>
+					</tr>
+					<tr>
+						<th>Sell(张):</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${item.value.get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.sell/1000,1,'COMMA',0,'POINT')}:'0'">1200,000</td>
+					</tr>
+					<tr>
+						<th>Diff(张):</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${item.value.get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.diff/1000,1,'COMMA',0,'POINT')}:'0'"
+							th:class="${#object!=null && #object.diff>0}?'text-white bg-danger':(${#object!=null && #object.diff<0}?'text-white bg-success':'text-muted')">-200,000</td>
+					</tr>
+					<tr>
+						<th>K:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.k,1,'COMMA',2,'POINT')}:'0'"
+							th:class="${#object!=null && #object.k>80}?'text-danger bg-dark': (${#object!=null && #object.k<20}?'text-success bg-dark':'text-muted')">50.0</td>
+					</tr>
+					<tr>
+						<th>D:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.d,1,'COMMA',2,'POINT')}:'0'">40.0</td>
+					</tr>
+					<tr>
+						<th>Close price:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.close,1,'COMMA',2,'POINT')}:'0'">109.0</td>
+					</tr>
+					<tr>
+						<th>Volume(张):</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.stockPrice.tradeVolume/1000,1,'COMMA',0,'POINT')}:'0'">100,000</td>
+					</tr>
+					<tr>
+						<th>SMA5:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma5,1,'COMMA',2,'POINT')}:'0'">110.0</td>
+					</tr>
+					<tr>
+						<th>SMA10:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma10,1,'COMMA',2,'POINT')}:'0'">120.0</td>
+					</tr>
+					<tr>
+						<th>SMA20:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma20,1,'COMMA',2,'POINT')}:'0'">100.0</td>
+					</tr>
+					<tr>
+						<th>SMA60:</th>
+						<td th:each="tDate : ${dateList}"
+							th:object="${statsMap.get(item.key).get(tDate)}"
+							th:text="${#object!=null}?${#numbers.formatDecimal(#object.sma60,1,'COMMA',2,'POINT')}:'0'">105.0</td>
+					</tr>
+				</table>
+				<input type="submit" value="Submit" th:value="'加入自选股'" /> <input
+					type="reset" value="Reset" th:value="'重设'" />
+			</form>
+		</div>
+		<div th:if="${#maps.isEmpty(dataMap)}">
+			<p>No records</p>
+		</div>
+	</div>
+</body>
+</html>
