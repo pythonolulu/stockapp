@@ -127,6 +127,7 @@ public class WatchItemController {
 		}
 		//
 		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "关注个股名单 - " + StockUtils.dateToStringSeparatedBySlash(date));
 		mav.addObject("tradingDate", date);
 		mav.addObject("dataMap", wiMap);
 		mav.addObject("wl", new WatchLog());

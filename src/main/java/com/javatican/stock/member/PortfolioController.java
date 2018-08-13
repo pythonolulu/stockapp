@@ -81,12 +81,14 @@ public class PortfolioController {
 		ModelAndView mav = null;
 		if (portfolioId == null) {
 			mav = new ModelAndView("stock/portfolioEditForm");
+			mav.addObject("title", "投资明细新增");
 			mav.addObject("pi", new PortfolioItem());
 		} else {
 			SiteUser su = siteUserService.findByUsername("ryan.nieh");
 			PortfolioItem pi = portfolioService.getByIdAndSiteUser(portfolioId, su);
 			if (pi != null) {
 				mav = new ModelAndView("stock/portfolioEditForm");
+				mav.addObject("title", "投资明细更新");
 				mav.addObject("pi", pi);
 				mav.addObject("stockItemName", pi.getStockItem().getName());
 				mav.addObject("sybmolReadonly", true);

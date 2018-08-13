@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<title th:text="|涨幅前50名 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">涨幅前50名</title>
-<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
-	rel="stylesheet"></link>
-<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
-<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
-</head>
+<head th:insert="~{stock/header :: header}"></head>
 <body>
 	<div class="container">
 		<h2>
@@ -33,10 +27,10 @@
 					 		<img th:src="@{/icons/put.jpeg}" th:alt="'put warrant'" height="16" width="16"/>
 				 		</a>
 				 		<a target='_blank'  th:href="@{/stock/imgs/{chartFile}(chartFile=${item.symbol}+'.png')}">
-					 		主要线图
+					 		主图
 				 		</a>
 				 		<a target='_blank'  th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.symbol}+'.png')}">
-					 		决策分析线图
+					 		副图
 				 		</a>
 				 	</td>
 				 </tr>

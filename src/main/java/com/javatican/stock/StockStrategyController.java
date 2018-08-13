@@ -187,6 +187,7 @@ public class StockStrategyController {
 			chartService.createGraphs(statsMap.keySet(), force);
 			//
 			mav.addObject("tradingDate", date);
+			mav.addObject("title", "涨幅前50名 - " + StockUtils.dateToStringSeparatedBySlash(date));
 			mav.addObject("dateList", dList);
 			mav.addObject("spcList", spcList);
 			mav.addObject("statsMap", statsMap);
@@ -229,6 +230,7 @@ public class StockStrategyController {
 			chartService.createGraphs(statsMap.keySet(), force);
 			//
 			mav.addObject("tradingDate", date);
+			mav.addObject("title", "跌幅前50名 - " + StockUtils.dateToStringSeparatedBySlash(date));
 			mav.addObject("dateList", dList);
 			mav.addObject("spcList", spcList);
 			mav.addObject("statsMap", statsMap);
@@ -363,6 +365,7 @@ public class StockStrategyController {
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
+			mav.addObject("title", "認購權證累计涨幅 - " + StockUtils.dateToStringSeparatedBySlash(date));
 			mav.addObject("tradingDate", date);
 			mav.addObject("dataDatePeriod", dataDatePeriod);
 			mav.addObject("selectCount", selectCount);
@@ -435,6 +438,7 @@ public class StockStrategyController {
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);
+			mav.addObject("title", "認售權證累计涨幅 - " + StockUtils.dateToStringSeparatedBySlash(date));
 			mav.addObject("tradingDate", date);
 			mav.addObject("dataDatePeriod", dataDatePeriod);
 			mav.addObject("selectCount", selectCount);
@@ -448,14 +452,14 @@ public class StockStrategyController {
 		return mav;
 	}
 
-	@GetMapping("/sma20SelectStrategy2")
-	public ModelAndView sma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
+	@GetMapping("/aboveSma20SelectStrategy2")
+	public ModelAndView aboveSma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
 		// get all the stockItem with call warrants
 		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
-		ModelAndView mav = new ModelAndView("stock/sma20SelectStrategy2");
+		ModelAndView mav = new ModelAndView("stock/aboveSma20SelectStrategy2");
 		LinkedHashMap<String, List<Number>> statsMap;
 		if (!strategyService2.existsForSma20SelectStrategy2StatsData(dateString)) {
 			Map<String, List<Number>> resultMap = new HashMap<>();
@@ -513,6 +517,7 @@ public class StockStrategyController {
 
 		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价在20日均线之上 - " + StockUtils.dateToStringSeparatedBySlash(date));
 		mav.addObject("tradingDate", date);
 		mav.addObject("statsMap", statsMap);
 		mav.addObject("siMap", siMap);
@@ -613,6 +618,7 @@ public class StockStrategyController {
 		//
 		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价向上突破 - " + StockUtils.dateToStringSeparatedBySlash(date));
 		mav.addObject("tradingDate", date);
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
@@ -660,6 +666,7 @@ public class StockStrategyController {
 		//
 		mav.addObject("command", new FormCommand());
 		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价向上突破 - " + StockUtils.dateToStringSeparatedBySlash(date));
 		mav.addObject("tradingDate", date);
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
@@ -797,6 +804,7 @@ public class StockStrategyController {
 			}
 			//
 			mav.addObject("command", new FormCommand());
+			mav.addObject("title", "自由现金流报酬率");
 			mav.addObject("realtimeMap", realtimeMap);
 			mav.addObject("resultMap", resultMap);
 			mav.addObject("siMap", siMap);

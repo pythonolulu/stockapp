@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<title th:text="|股价向上突破 - ${#dates.format(tradingDate,'yyyy/MM/dd')}|">股价向上突破</title>
-<link th:href="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css}"
-	rel="stylesheet"></link>
-<script th:src="@{https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js}"></script>
-<script th:src="@{https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
-</head>
+<head th:insert="~{stock/header :: header}"></head>
 <body>
 	<div class="container">
 		<h2>
