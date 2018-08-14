@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{stock/header :: header}"></head>
+<body>
+	<div class="container">
+		<h2>
+			<span th:text="${title}"></span>
+		</h2>
+		<div th:unless="${#maps.isEmpty(resultMap)}">
+			<form action="#" th:action="@{/stock/addToWatchList}" method="post">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th scope="col">代码</th>
+							<th scope="col"></th>
+							<th scope="col">名称</th>
+							<th th:if="${#maps.size(realtimeMap)>0}" scope="col">即時價格</th>
+							<th scope="col">均线之上(日)</th>
+							<th scope="col">均线上揚(日)</th>
+							<th scope="col">超過均線(百分比)</th>
+							<th scope="col">K9</th>
+							<th scope="col">D9</th>
+							<th scope="col">缩图</th>
+							<th scope="col">线图</th>
+							<th scope="col">權證</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="item : ${resultMap}">
+							<th scope="row" th:text="${#ids.seq('')}">1</th>
+							<td><input type="checkbox" th:field="${command.symbols}"
+								th:value="${item.key}" /></td>
+							<td><a target='_blank'
+								href="http://tw.stock.yahoo.com/q/ta?s=2317"
+								th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key})}"
+								th:text="${item.key}">2317</a></td>
+							<td><a target='_blank'
+								href="http://norway.twsthr.info/StockHolders.aspx?stock=2317"
+								th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key})}"
+								th:text="${siMap.get(item.key).name}">鸿海</a></td>
+							<td th:if="${#maps.size(realtimeMap)>0}"><span
+								th:if="${#maps.containsKey(realtimeMap, item.key)}"
+								th:object="${realtimeMap.get(item.key)}" th:text="*{z}">
+									85</span> <span th:if="${#maps.containsKey(realtimeMap, item.key)}"
+								th:object="${realtimeMap.get(item.key)}"
+								th:text="|*{#numbers.formatDecimal(100*priceChangeP,1,'COMMA',1,'POINT')}%|"
+								th:class="*{priceChangeP>0}?'text-danger':'text-success'">
+									-1.5%</span> <span th:if="${#maps.containsKey(realtimeMap, item.key)}"
+								th:object="${realtimeMap.get(item.key)}" th:text="|*{v}張|">
+									1600張</span></td>
+							<td th:text="${item.value[0]}">5</td>
+							<td th:text="${item.value[1]}">6</td>
+							<td
+								th:text="|${#numbers.formatDecimal(item.value[2]*100,1,'COMMA',1,'POINT')}%|">3.1%</td>
+							<td th:text="${item.value[3]}">25</td>
+							<td th:text="${item.value[4]}">21</td>
+							<td><a target='_blank'
+								th:href="@{https://goodinfo.tw/StockInfo/ShowBuySaleChart.asp(STOCK_ID=${item.key},CHT_CAT=DATE)}">
+									<img
+									th:src="@{https://stock.wearn.com/finance_chart.asp(stockid=${item.key},timekind=0,timeblock=120,volume=0)}"
+									th:alt="${item.key}+' graph'" height="64" width="64" />
+							</a></td>
+							<td><a target='_blank'
+								th:href="@{/stock/imgs/{chartFile}(chartFile=${item.key}+'.png')}">
+									主图 </a><a target='_blank'
+								th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key}+'.png')}">
+									副图 </a></td>
+							<td><a target='_blank'
+								th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
+									<img th:src="@{/icons/call.jpeg}" th:alt="'認購權證'" height="16"
+									width="16" />
+							</a><a th:if="${#lists.contains(swpwList, item.key)}" target='_blank'
+								th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
+									<img th:src="@{/icons/put.jpeg}" th:alt="'認售權證'" height="16"
+									width="16" />
+							</a></td>
+						</tr>
+					</tbody>
+				</table>
+				<input type="submit" value="Submit" th:value="'加入自选股'" /> <input
+					type="reset" value="Reset" th:value="'重设'" />
+			</form>
+		</div>
+		<div th:if="${#maps.isEmpty(resultMap)}">
+			<p>无记录</p>
+		</div>
+	</div>
+</body>
+</html>
+
+

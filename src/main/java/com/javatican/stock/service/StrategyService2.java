@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockException;
-import com.javatican.stock.dao.Sma20SelectStrategy2DAO;
+import com.javatican.stock.dao.SmaSelectStrategy2DAO;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.StockItemWeeklyDataDAO;
@@ -32,9 +32,7 @@ public class StrategyService2 {
 	@Autowired
 	StockItemDataDAO stockItemDataDAO;
 	@Autowired
-	StockItemWeeklyDataDAO stockItemWeeklyDataDAO;
-	@Autowired
-	Sma20SelectStrategy2DAO sma20SelectStrategy2DAO;
+	SmaSelectStrategy2DAO smaSelectStrategy2DAO;
 
 	public int getDaysAboveSma20(List<StockItemData> sidList) {
 		int count = 0;
@@ -84,18 +82,18 @@ public class StrategyService2 {
 	}
 
 	//
-	public boolean existsForSma20SelectStrategy2StatsData(String dateString) {
-		return sma20SelectStrategy2DAO.existsForStatsData(dateString);
+	public boolean existsForStatsData(String dateString) {
+		return smaSelectStrategy2DAO.existsForStatsData(dateString);
 	}
 
-	public void saveSma20SelectStrategy2StatsData(String dateString, LinkedHashMap<String, List<Number>> statsMap)
+	public void saveStatsData(String dateString, LinkedHashMap<String, List<Number>> statsMap)
 			throws StockException {
-		sma20SelectStrategy2DAO.saveStatsData(dateString, statsMap);
+		smaSelectStrategy2DAO.saveStatsData(dateString, statsMap);
 	}
 
-	public LinkedHashMap<String, List<Number>> loadSma20SelectStrategy2StatsData(String dateString)
+	public LinkedHashMap<String, List<Number>> loadStatsData(String dateString)
 			throws StockException {
-		return sma20SelectStrategy2DAO.loadStatsData(dateString);
+		return smaSelectStrategy2DAO.loadStatsData(dateString);
 	}
 
 

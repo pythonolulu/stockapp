@@ -39,6 +39,7 @@ import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StrategyService;
 import com.javatican.stock.service.StrategyService2;
+import com.javatican.stock.service.StrategyService2a;
 import com.javatican.stock.service.StrategyService3;
 import com.javatican.stock.service.StrategyService4;
 import com.javatican.stock.service.StrategyService5;
@@ -64,6 +65,8 @@ public class StockStrategyController {
 	private StrategyService strategyService;
 	@Autowired
 	private StrategyService2 strategyService2;
+	@Autowired
+	private StrategyService2a strategyService2a;
 	@Autowired
 	private StrategyService3 strategyService3;
 	@Autowired
@@ -461,7 +464,7 @@ public class StockStrategyController {
 		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
 		ModelAndView mav = new ModelAndView("stock/aboveSma20SelectStrategy2");
 		LinkedHashMap<String, List<Number>> statsMap;
-		if (!strategyService2.existsForSma20SelectStrategy2StatsData(dateString)) {
+		if (!strategyService2.existsForStatsData(dateString)) {
 			Map<String, List<Number>> resultMap = new HashMap<>();
 			for (StockItem si : siMap.values()) {
 				List<StockItemData> sidList = stockService.getStockItemStatsData(si);
@@ -485,13 +488,13 @@ public class StockStrategyController {
 					.forEach(e -> statsMap.put(e.getKey(), e.getValue()));
 			// write statsMap
 			try {
-				strategyService2.saveSma20SelectStrategy2StatsData(dateString, statsMap);
+				strategyService2.saveStatsData(dateString, statsMap);
 			} catch (StockException ex) {
 				ex.printStackTrace();
 			}
 		} else {
 			try {
-				statsMap = strategyService2.loadSma20SelectStrategy2StatsData(dateString);
+				statsMap = strategyService2.loadStatsData(dateString);
 			} catch (StockException e) {
 				e.printStackTrace();
 				mav = new ModelAndView("stock/error");
@@ -549,7 +552,205 @@ public class StockStrategyController {
 		return mes;
 
 	}
+	@GetMapping("/aboveSma20SelectStrategy2a")
+	public ModelAndView aboveSma20SelectStrategy2a(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote){
+		String type = "20A";
+		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/aboveSma20SelectStrategy2");
+		  
+		Map<String, List<Number>> statsMap = strategyService2a.getStatsData(dateString, type);
+		LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+		
+		statsMap.entrySet().stream()
+		.sorted((e1, e2) -> e1.getValue().get(0).intValue() > e2.getValue().get(0).intValue() ? -1
+				: (e1.getValue().get(0).intValue() < e2.getValue().get(0).intValue() ? 1 : 0))
+		.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		 
+		// create stock charts
+		chartService.createGraphs2(resultMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("command", new FormCommand());
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价在20日均线之上 - " + StockUtils.dateToStringSeparatedBySlash(date));
+		mav.addObject("tradingDate", date);
+		mav.addObject("resultMap", resultMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+	@GetMapping("/belowSma20SelectStrategy2a")
+	public ModelAndView belowSma20SelectStrategy2a(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote){
+		String type = "20B";
+		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/belowSma20SelectStrategy2");
+		  
+		Map<String, List<Number>> statsMap = strategyService2a.getStatsData(dateString, type);
+		LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+		
+		statsMap.entrySet().stream()
+		.sorted((e1, e2) -> e1.getValue().get(0).intValue() < e2.getValue().get(0).intValue() ? -1
+				: (e1.getValue().get(0).intValue() > e2.getValue().get(0).intValue() ? 1 : 0))
+		.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		 
+		// create stock charts
+		chartService.createGraphs2(resultMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("command", new FormCommand());
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价在20日均线之下 - " + StockUtils.dateToStringSeparatedBySlash(date));
+		mav.addObject("tradingDate", date);
+		mav.addObject("resultMap", resultMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
 
+	@GetMapping("/aboveSma60SelectStrategy2a")
+	public ModelAndView aboveSma60SelectStrategy2a(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote){
+		String type = "60A";
+		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/aboveSma60SelectStrategy2");
+		  
+		Map<String, List<Number>> statsMap = strategyService2a.getStatsData(dateString, type);
+		LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+		
+		statsMap.entrySet().stream()
+		.sorted((e1, e2) -> e1.getValue().get(0).intValue() > e2.getValue().get(0).intValue() ? -1
+				: (e1.getValue().get(0).intValue() < e2.getValue().get(0).intValue() ? 1 : 0))
+		.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		 
+		// create stock charts
+		chartService.createGraphs2(resultMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("command", new FormCommand());
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价在60日均线之上 - " + StockUtils.dateToStringSeparatedBySlash(date));
+		mav.addObject("tradingDate", date);
+		mav.addObject("resultMap", resultMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+	@GetMapping("/belowSma60SelectStrategy2a")
+	public ModelAndView belowSma60SelectStrategy2a(
+			@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote){
+		String type = "60B";
+		Date date = stockService.getLatestTradingDate();
+		String dateString = StockUtils.dateToSimpleString(date);
+		// get all the stockItem with call warrants
+		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		ModelAndView mav = new ModelAndView("stock/belowSma60SelectStrategy2");
+		  
+		Map<String, List<Number>> statsMap = strategyService2a.getStatsData(dateString, type);
+		LinkedHashMap<String, List<Number>> resultMap = new LinkedHashMap<>();
+		
+		statsMap.entrySet().stream()
+		.sorted((e1, e2) -> e1.getValue().get(0).intValue() < e2.getValue().get(0).intValue() ? -1
+				: (e1.getValue().get(0).intValue() > e2.getValue().get(0).intValue() ? 1 : 0))
+		.forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		 
+		// create stock charts
+		chartService.createGraphs2(resultMap.keySet(), force);
+		Map<String, StockItemMarketInfo> realtimeMap = new HashMap<>();
+		if (realtimeQuote) {
+			RealtimeMarketInfo mri;
+			try {
+				mri = realtimeQuoteService.getInfo(resultMap.keySet());
+				for (StockItemMarketInfo simi : mri.getMsgArray()) {
+					realtimeMap.put(simi.getC(), simi);
+				}
+			} catch (StockException e) {
+				logger.warn("Error getting realtime quote!");
+				e.printStackTrace();
+			}
+		}
+		//
+		mav.addObject("command", new FormCommand());
+		mav.addObject("realtimeMap", realtimeMap);
+		mav.addObject("title", "股价在60日均线之下 - " + StockUtils.dateToStringSeparatedBySlash(date));
+		mav.addObject("tradingDate", date);
+		mav.addObject("resultMap", resultMap);
+		mav.addObject("siMap", siMap);
+		// stockItems with call and put warrants
+		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
+		return mav;
+	}
+	@GetMapping("/prepareSmaSelectStrategy2a")
+	public ResponseMessage prepareSmaSelectStrategy2a() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			strategyService2a.prepareRawStatsData();
+			mes.setCategory("Success");
+			mes.setText("Sma select strategy 2a stats data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Sma select strategy 2a stats data fails to be prepared.");
+		}
+		return mes;
+	}
 	@GetMapping("/preparePriceBreakUpSelectStrategy3")
 	public ResponseMessage preparePriceBreakUpSelectStrategy3() {
 		ResponseMessage mes = new ResponseMessage();
