@@ -720,6 +720,9 @@ public class StockItemService {
 		return null;
 	}
 
+	public List<String> getAllSymbols() {
+		return stockItemDAO.getAllSymbols();
+	}
 	public List<StockItem> findAllStockItems() {
 		return stockItemDAO.findAll();
 	}

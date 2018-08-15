@@ -12,13 +12,13 @@
 					<thead>
 						<tr>
 							<th>#</th>
-							<th scope="col">代码</th>
 							<th scope="col"></th>
+							<th scope="col">代码</th>
 							<th scope="col">名称</th>
 							<th th:if="${#maps.size(realtimeMap)>0}" scope="col">即時價格</th>
-							<th scope="col">均线之上(日)</th>
-							<th scope="col">均线上揚(日)</th>
-							<th scope="col">超過均線(百分比)</th>
+							<th scope="col">均线之上天數</th>
+						<th scope="col">均线上揚(下彎)天數</th>
+							<th scope="col">超過均線(%)</th>
 							<th scope="col">K9</th>
 							<th scope="col">D9</th>
 							<th scope="col">缩图</th>
@@ -50,7 +50,7 @@
 								th:object="${realtimeMap.get(item.key)}" th:text="|*{v}張|">
 									1600張</span></td>
 							<td th:text="${item.value[0]}">5</td>
-							<td th:text="${item.value[1]}">6</td>
+							<td th:text="${item.value[1]>0?item.value[1]:'('+item.value[1]+')'}">6</td>
 							<td
 								th:text="|${#numbers.formatDecimal(item.value[2]*100,1,'COMMA',1,'POINT')}%|">3.1%</td>
 							<td th:text="${item.value[3]}">25</td>

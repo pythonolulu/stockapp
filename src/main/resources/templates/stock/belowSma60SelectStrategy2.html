@@ -43,7 +43,7 @@
 							<span th:if="${#maps.containsKey(realtimeMap, item.key)}" th:object="${realtimeMap.get(item.key)}"
 								th:text="|*{v}張|"> 1600張</span> 
 					 	</td>
-					    <td th:text="${item.value[0]}">5</td> 
+					    <td th:text="${-1*item.value[0]}">5</td> 
 					    <td th:text="${item.value[1]}">6</td> 
 					    <td th:text="|${#numbers.formatDecimal(item.value[2]*100,1,'COMMA',1,'POINT')}%|">3.1%</td>
 					    <td th:text="${item.value[3]}">25</td> 

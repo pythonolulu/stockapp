@@ -20,7 +20,7 @@ public class RoutineJob {
 		List<String> commandList = new ArrayList<>(Arrays.asList("updateData", "updateTrustData", "updateForeignData",
 				"updatePerformers", "createStockPrices", "updateMissingPriceField", "updatePriceDataForAll",
 				"calculateAndSaveKDForAll", "updateCallWarrantData", "updatePutWarrantData", "updateDealerData",
-				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1",
+				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1", "prepareSmaSelectStrategy2",
 				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
 				"extractMarginData"));
 		Set<String> finishedSet = new HashSet<>();

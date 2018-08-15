@@ -129,9 +129,9 @@ public class ChartService {
 	private JPlot pwss1Hp5Plot;
 
 	public void createGraphs(Collection<StockItem> siList, boolean force) {
-		siList.stream().forEach(stockItem -> createGraph(stockItem,force));
+		siList.stream().forEach(stockItem -> createGraph(stockItem, force));
 	}
-	
+
 	public void createGraphs2(Collection<String> symbolList, boolean force) {
 		symbolList.stream().forEach(symbol -> createGraph(symbol, force));
 	}
@@ -221,7 +221,7 @@ public class ChartService {
 			XYPlot pwss1Hp1Subplot = (XYPlot) pwss1Hp1Plot.getPlot(stockItem);
 			XYPlot pwss1Hp3Subplot = (XYPlot) pwss1Hp3Plot.getPlot(stockItem);
 			XYPlot pwss1Hp5Subplot = (XYPlot) pwss1Hp5Plot.getPlot(stockItem);
-			 
+
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
 			// dateAxis.setTickMarkPosition(DateTickMarkPosition.MIDDLE);
