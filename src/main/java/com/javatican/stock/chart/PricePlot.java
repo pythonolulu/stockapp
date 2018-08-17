@@ -44,7 +44,7 @@ public class PricePlot implements JPlot{
 		return createPlot();
 	}
 
-	private XYPlot createPlot() {
+	protected XYPlot createPlot() {
 		OHLCSeriesCollection priceDataset = createPriceDataset();
 		TimeSeriesCollection smaDataset = createSMADataset();
 		// Create candlestick chart priceAxis
@@ -80,7 +80,7 @@ public class PricePlot implements JPlot{
 		return candlestickSubplot;
 	}
 
-	private OHLCSeriesCollection createPriceDataset() {
+	protected OHLCSeriesCollection createPriceDataset() {
 		OHLCSeriesCollection priceDataset = new OHLCSeriesCollection();
 		OHLCSeries ohlcSeries = new OHLCSeries("Price");
 		// add data
@@ -90,7 +90,7 @@ public class PricePlot implements JPlot{
 		return priceDataset;
 	}
 
-	private TimeSeriesCollection createSMADataset() {
+	protected TimeSeriesCollection createSMADataset() {
 		TimeSeriesCollection smaDataset = new TimeSeriesCollection();
 		TimeSeries sma60Series = new TimeSeries("SMA_60");
 		TimeSeries sma20Series = new TimeSeries("SMA_20");

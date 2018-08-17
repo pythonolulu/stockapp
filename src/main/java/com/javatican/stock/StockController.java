@@ -1,42 +1,23 @@
 package com.javatican.stock;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
 
-import com.javatican.stock.model.PortfolioItem;
-import com.javatican.stock.model.RealtimeMarketInfo;
-import com.javatican.stock.model.RealtimeMarketInfo.StockItemMarketInfo;
-import com.javatican.stock.model.SiteUser;
-import com.javatican.stock.model.StockItem;
-import com.javatican.stock.model.WatchItem;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.DealerTradeSummaryService;
 import com.javatican.stock.service.FinancialService;
 import com.javatican.stock.service.MarginService;
-import com.javatican.stock.service.PortfolioService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
-import com.javatican.stock.service.RealtimeQuoteService;
-import com.javatican.stock.service.SiteUserService;
 import com.javatican.stock.service.StockItemService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.service.StockTradeByForeignService;
 import com.javatican.stock.service.StockTradeByTrustService;
-import com.javatican.stock.service.WatchItemService;
 import com.javatican.stock.util.ResponseMessage;
 import com.javatican.stock.util.StockUtils;
 
@@ -232,7 +213,36 @@ public class StockController {
 		}
 		return mes;
 	}
+	
+	@GetMapping("/calculateIndexStatsData")
+	public ResponseMessage calculateIndexStatsData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockService.calculateIndexStatsData();
+			mes.setCategory("Success");
+			mes.setText("Index Stats data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Index Stats data fails to be updated.");
+		}
+		return mes;
+	}
 
+	@GetMapping("/calculateWeeklyIndexStatsData")
+	public ResponseMessage calculateWeeklyIndexStatsData() {
+		ResponseMessage mes = new ResponseMessage();
+		try {
+			stockService.calculateWeeklyIndexStatsData();
+			mes.setCategory("Success");
+			mes.setText("Weekly Index Stats data has been updated.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Weekly Index Stats data fails to be updated.");
+		}
+		return mes;
+	}
 	@GetMapping("/{stockSymbol}/calculateAndSaveKD")
 	private ResponseMessage calculateAndSaveKD(@PathVariable String stockSymbol) {
 		ResponseMessage mes = new ResponseMessage();
@@ -405,6 +415,7 @@ public class StockController {
 		}
 		return mes;
 	}
+	
 	// @GetMapping("/prepareDealerData")
 	// private ResponseMessage prepareDealerData() {
 	// ResponseMessage mes = new ResponseMessage();

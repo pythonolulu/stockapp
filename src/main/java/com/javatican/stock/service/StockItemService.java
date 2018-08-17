@@ -595,23 +595,23 @@ public class StockItemService {
 		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(24);
 		// CircularFifoQueue<Double> queue = new
 		// CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
-		siwdList.stream().forEach(sid -> {
-			queue.add(sid.getStockPrice().getClose());
+		siwdList.stream().forEach(siwd -> {
+			queue.add(siwd.getStockPrice().getClose());
 			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
 			if (values.length == 24) {
-				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, 20, 4)));
-				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, 16, 8)));
-				sid.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, 12, 12)));
-				sid.setSma24(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 24)));
+				siwd.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, 20, 4)));
+				siwd.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, 16, 8)));
+				siwd.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, 12, 12)));
+				siwd.setSma24(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 24)));
 			} else if (values.length >= 12) {
-				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
-				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
-				sid.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 12, 12)));
+				siwd.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				siwd.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+				siwd.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 12, 12)));
 			} else if (values.length >= 8) {
-				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
-				sid.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+				siwd.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				siwd.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
 			} else if (values.length >= 4) {
-				sid.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				siwd.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
 			}
 		});
 		try {
@@ -654,7 +654,7 @@ public class StockItemService {
 			for (StockPrice sp : spList) {
 				// get its last day of the week(not necessarily Friday, because of holidays)
 				// logger.info(sp.toString());
-				Date lastTradingDateOfWeek = getLastTradingDateOfWeek(sp.getTradingDate(), tdList);
+				Date lastTradingDateOfWeek = StockUtils.getLastTradingDateOfWeek(sp.getTradingDate(), tdList);
 				String dateString = StockUtils.dateToSimpleString(lastTradingDateOfWeek);
 				StockPrice weeklySp = weeklySpMap.get(dateString);
 				if (weeklySp == null) {
@@ -666,7 +666,7 @@ public class StockItemService {
 					weeklySp.setHigh(sp.getHigh());
 					weeklySp.setLow(sp.getLow());
 				}
-				if (sp.getTradingDate().equals(lastTradingDateOfWeek)) {
+				if (sp.getTradingDate().getTime()==lastTradingDateOfWeek.getTime()) {
 					// set close price
 					weeklySp.setClose(sp.getClose());
 				}
@@ -700,25 +700,6 @@ public class StockItemService {
 		weeklySp.setTradeValue(weeklySp.getTradeValue() + sp.getTradeValue());
 	}
 
-	private Date getLastTradingDateOfWeek(Date tradingDate, List<Date> tdList) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(tradingDate);
-		// dayOfWeek starts from 1(Sunday)
-		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-		// first set to Saturday(sometimes TWSE will open on Sat.)
-		cal.add(Calendar.DAY_OF_WEEK, 7 - dayOfWeek);
-		// logger.info(cal.getTime().toString());
-		//
-		for (int i = 0; i <= (7 - dayOfWeek); i++) {
-			Date d = cal.getTime();
-			// logger.info(d.toString());
-			if (tdList.contains(d)) {
-				return d;
-			}
-			cal.add(Calendar.DAY_OF_WEEK, -1);
-		}
-		return null;
-	}
 
 	public List<String> getAllSymbols() {
 		return stockItemDAO.getAllSymbols();

@@ -10,7 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,6 +38,7 @@ import com.javatican.stock.dao.StockTradeByForeignDAO;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.dao.TradingValueDAO;
+import com.javatican.stock.dao.WeeklyTradingValueDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockPriceChange;
@@ -40,6 +46,7 @@ import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.model.WeeklyTradingValue;
 import com.javatican.stock.util.StockUtils;
 
 /* this service deals with downloading and saving trading date and total trading values
@@ -52,6 +59,7 @@ public class StockService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static final String TWSE_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
 	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
+	private static final String TWSE_TRADING_INDEX_GET_URL = "http://www.tse.com.tw/indicesReport/MI_5MINS_HIST?response=html&date=%s";
 	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
 	@Autowired
 	StockConfig stockConfig;
@@ -59,6 +67,8 @@ public class StockService {
 	TradingDateDAO tradingDateDAO;
 	@Autowired
 	TradingValueDAO tradingValueDAO;
+	@Autowired
+	WeeklyTradingValueDAO weeklyTradingValueDAO;
 	@Autowired
 	StockTradeByTrustDAO stockTradeByTrustDAO;
 	@Autowired
@@ -146,6 +156,7 @@ public class StockService {
 					tValue.setTotalValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
 					// set trading values for foreign and other investors
 					setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
+					downloadAndSaveIndexOhlcData(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
 					tradingValueDAO.save(tValue);
 					try {
 						Thread.sleep(stockConfig.getSleepTime());
@@ -157,6 +168,62 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
+
+	/*
+	 * download and store the index ohlc data for a specific month.
+	 */
+
+	private void downloadAndSaveIndexOhlcData(String dateString, TradingValue tValue) throws StockException {
+		try {
+			Document doc = Jsoup.connect(String.format(TWSE_TRADING_INDEX_GET_URL, dateString)).get();
+			Elements trs = doc.select("table > tbody > tr");
+			for (Element tr : trs) {
+				Element td = tr.selectFirst("td");
+				Date date = StockUtils.rocYearStringToDate(td.text()).get();
+				if (!StockUtils.dateToSimpleString(date).equals(dateString)) {
+					continue;
+				} else {
+					Elements tds = tr.select("td");
+					tValue.setOpen(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text())));
+					tValue.setHigh(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+					tValue.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+					tValue.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
+					break;
+				}
+			}
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+	}
+
+	/*
+	 * download and store the index ohlc data for a specific month.
+	 */
+	// public void downloadAndSaveIndexOhlcDataForTheMonth(String dateString) throws
+	// StockException {
+	// try {
+	// Document doc = Jsoup.connect(String.format(TWSE_TRADING_INDEX_GET_URL,
+	// dateString)).get();
+	// Elements trs = doc.select("table > tbody > tr");
+	// for (Element tr : trs) {
+	//
+	// Elements tds = tr.select("td");
+	// Date date = StockUtils.rocYearStringToDate(tds.get(0).text()).get();
+	// //
+	// TradingValue tValue = tradingValueDAO.getByTradingDate(date);
+	// if (tValue == null)
+	// continue;
+	// tValue.setOpen(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text())));
+	// tValue.setHigh(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+	// tValue.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+	// tValue.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
+	// tradingValueDAO.save(tValue);
+	//
+	// }
+	// } catch (Exception ex) {
+	// throw new StockException(ex);
+	// }
+	// }
 
 	/*
 	 * download and parse Trading values for Foreign and other investors for a
@@ -206,17 +273,202 @@ public class StockService {
 			throw new StockException(ex);
 		}
 	}
+
 	/*
-	 * public List<StockTradeByTrust> getTop30StockTradeByTrust(Date tradingDate) {
-	 * List<StockTradeByTrust> stbtList =
-	 * stockTradeByTrustDAO.getByTradingDate(tradingDate); stbtList =
-	 * stbtList.stream().sorted((stbt1, stbt2) -> { double price1 =
-	 * stbt1.getStockItem().getPrice(); double price2 =
-	 * stbt2.getStockItem().getPrice(); double amt1 = price1 * (stbt1.getBuy() +
-	 * stbt1.getSell()); double amt2 = price2 * (stbt2.getBuy() + stbt2.getSell());
-	 * return -1 * Double.compare(amt1, amt2);
-	 * }).limit(30).collect(Collectors.toList()); return stbtList; }
+	 * Calculate RSV and KD values for the specified stock item
 	 */
+	public void calculateIndexStatsData() {
+		List<TradingValue> tvList = tradingValueDAO.findAll();
+		List<TradingValue> updateList = new ArrayList<>();
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		stats.setWindowSize(9);
+		//
+
+		tvList.stream().forEach(tv -> {
+			stats.addValue(tv.getHigh());
+			if (tv.getMax9() == null) {
+				tv.setMax9(stats.getMax());
+				logger.info("modify index stats data for" + tv.getTradingDate());
+				updateList.add(tv);
+			}
+		});
+		stats.clear();
+		tvList.stream().forEach(tv -> {
+			stats.addValue(tv.getLow());
+			if (tv.getMin9() == null) {
+				tv.setMin9(stats.getMin());
+			}
+		});
+		tvList.stream().forEach(tv -> {
+			if (tv.getRsv() == null) {
+				if (tv.getMax9() - tv.getMin9() < 0.001) {
+					tv.setRsv(100.0);
+				} else {
+					tv.setRsv(StockUtils
+							.roundDoubleDp2(100 * (tv.getClose() - tv.getMin9()) / (tv.getMax9() - tv.getMin9())));
+				}
+			}
+		});
+		IntStream.range(0, tvList.size()).forEach(idx -> {
+			TradingValue tv = tvList.get(idx);
+			if (tv.getK() == null) {
+				double k;
+				double d;
+				if (idx == 0) {
+					k = 50.0 * 2 / 3 + tv.getRsv() / 3;
+					d = 50.0 * 2 / 3 + k / 3.0;
+				} else {
+					k = tvList.get(idx - 1).getK() * 2 / 3 + tv.getRsv() / 3.0;
+					d = tvList.get(idx - 1).getD() * 2 / 3 + k / 3;
+				}
+				tv.setK(StockUtils.roundDoubleDp2(k));
+				tv.setD(StockUtils.roundDoubleDp2(d));
+			}
+		});
+		// simple moving average
+		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(60);
+		// CircularFifoQueue<Double> queue = new
+		// CircularFifoQueue<>(Arrays.asList(ArrayUtils.toObject(new double[60])));
+		tvList.stream().forEach(tv -> {
+			queue.add(tv.getClose());
+			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
+			if (tv.getSma5() == null) {
+				if (values.length == 60) {
+					tv.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, 55, 5)));
+					tv.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, 50, 10)));
+					tv.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, 40, 20)));
+					tv.setSma60(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 60)));
+				} else if (values.length >= 20) {
+					tv.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
+					tv.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 10, 10)));
+					tv.setSma20(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 20, 20)));
+				} else if (values.length >= 10) {
+					tv.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
+					tv.setSma10(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 10, 10)));
+				} else if (values.length >= 5) {
+					tv.setSma5(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 5, 5)));
+				}
+			}
+		});
+		tradingValueDAO.saveAll(updateList);
+	}
+
+	public void calculateWeeklyIndexStatsData() {
+		List<Date> tdList = tradingDateDAO.findAllTradingDate();
+		// weeklySpMap: key is the dateString , value is a StockPrice (store weekly
+		// price)
+		TreeMap<String, WeeklyTradingValue> weeklyTvMap;
+		weeklyTvMap = new TreeMap<>();
+		List<TradingValue> tvList;
+		// load tradingValue
+		tvList = tradingValueDAO.findAll();
+		for (TradingValue tv : tvList) {
+			// get its last day of the week(not necessarily Friday, because of holidays)
+			// logger.info(tv.toString());
+			Date lastTradingDateOfWeek = StockUtils.getLastTradingDateOfWeek(tv.getTradingDate(), tdList);
+			String dateString = StockUtils.dateToSimpleString(lastTradingDateOfWeek);
+			WeeklyTradingValue weeklyTv = weeklyTvMap.get(dateString);
+			if (weeklyTv == null) {
+				weeklyTv = new WeeklyTradingValue();
+				weeklyTvMap.put(dateString, weeklyTv);
+				weeklyTv.setTradingDate(lastTradingDateOfWeek);
+				// set open/high/low prices
+				weeklyTv.setOpen(tv.getOpen());
+				weeklyTv.setHigh(tv.getHigh());
+				weeklyTv.setLow(tv.getLow());
+			}
+			if (tv.getTradingDate().getTime()==lastTradingDateOfWeek.getTime()) { 
+				// set close price
+				weeklyTv.setClose(tv.getClose());
+			}
+			// update other fields except open/close
+			updateWeeklyData(weeklyTv, tv);
+		}
+		//
+		List<WeeklyTradingValue> wtvList = new ArrayList<>(weeklyTvMap.values());
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		stats.setWindowSize(9);
+
+		wtvList.stream().forEach(wtv -> {
+			stats.addValue(wtv.getHigh());
+			wtv.setMax9(stats.getMax());
+		});
+		stats.clear();
+		wtvList.stream().forEach(wtv -> {
+			stats.addValue(wtv.getLow());
+			wtv.setMin9(stats.getMin());
+		});
+		wtvList.stream().forEach(wtv -> {
+			if (wtv.getMax9() - wtv.getMin9() < 0.001) {
+				wtv.setRsv(100.0);
+			} else {
+				wtv.setRsv(StockUtils
+						.roundDoubleDp2(100 * (wtv.getClose() - wtv.getMin9()) / (wtv.getMax9() - wtv.getMin9())));
+			}
+		});
+		IntStream.range(0, wtvList.size()).forEach(idx -> {
+			WeeklyTradingValue wtv = wtvList.get(idx);
+			double k;
+			double d;
+			if (idx == 0) {
+				k = 50.0 * 2 / 3 + wtv.getRsv() / 3;
+				d = 50.0 * 2 / 3 + k / 3.0;
+			} else {
+				k = wtvList.get(idx - 1).getK() * 2 / 3 + wtv.getRsv() / 3.0;
+				d = wtvList.get(idx - 1).getD() * 2 / 3 + k / 3;
+			}
+			wtv.setK(StockUtils.roundDoubleDp2(k));
+			wtv.setD(StockUtils.roundDoubleDp2(d));
+		});
+		// simple moving average
+		CircularFifoQueue<Double> queue = new CircularFifoQueue<>(24);
+		wtvList.stream().forEach(wtv -> {
+			queue.add(wtv.getClose());
+			double[] values = ArrayUtils.toPrimitive(queue.toArray(new Double[0]));
+			if (values.length == 24) {
+				wtv.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, 20, 4)));
+				wtv.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, 16, 8)));
+				wtv.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, 12, 12)));
+				wtv.setSma24(StockUtils.roundDoubleDp2(StatUtils.mean(values, 0, 24)));
+			} else if (values.length >= 12) {
+				wtv.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				wtv.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+				wtv.setSma12(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 12, 12)));
+			} else if (values.length >= 8) {
+				wtv.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+				wtv.setSma8(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 8, 8)));
+			} else if (values.length >= 4) {
+				wtv.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
+			}
+		});
+		weeklyTradingValueDAO.saveAll(wtvList);
+	}
+
+	/*
+	 * update values except open and close price fields
+	 * 
+	 */
+	private void updateWeeklyData(WeeklyTradingValue weeklyTv, TradingValue tv) {
+		if (tv.getHigh() > weeklyTv.getHigh()) {
+			weeklyTv.setHigh(tv.getHigh());
+		}
+		if (tv.getLow() < weeklyTv.getLow()) {
+			weeklyTv.setLow(tv.getLow());
+		}
+		weeklyTv.setTotalValue(weeklyTv.getTotalValue() + tv.getTotalValue());
+		weeklyTv.setDealerBuy(weeklyTv.getDealerBuy() + tv.getDealerBuy());
+		weeklyTv.setDealerSell(weeklyTv.getDealerSell() + tv.getDealerSell());
+		weeklyTv.setDealerDiff(weeklyTv.getDealerDiff() + tv.getDealerDiff());
+		weeklyTv.setDealerHedgeBuy(weeklyTv.getDealerHedgeBuy() + tv.getDealerHedgeBuy());
+		weeklyTv.setDealerHedgeSell(weeklyTv.getDealerHedgeSell() + tv.getDealerHedgeSell());
+		weeklyTv.setDealerHedgeDiff(weeklyTv.getDealerHedgeDiff() + tv.getDealerHedgeDiff());
+		weeklyTv.setForeignBuy(weeklyTv.getForeignBuy() + tv.getForeignBuy());
+		weeklyTv.setForeignSell(weeklyTv.getForeignSell() + tv.getForeignSell());
+		weeklyTv.setForeignDiff(weeklyTv.getForeignDiff() + tv.getForeignDiff());
+		weeklyTv.setTrustBuy(weeklyTv.getTrustBuy() + tv.getTrustBuy());
+		weeklyTv.setTrustSell(weeklyTv.getTrustSell() + tv.getTrustSell());
+		weeklyTv.setTrustDiff(weeklyTv.getTrustDiff() + tv.getTrustDiff());
+	}
 
 	public List<Date> getLatestNTradingDateDesc(int dateLength) {
 		return tradingDateDAO.findLatestNTradingDateDesc(dateLength);
@@ -260,8 +512,8 @@ public class StockService {
 		return dataMap;
 	}
 
-	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByForeign>> getTopStockItemTradeByForeign(Date tradingDate,
-			int dateLength, int selectCount) {
+	public LinkedHashMap<StockItem, TreeMap<String, StockTradeByForeign>> getTopStockItemTradeByForeign(
+			Date tradingDate, int dateLength, int selectCount) {
 		// 1. get the stbf list for the specified date
 		List<StockTradeByForeign> stbfList = stockTradeByForeignDAO.getByTradingDate(tradingDate);
 		// 2. sort the stbf list by (buy+sell)*price amount in descending order

@@ -117,6 +117,20 @@ public class StockUtils {
 	}
 
 	/*
+	 * parse a date string of '107/01/01' format
+	 */
+	public static Optional<Date> rocYearStringToDate(String date) {
+		try {
+			int rocYear = Integer.parseInt(date.substring(0, date.indexOf('/')));
+			int wYear = 1911 + rocYear;
+			String wDate = Integer.toString(wYear) + date.substring(date.indexOf('/'));
+			return Optional.of(format2.parse(wDate));
+		} catch (Exception ex) {
+			return Optional.empty();
+		}
+	}
+
+	/*
 	 * parse a date string of '20180101' format
 	 */
 	public static Optional<Date> stringSimpleToDate(String date) {
@@ -233,6 +247,26 @@ public class StockUtils {
 			return null;
 		else
 			return StockUtils.dateToSimpleString(targetDate);
+	}
+
+	public static Date getLastTradingDateOfWeek(Date tradingDate, List<Date> tdList) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(tradingDate);
+		// dayOfWeek starts from 1(Sunday)
+		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		// first set to Saturday(sometimes TWSE will open on Sat.)
+		cal.add(Calendar.DAY_OF_WEEK, 7 - dayOfWeek);
+		// logger.info(cal.getTime().toString());
+		//
+		for (int i = 0; i <= (7 - dayOfWeek); i++) {
+			Date d = cal.getTime();
+			// logger.info(d.toString());
+			if (tdList.contains(d)) {
+				return d;
+			}
+			cal.add(Calendar.DAY_OF_WEEK, -1);
+		}
+		return null;
 	}
 
 }

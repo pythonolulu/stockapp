@@ -14,8 +14,8 @@ import javax.persistence.*;
  * MySQL import tool has problems dealing with table name with 'value' word in it.
  */
 @Entity
-@Table(name = "trading_data")
-public class TradingValue {
+@Table(name = "weekly_trading_data")
+public class WeeklyTradingValue {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -41,14 +41,14 @@ public class TradingValue {
 	private Double k;
 	@Column(name = "d", nullable = true)
 	private Double d;
-	@Column(name = "sma5", nullable = true)
-	private Double sma5;
-	@Column(name = "sma10", nullable = true)
-	private Double sma10;
-	@Column(name = "sma20", nullable = true)
-	private Double sma20;
-	@Column(name = "sma60", nullable = true)
-	private Double sma60;
+	@Column(name = "sma4", nullable = true)
+	private Double sma4;
+	@Column(name = "sma8", nullable = true)
+	private Double sma8;
+	@Column(name = "sma12", nullable = true)
+	private Double sma12;
+	@Column(name = "sma24", nullable = true)
+	private Double sma24;
 
 	@Column(name = "total_value", nullable = false)
 	private Double totalValue = 0.0;
@@ -81,7 +81,7 @@ public class TradingValue {
 	@Column(name = "foreign_diff", nullable = false)
 	private Double foreignDiff = 0.0;
 
-	public TradingValue() {
+	public WeeklyTradingValue() {
 		super();
 	}
 
@@ -165,36 +165,36 @@ public class TradingValue {
 		this.d = d;
 	}
 
-	public Double getSma5() {
-		return sma5;
+	public Double getSma4() {
+		return sma4;
 	}
 
-	public void setSma5(Double sma5) {
-		this.sma5 = sma5;
+	public void setSma4(Double sma4) {
+		this.sma4 = sma4;
 	}
 
-	public Double getSma10() {
-		return sma10;
+	public Double getSma8() {
+		return sma8;
 	}
 
-	public void setSma10(Double sma10) {
-		this.sma10 = sma10;
+	public void setSma8(Double sma8) {
+		this.sma8 = sma8;
 	}
 
-	public Double getSma20() {
-		return sma20;
+	public Double getSma12() {
+		return sma12;
 	}
 
-	public void setSma20(Double sma20) {
-		this.sma20 = sma20;
+	public void setSma12(Double sma12) {
+		this.sma12 = sma12;
 	}
 
-	public Double getSma60() {
-		return sma60;
+	public Double getSma24() {
+		return sma24;
 	}
 
-	public void setSma60(Double sma60) {
-		this.sma60 = sma60;
+	public void setSma24(Double sma24) {
+		this.sma24 = sma24;
 	}
 
 	public Double getTotalValue() {
