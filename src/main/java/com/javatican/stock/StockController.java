@@ -1,5 +1,9 @@
 package com.javatican.stock;
 
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,12 +57,19 @@ public class StockController {
 	 * data
 	 */
 	@GetMapping("/updateData")
-	public ResponseMessage updateData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
-			stockService.updateTradingDateAndValue();
-			mes.setCategory("Success");
-			mes.setText("Trading date and value information has been updated.");
+			Date latestTradingDate = stockService.updateTradingDateAndValue();
+			if (latestTradingDate == null) {
+				mes.setCategory("Fail");
+				mes.setText(String.format("No new data available."));
+			} else {
+				mes.setCategory("Success");
+				mes.setText(String.format(
+						"Trading date and value information has been updated. The latest trading date is ***%s",
+						StockUtils.dateToSimpleString(latestTradingDate)));
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			mes.setCategory("Fail");
@@ -71,8 +82,8 @@ public class StockController {
 	 * 2.1. handler for downloading and saving any new stock trading data by Trust
 	 */
 	@GetMapping("/updateTrustData")
-	public ResponseMessage updateTrustData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateTrustData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockTradeByTrustService.updateData();
 			mes.setCategory("Success");
@@ -90,8 +101,8 @@ public class StockController {
 	 * Traders
 	 */
 	@GetMapping("/updateForeignData")
-	public ResponseMessage updateForeignData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateForeignData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockTradeByForeignService.updateData();
 			mes.setCategory("Success");
@@ -109,11 +120,11 @@ public class StockController {
 	 */
 	@GetMapping("/updatePerformers")
 	public ResponseMessage updateTopAndBottomPerformers(
-			@RequestParam(value = "tradingDate", required = false) String dateString) {
+			@RequestParam(value = "tradingDate", required = false) String dateString, HttpServletRequest request) {
 		if (dateString == null) {
 			dateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 		}
-		ResponseMessage mes = new ResponseMessage();
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockService.updatePerformers(dateString, 50);
 			mes.setCategory("Success");
@@ -130,8 +141,8 @@ public class StockController {
 	 * 3. handler for downloading and saving stock prices for any new stock items
 	 */
 	@GetMapping("/createStockPrices")
-	public ResponseMessage createStockPrices() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage createStockPrices(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.downloadAndSaveStockPrices();
 			mes.setCategory("Success");
@@ -149,8 +160,8 @@ public class StockController {
 	 * field stock items.
 	 */
 	@GetMapping("/updateMissingPriceField")
-	public ResponseMessage updateMissingStockItemPriceField() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateMissingStockItemPriceField(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.updateMissingStockItemPriceField();
 			mes.setCategory("Success");
@@ -167,8 +178,8 @@ public class StockController {
 	 * 5. handler for updating price for all existing stock items
 	 */
 	@GetMapping("/updatePriceDataForAll")
-	public ResponseMessage updatePriceDataForAll() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updatePriceDataForAll(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.updatePriceDataForAllImproved();
 			mes.setCategory("Success");
@@ -182,8 +193,8 @@ public class StockController {
 	}
 
 	@GetMapping("/{stockSymbol}/updatePriceData")
-	private ResponseMessage updateStockPriceData(@PathVariable String stockSymbol) {
-		ResponseMessage mes = new ResponseMessage();
+	private ResponseMessage updateStockPriceData(@PathVariable String stockSymbol, HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.updatePriceDataForSymbol(stockSymbol);
 			mes.setCategory("Success");
@@ -200,8 +211,8 @@ public class StockController {
 	 * 6. handler for calculating K/D and SMA values for all existing stock items
 	 */
 	@GetMapping("/calculateAndSaveKDForAll")
-	public ResponseMessage calculateAndSaveKDForAll() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage calculateAndSaveKDForAll(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.calculateAndSaveKDForAll();
 			mes.setCategory("Success");
@@ -213,10 +224,10 @@ public class StockController {
 		}
 		return mes;
 	}
-	
+
 	@GetMapping("/calculateIndexStatsData")
-	public ResponseMessage calculateIndexStatsData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage calculateIndexStatsData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockService.calculateIndexStatsData();
 			mes.setCategory("Success");
@@ -230,8 +241,8 @@ public class StockController {
 	}
 
 	@GetMapping("/calculateWeeklyIndexStatsData")
-	public ResponseMessage calculateWeeklyIndexStatsData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage calculateWeeklyIndexStatsData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockService.calculateWeeklyIndexStatsData();
 			mes.setCategory("Success");
@@ -243,9 +254,10 @@ public class StockController {
 		}
 		return mes;
 	}
+
 	@GetMapping("/{stockSymbol}/calculateAndSaveKD")
-	private ResponseMessage calculateAndSaveKD(@PathVariable String stockSymbol) {
-		ResponseMessage mes = new ResponseMessage();
+	private ResponseMessage calculateAndSaveKD(@PathVariable String stockSymbol, HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.calculateAndSaveKDForSymbol(stockSymbol);
 			mes.setCategory("Success");
@@ -262,8 +274,8 @@ public class StockController {
 	 * 7. handler for download call warrants trade data.
 	 */
 	@GetMapping("/updateCallWarrantData")
-	public ResponseMessage updateCallWarrantData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateCallWarrantData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			callWarrantTradeSummaryService.updateData();
 			mes.setCategory("Success");
@@ -281,8 +293,8 @@ public class StockController {
 	 * 8. handler for download put warrants trade data.
 	 */
 	@GetMapping("/updatePutWarrantData")
-	public ResponseMessage updatePutWarrantData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updatePutWarrantData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			putWarrantTradeSummaryService.updateData();
 			mes.setCategory("Success");
@@ -300,8 +312,8 @@ public class StockController {
 	 * 9. handler for download Dealer warrants hedge trade data.
 	 */
 	@GetMapping("/updateDealerData")
-	public ResponseMessage updateDealerData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateDealerData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			dealerTradeSummaryService.updateData();
 			mes.setCategory("Success");
@@ -316,8 +328,8 @@ public class StockController {
 	}
 
 	@GetMapping("/updateMarginData")
-	public ResponseMessage updateMarginData() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateMarginData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			marginService.updateData();
 			mes.setCategory("Success");
@@ -332,8 +344,8 @@ public class StockController {
 	}
 
 	@GetMapping("/extractMarginData")
-	private ResponseMessage extractMarginData() {
-		ResponseMessage mes = new ResponseMessage();
+	private ResponseMessage extractMarginData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			marginService.extractMarginData();
 			mes.setCategory("Success");
@@ -348,8 +360,8 @@ public class StockController {
 	}
 
 	@GetMapping("/prepareWeeklyStockPriceForAll")
-	public ResponseMessage prepareWeeklyStockPriceForAll() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage prepareWeeklyStockPriceForAll(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.prepareWeeklyStockPriceForAll();
 			mes.setCategory("Success");
@@ -363,8 +375,8 @@ public class StockController {
 	}
 
 	@GetMapping("/calculateAndSaveWeeklyKDForAll")
-	public ResponseMessage calculateAndSaveWeeklyKDForAll() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage calculateAndSaveWeeklyKDForAll(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.calculateAndSaveWeeklyKDForAll();
 			mes.setCategory("Success");
@@ -381,8 +393,8 @@ public class StockController {
 	 * only run at the beginning of new month.
 	 */
 	@GetMapping("/updatePriceFieldForAll")
-	public ResponseMessage updateStockItemPriceFieldForAll() {
-		ResponseMessage mes = new ResponseMessage();
+	public ResponseMessage updateStockItemPriceFieldForAll(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			stockItemService.updateStockItemPriceFieldForAll();
 			mes.setCategory("Success");
@@ -397,9 +409,10 @@ public class StockController {
 
 	@GetMapping("/updateFinancialInfo")
 	public ResponseMessage updateFinancialInfo(@RequestParam(value = "symbol", required = false) String symbol,
-			@RequestParam(value = "checkExists", required = false, defaultValue = "true") boolean checkExists) {
+			@RequestParam(value = "checkExists", required = false, defaultValue = "true") boolean checkExists,
+			HttpServletRequest request) {
 
-		ResponseMessage mes = new ResponseMessage();
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
 			if (symbol == null) {
 				financialService.updateData(checkExists);
@@ -415,43 +428,5 @@ public class StockController {
 		}
 		return mes;
 	}
-	
-	// @GetMapping("/prepareDealerData")
-	// private ResponseMessage prepareDealerData() {
-	// ResponseMessage mes = new ResponseMessage();
-	// try {
-	// dealerTradeSummaryService.prepareData();
-	// mes.setCategory("Success");
-	// mes.setText("Dealer trading data has been updated.");
-	// } catch (Exception ex) {
-	// ex.printStackTrace();
-	// mes.setCategory("Fail");
-	// mes.setText("Dealer trading data fails to be updated.");
-	// }
-	// return mes;
-	//
-	// }
-	//
-	/*
-	 * @GetMapping("/prepareCallWarrantData") private ResponseMessage
-	 * prepareCallWarrantData() { ResponseMessage mes = new ResponseMessage(); try {
-	 * callWarrantTradeSummaryService.prepareData(); mes.setCategory("Success");
-	 * mes.setText("Call warrant trading data has been updated."); } catch
-	 * (Exception ex) { ex.printStackTrace(); mes.setCategory("Fail");
-	 * mes.setText("Call warrant trading data fails to be updated."); } return mes;
-	 * 
-	 * }
-	 */
 
-	/*
-	 * @GetMapping("/preparePutWarrantData") private ResponseMessage
-	 * preparePutWarrantData() { ResponseMessage mes = new ResponseMessage(); try {
-	 * putWarrantTradeSummaryService.prepareData(); mes.setCategory("Success");
-	 * mes.setText("Put warrant trading data has been updated."); } catch (Exception
-	 * ex) { ex.printStackTrace(); mes.setCategory("Fail");
-	 * mes.setText("Put warrant trading data fails to be updated."); } return mes;
-	 * 
-	 * }
-	 */
- 
 }

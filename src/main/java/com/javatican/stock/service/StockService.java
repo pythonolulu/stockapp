@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
@@ -99,9 +100,9 @@ public class StockService {
 	 * 
 	 * This shall be run after every trading date.
 	 */
-	public void updateTradingDateAndValue() throws StockException {
+	public Date updateTradingDateAndValue() throws StockException {
 		String dateString = StockUtils.todayDateString();
-		downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
+		return downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
 	}
 
 	/*
@@ -131,20 +132,23 @@ public class StockService {
 	/*
 	 * download and store the trading date and total trading values for a specific
 	 * month. It calls setForeignAndOtherInvestorsTradingValue()
+	 * return the latest trading date.
 	 */
-	private void downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate)
+	private Date downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate)
 			throws StockException {
 		try {
+			Date latestTradingDate = null;
 			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
 			Elements trs = doc.select("table > tbody > tr");
 			for (Element tr : trs) {
 				Element td = tr.selectFirst("td");
-				Date date = StockUtils.stringToDate(td.text()).get();
+				Date date =  StockUtils.stringToDate(td.text()).get();
 				// check duplicates
 				if (checkDuplicate && tradingDateDAO.existsByDate(date)) {
 					logger.info("Data exist. Skipping updating trading date and values for date:" + date);
 					continue;
 				} else {
+					latestTradingDate = date;
 					TradingDate tDate = new TradingDate();
 					tDate.setDate(date);
 					tradingDateDAO.save(tDate);
@@ -164,6 +168,7 @@ public class StockService {
 					}
 				}
 			}
+			return latestTradingDate;
 		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
@@ -357,8 +362,7 @@ public class StockService {
 		List<Date> tdList = tradingDateDAO.findAllTradingDate();
 		// weeklySpMap: key is the dateString , value is a StockPrice (store weekly
 		// price)
-		TreeMap<String, WeeklyTradingValue> weeklyTvMap;
-		weeklyTvMap = new TreeMap<>();
+		TreeMap<String, WeeklyTradingValue> weeklyTvMap = new TreeMap<>();
 		List<TradingValue> tvList;
 		// load tradingValue
 		tvList = tradingValueDAO.findAll();
@@ -441,7 +445,21 @@ public class StockService {
 				wtv.setSma4(StockUtils.roundDoubleDp2(StatUtils.mean(values, values.length - 4, 4)));
 			}
 		});
-		weeklyTradingValueDAO.saveAll(wtvList);
+		List<WeeklyTradingValue> existingWtvList = weeklyTradingValueDAO.findAll();
+		Iterator<WeeklyTradingValue> itr = existingWtvList.iterator();
+		while(itr.hasNext()) {
+			WeeklyTradingValue wtv2= itr.next();
+			String key = StockUtils.dateToSimpleString(wtv2.getTradingDate());
+			if(weeklyTvMap.containsKey(key)) {
+				weeklyTvMap.remove(key);
+				//itr.remove() will remove the current iterated item from existingWtvList
+				itr.remove(); 
+			}
+		}
+		// first remove the last item that is not the final 'week' stats data.
+		weeklyTradingValueDAO.deleteAll(existingWtvList);
+		// insert any new 'week' stats data
+		weeklyTradingValueDAO.saveAll(weeklyTvMap.values());
 	}
 
 	/*

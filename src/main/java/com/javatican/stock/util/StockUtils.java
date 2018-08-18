@@ -29,6 +29,13 @@ public class StockUtils {
 	private static final String TWO_DEC_DOUBLE_FORMAT = "##.00";
 	private static final String ZERO_DEC_DOUBLE_FORMAT = "##.";
 
+	public static boolean isFriday(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// dayOfWeek starts from 1(Sunday)
+		return cal.get(Calendar.DAY_OF_WEEK)==Calendar.FRIDAY;
+	}
+
 	/**
 	 * Round double.
 	 *
