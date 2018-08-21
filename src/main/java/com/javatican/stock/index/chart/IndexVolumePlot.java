@@ -1,49 +1,41 @@
-package com.javatican.stock.chart;
+package com.javatican.stock.index.chart;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.labels.HighLowItemLabelGenerator;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.CandlestickRenderer;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.time.ohlc.OHLCSeries;
-import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.javatican.stock.StockException;
-import com.javatican.stock.dao.StockItemDataDAO;
-import com.javatican.stock.model.StockItem;
-import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.dao.TradingValueDAO;
+import com.javatican.stock.model.TradingValue;
 
-@Component("volumePlot")
-public class VolumePlot implements JPlot {
+@Component("indexVolumePlot")
+public class IndexVolumePlot  {
 
 	@Autowired
-	StockItemDataDAO stockItemDataDAO;
-	private List<StockItemData> sidList;
+	TradingValueDAO tradingValueDAO;
+ 
+	private List<TradingValue> tvList;
 
-	public VolumePlot() {
-	}
-
-	public Plot getPlot(StockItem stockItem) throws StockException {
-		this.sidList = stockItemDataDAO.load(stockItem.getSymbol());
+	public Plot getPlot() throws StockException {
+		tvList = tradingValueDAO.findAll();
 		return createPlot();
 	}
 
@@ -53,7 +45,7 @@ public class VolumePlot implements JPlot {
 		//
 
 		// Create volume chart volumeAxis
-		NumberAxis volumeAxis = new NumberAxis("交易量(千股)");
+		NumberAxis volumeAxis = new NumberAxis("交易金額(10億)");
 		volumeAxis.setAutoRangeIncludesZero(true);
 		// Set to no decimal
 		volumeAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
@@ -112,14 +104,14 @@ public class VolumePlot implements JPlot {
 		TimeSeries zVolumeSeries = new TimeSeries("ZVolume");
 		// add data
 		Double oldClosePrice = 0.0;
-		for (StockItemData sid : sidList) {
-			Double closePrice = sid.getStockPrice().getClose();
+		for (TradingValue tv : tvList) {
+			Double closePrice = tv.getClose();
 			if (closePrice > oldClosePrice) {
-				pVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume() / 1000);
+				pVolumeSeries.add(new Day(tv.getTradingDate()), tv.getTotalValue() / 1000000000);
 			} else if (closePrice < oldClosePrice) {
-				nVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume() / 1000);
+				nVolumeSeries.add(new Day(tv.getTradingDate()), tv.getTotalValue() / 1000000000);
 			} else {
-				zVolumeSeries.add(new Day(sid.getTradingDate()), sid.getStockPrice().getTradeVolume() / 1000);
+				zVolumeSeries.add(new Day(tv.getTradingDate()), tv.getTotalValue() / 1000000000);
 			}
 			oldClosePrice = closePrice;
 		}
@@ -136,16 +128,16 @@ public class VolumePlot implements JPlot {
 		TimeSeries ka80Series = new TimeSeries("ka80");
 		TimeSeries ku20Series = new TimeSeries("ku20");
 		// add data
-		sidList.stream().forEach(sid -> {
-			Date date = sid.getTradingDate();
+		tvList.stream().forEach(tv -> {
+			Date date = tv.getTradingDate();
 			Day d = new Day(date);
-			kSeries.add(d, sid.getK());
-			dSeries.add(d, sid.getD());
-			if (sid.getK() >= 80) {
-				ka80Series.add(d, sid.getK());
+			kSeries.add(d, tv.getK());
+			dSeries.add(d, tv.getD());
+			if (tv.getK() >= 80) {
+				ka80Series.add(d, tv.getK());
 			}
-			if (sid.getK() <= 20) {
-				ku20Series.add(d, sid.getK());
+			if (tv.getK() <= 20) {
+				ku20Series.add(d, tv.getK());
 			}
 		});
 		// add data

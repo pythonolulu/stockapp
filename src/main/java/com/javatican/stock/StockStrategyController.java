@@ -34,6 +34,8 @@ import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.ChartService;
+import com.javatican.stock.service.IndexChartService;
+import com.javatican.stock.service.IndexStrategyService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.RealtimeQuoteService;
 import com.javatican.stock.service.StockItemService;
@@ -58,6 +60,8 @@ public class StockStrategyController {
 	@Autowired
 	private ChartService chartService;
 	@Autowired
+	private IndexChartService indexChartService;
+	@Autowired
 	private CallWarrantTradeSummaryService callWarrantTradeSummaryService;
 	@Autowired
 	private PutWarrantTradeSummaryService putWarrantTradeSummaryService;
@@ -71,6 +75,8 @@ public class StockStrategyController {
 	private StrategyService4 strategyService4;
 	@Autowired
 	private StrategyService5 strategyService5;
+	@Autowired
+	private IndexStrategyService indexStrategyService;
 	@Autowired
 	RealtimeQuoteService realtimeQuoteService;
 
@@ -280,6 +286,13 @@ public class StockStrategyController {
 			@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		chartService.createGraph(stockSymbol, force);
 		return new ModelAndView("redirect:" + "/stock/imgs/strategy/" + stockSymbol + ".png");
+	}
+
+	@GetMapping("/getIndexChart")
+	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force) {
+		String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
+		indexChartService.createGraph(force, latestTradingDateString);
+		return new ModelAndView("redirect:" + "/stock/imgs/index_" + latestTradingDateString + ".png");
 	}
 
 	/*
@@ -963,4 +976,20 @@ public class StockStrategyController {
 		}
 		return mav;
 	}
+
+	@GetMapping("/prepareSmaStatsData")
+	public ResponseMessage prepareSmaStatsData(HttpServletRequest request) {
+		ResponseMessage mes = new ResponseMessage(request.getServletPath());
+		try {
+			indexStrategyService.prepareSmaStatsData();
+			mes.setCategory("Success");
+			mes.setText("Sma stats data has been prepared.");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			mes.setCategory("Fail");
+			mes.setText("Sma stats data fails to be prepared.");
+		}
+		return mes;
+	}
+
 }
