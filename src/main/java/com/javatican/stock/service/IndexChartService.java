@@ -14,7 +14,6 @@ import org.jfree.data.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
@@ -26,6 +25,9 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.index.chart.IndexDealerHedgeTradeVolumePlot;
 import com.javatican.stock.index.chart.IndexDealerTradeVolumePlot;
 import com.javatican.stock.index.chart.IndexForeignTradeVolumePlot;
+import com.javatican.stock.index.chart.IndexMarginBuyPlot;
+import com.javatican.stock.index.chart.IndexMarginBuyValuePlot;
+import com.javatican.stock.index.chart.IndexMarginShortSellPlot;
 import com.javatican.stock.index.chart.IndexPricePlot;
 import com.javatican.stock.index.chart.IndexTrustTradeVolumePlot;
 import com.javatican.stock.index.chart.IndexVolumePlot;
@@ -53,6 +55,12 @@ public class IndexChartService {
 	private IndexDealerTradeVolumePlot indexDealerTradeVolumePlot;
 	@Autowired 
 	private IndexDealerHedgeTradeVolumePlot indexDealerHedgeTradeVolumePlot;
+	@Autowired 
+	private IndexMarginBuyValuePlot indexMarginBuyValuePlot;
+	@Autowired 
+	private IndexMarginBuyPlot indexMarginBuyPlot;
+	@Autowired 
+	private IndexMarginShortSellPlot indexMarginShortSellPlot;
 	@Autowired 
 	private SmaStatsPlot smaStatsPlot;
 
@@ -130,6 +138,9 @@ public class IndexChartService {
 			XYPlot trustSubplot = (XYPlot) indexTrustTradeVolumePlot.getPlot();
 			XYPlot dealerSubplot = (XYPlot) indexDealerTradeVolumePlot.getPlot();
 			XYPlot dealerHedgeSubplot = (XYPlot) indexDealerHedgeTradeVolumePlot.getPlot();
+			XYPlot marginBuyValueSubplot = (XYPlot) indexMarginBuyValuePlot.getPlot();
+			XYPlot marginBuySubplot = (XYPlot) indexMarginBuyPlot.getPlot();
+			XYPlot marginShortSubplot = (XYPlot) indexMarginShortSellPlot.getPlot();
 			XYPlot smaStatsSubplot = (XYPlot) smaStatsPlot.getPlot();
 
 			DateAxis dateAxis = new DateAxis("Date");
@@ -147,12 +158,18 @@ public class IndexChartService {
 			mainPlot.add(trustSubplot, 2);
 			mainPlot.add(dealerSubplot, 2);
 			mainPlot.add(dealerHedgeSubplot, 2);
+			mainPlot.add(marginBuyValueSubplot, 2);
+			mainPlot.add(marginBuySubplot, 2);
+			mainPlot.add(marginShortSubplot, 2);
 			mainPlot.add(smaStatsSubplot, 2);
 //
 			showAnnotation(foreignSubplot, x, "外资买卖"); 
 			showAnnotation(trustSubplot, x, "投信买卖");
 			showAnnotation(dealerSubplot, x, "自营商买卖");
 			showAnnotation(dealerHedgeSubplot, x, "自营商避险买卖");
+			showAnnotation(marginBuyValueSubplot, x, "融资买卖金额");
+			showAnnotation(marginBuySubplot, x, "融资买卖");
+			showAnnotation(marginShortSubplot, x, "融券买卖");
 			showAnnotation(smaStatsSubplot, x, "均线统计");
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);

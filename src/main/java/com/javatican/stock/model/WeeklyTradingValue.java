@@ -81,6 +81,99 @@ public class WeeklyTradingValue {
 	@Column(name = "foreign_diff", nullable = false)
 	private Double foreignDiff = 0.0;
 
+	@Column(name = "margin_buy", nullable = true)
+	private Double marginBuy = 0.0;
+	@Column(name = "margin_redemp", nullable = true)
+	private Double marginRedemp = 0.0;
+	@Column(name = "margin_acc", nullable = true)
+	private Double marginAcc = 0.0;  
+
+	@Column(name = "margin_buy_value", nullable = true)
+	private Double marginBuyValue = 0.0;
+	@Column(name = "margin_redemp_value", nullable = true)
+	private Double marginRedempValue = 0.0;
+	@Column(name = "margin_acc_value", nullable = true)
+	private Double marginAccValue = 0.0;  
+
+	@Column(name = "short_redemp", nullable = true)
+	private Double shortRedemp = 0.0;
+	@Column(name = "short_sell", nullable = true)
+	private Double shortSell = 0.0;
+	@Column(name = "short_acc", nullable = true)
+	private Double shortAcc = 0.0;  
+	
+	public Double getMarginBuy() {
+		return marginBuy;
+	}
+
+	public void setMarginBuy(Double marginBuy) {
+		this.marginBuy = marginBuy;
+	}
+
+	public Double getMarginRedemp() {
+		return marginRedemp;
+	}
+
+	public void setMarginRedemp(Double marginRedemp) {
+		this.marginRedemp = marginRedemp;
+	}
+
+	public Double getMarginAcc() {
+		return marginAcc;
+	}
+
+	public void setMarginAcc(Double marginAcc) {
+		this.marginAcc = marginAcc;
+	}
+
+	public Double getMarginBuyValue() {
+		return marginBuyValue;
+	}
+
+	public void setMarginBuyValue(Double marginBuyValue) {
+		this.marginBuyValue = marginBuyValue;
+	}
+
+	public Double getMarginRedempValue() {
+		return marginRedempValue;
+	}
+
+	public void setMarginRedempValue(Double marginRedempValue) {
+		this.marginRedempValue = marginRedempValue;
+	}
+
+	public Double getMarginAccValue() {
+		return marginAccValue;
+	}
+
+	public void setMarginAccValue(Double marginAccValue) {
+		this.marginAccValue = marginAccValue;
+	}
+
+	public Double getShortRedemp() {
+		return shortRedemp;
+	}
+
+	public void setShortRedemp(Double shortRedemp) {
+		this.shortRedemp = shortRedemp;
+	}
+
+	public Double getShortSell() {
+		return shortSell;
+	}
+
+	public void setShortSell(Double shortSell) {
+		this.shortSell = shortSell;
+	}
+
+	public Double getShortAcc() {
+		return shortAcc;
+	}
+
+	public void setShortAcc(Double shortAcc) {
+		this.shortAcc = shortAcc;
+	}
+
 	public WeeklyTradingValue() {
 		super();
 	}

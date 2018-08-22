@@ -1,15 +1,12 @@
 package com.javatican.stock.dao;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -44,7 +40,7 @@ public class IndexStrategyDAO {
 		return resource.exists();
 	}
 
-	public void saveSmaStatsData(Map<Date, List<Integer>> statsMap) throws StockException {
+	public void saveSmaStatsData(Map<Date, List<Number>> statsMap) throws StockException {
 		Resource resource = resourceLoader.getResource(SMA_STATS_RESOURCE_FILE_PATH);
 		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
 			objectMapper.writeValue(st, statsMap);
@@ -55,11 +51,11 @@ public class IndexStrategyDAO {
 		}
 	}
 
-	public Map<Date, List<Integer>> loadSmaStatsData() throws StockException {
+	public Map<Date, List<Number>> loadSmaStatsData() throws StockException {
 		Resource resource = resourceLoader.getResource(SMA_STATS_RESOURCE_FILE_PATH);
 		try (InputStream st = resource.getInputStream();) {
-			Map<Date, List<Integer>> statsMap = objectMapper.readValue(st,
-					new TypeReference<Map<Date, List<Integer>>>() {
+			Map<Date, List<Number>> statsMap = objectMapper.readValue(st,
+					new TypeReference<Map<Date, List<Number>>>() {
 					});
 			return statsMap;
 		} catch (Exception ex) {

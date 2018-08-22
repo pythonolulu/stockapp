@@ -428,5 +428,4 @@ public class StockController {
 		}
 		return mes;
 	}
-
 }

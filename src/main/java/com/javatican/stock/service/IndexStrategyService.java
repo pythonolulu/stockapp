@@ -43,7 +43,8 @@ public class IndexStrategyService {
 	public void prepareSmaStatsData() throws StockException {
 		// only stocks with call warrants are selected
 		List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
-		TreeMap<Date, List<Integer>> statsMap = new TreeMap<>();
+		int totalItemCount = 0;
+		TreeMap<Date, List<Number>> statsMap = new TreeMap<>();
 		for (String stockSymbol : symbolList) {
 			if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
 				continue;
@@ -51,6 +52,7 @@ public class IndexStrategyService {
 				TreeMap<Date, List<Number>> rawStatsMap = smaSelectStrategy2DAO.loadRawStatsData(stockSymbol);
 				if (rawStatsMap == null)
 					continue;
+				totalItemCount++;
 				for (Date date : rawStatsMap.keySet()) {
 					// rawStatsList contains the following data:
 					// count_above_sma20, count_above_sma60, count_sma20_up,
@@ -59,7 +61,7 @@ public class IndexStrategyService {
 					// dataList contains the stats data for the sma, includes:
 					// above_sma20_stock_count, above_sma60_stock_count, sma20_up_stock_count,
 					// sma60_up_stock_count
-					List<Integer> dataList;
+					List<Number> dataList;
 					if (statsMap.containsKey(date)) {
 						dataList = statsMap.get(date);
 					} else {
@@ -67,16 +69,16 @@ public class IndexStrategyService {
 						statsMap.put(date, dataList);
 					}
 					if (rawStatsList.get(0).intValue() > 0) {
-						dataList.set(0, dataList.get(0) + 1);
+						dataList.set(0, dataList.get(0).intValue() + 1);
 					}
 					if (rawStatsList.get(1).intValue() > 0) {
-						dataList.set(1, dataList.get(1) + 1);
+						dataList.set(1, dataList.get(1).intValue() + 1);
 					}
 					if (rawStatsList.get(2).intValue() > 0) {
-						dataList.set(2, dataList.get(2) + 1);
+						dataList.set(2, dataList.get(2).intValue() + 1);
 					}
 					if (rawStatsList.get(3).intValue() > 0) {
-						dataList.set(3, dataList.get(3) + 1);
+						dataList.set(3, dataList.get(3).intValue() + 1);
 					}
 				}
 			} catch (StockException e) {
@@ -85,6 +87,13 @@ public class IndexStrategyService {
 			}
 		}
 		// write to file
+		final int count = totalItemCount;
+		statsMap.values().stream().forEach(item -> {
+			item.set(0, StockUtils.roundDoubleDp4(((double) item.get(0).intValue()) / count));
+			item.set(1, StockUtils.roundDoubleDp4(((double) item.get(1).intValue()) / count));
+			item.set(2, StockUtils.roundDoubleDp4(((double) item.get(2).intValue()) / count));
+			item.set(3, StockUtils.roundDoubleDp4(((double) item.get(3).intValue()) / count));
+		});
 		indexStrategyDAO.saveSmaStatsData(statsMap);
 	}
 

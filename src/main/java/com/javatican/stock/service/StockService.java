@@ -62,6 +62,7 @@ public class StockService {
 	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
 	private static final String TWSE_TRADING_INDEX_GET_URL = "http://www.tse.com.tw/indicesReport/MI_5MINS_HIST?response=html&date=%s";
 	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
+	private static final String TWSE_TRADING_MARGIN_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_MARGN?response=html&date=%s&selectType=MS";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -131,8 +132,8 @@ public class StockService {
 
 	/*
 	 * download and store the trading date and total trading values for a specific
-	 * month. It calls setForeignAndOtherInvestorsTradingValue()
-	 * return the latest trading date.
+	 * month. It calls setForeignAndOtherInvestorsTradingValue() return the latest
+	 * trading date.
 	 */
 	private Date downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate)
 			throws StockException {
@@ -142,7 +143,7 @@ public class StockService {
 			Elements trs = doc.select("table > tbody > tr");
 			for (Element tr : trs) {
 				Element td = tr.selectFirst("td");
-				Date date =  StockUtils.stringToDate(td.text()).get();
+				Date date = StockUtils.stringToDate(td.text()).get();
 				// check duplicates
 				if (checkDuplicate && tradingDateDAO.existsByDate(date)) {
 					logger.info("Data exist. Skipping updating trading date and values for date:" + date);
@@ -159,8 +160,10 @@ public class StockService {
 					tValue.setTradingDate(date);
 					tValue.setTotalValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
 					// set trading values for foreign and other investors
-					setForeignAndOtherInvestorsTradingValue(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
-					downloadAndSaveIndexOhlcData(StockUtils.dateToSimpleString(tDate.getDate()), tValue);
+					String dString = StockUtils.dateToSimpleString(tDate.getDate());
+					setForeignAndOtherInvestorsTradingValue(dString, tValue);
+					downloadAndSaveIndexOhlcData(dString, tValue);
+					downloadAndSaveMargin(dString, tValue);
 					tradingValueDAO.save(tValue);
 					try {
 						Thread.sleep(stockConfig.getSleepTime());
@@ -170,6 +173,7 @@ public class StockService {
 			}
 			return latestTradingDate;
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			throw new StockException(ex);
 		}
 	}
@@ -197,6 +201,39 @@ public class StockService {
 				}
 			}
 		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+	}
+
+	private void downloadAndSaveMargin(String dateString, TradingValue tValue) throws StockException {
+		try {
+			Document doc = Jsoup.connect(String.format(TWSE_TRADING_MARGIN_GET_URL, dateString)).get();
+			Elements trs = doc.select("table > tbody > tr");
+			Element tr = trs.get(0);
+			Elements tds = tr.select("td");
+			//
+			tValue.setMarginBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text()))
+					- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+			tValue.setMarginRedemp(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+			tValue.setMarginAcc(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+			//
+			tr = trs.get(1);
+			tds = tr.select("td");
+			tValue.setShortRedemp(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text())));
+			tValue.setShortSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text()))
+					- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+			tValue.setShortAcc(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+			//
+			//
+			tr = trs.get(2);
+			tds = tr.select("td");
+			// unit is NTD 1000
+			tValue.setMarginBuyValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text()))
+					- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+			tValue.setMarginRedempValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+			tValue.setMarginAccValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+		} catch (Exception ex) {
+			ex.printStackTrace();
 			throw new StockException(ex);
 		}
 	}
@@ -229,6 +266,52 @@ public class StockService {
 	// throw new StockException(ex);
 	// }
 	// }
+	public void downloadAndSaveMargin() throws StockException {
+		try {
+			List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
+			for (Date date : tradingDateList) {
+				String dateString = StockUtils.dateToSimpleString(date);
+
+				Document doc = Jsoup.connect(String.format(TWSE_TRADING_MARGIN_GET_URL, dateString)).get();
+				Elements trs = doc.select("table > tbody > tr");
+				Element tr = trs.get(0);
+				Elements tds = tr.select("td");
+
+				//
+				TradingValue tValue = tradingValueDAO.getByTradingDate(date);
+				if (tValue == null)
+					continue;
+				tValue.setMarginBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text()))
+						- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+				tValue.setMarginRedemp(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+				tValue.setMarginAcc(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+				//
+				tr = trs.get(1);
+				tds = tr.select("td");
+				tValue.setShortRedemp(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text())));
+				tValue.setShortSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text()))
+						- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+				tValue.setShortAcc(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+				//
+				//
+				tr = trs.get(2);
+				tds = tr.select("td");
+				// unit is NTD 1000
+				tValue.setMarginBuyValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text()))
+						- Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+				tValue.setMarginRedempValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+				tValue.setMarginAccValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+
+				tradingValueDAO.save(tValue);
+				try {
+					Thread.sleep(stockConfig.getSleepTime());
+				} catch (InterruptedException ex) {
+				}
+			}
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+	}
 
 	/*
 	 * download and parse Trading values for Foreign and other investors for a
@@ -357,7 +440,7 @@ public class StockService {
 		});
 		tradingValueDAO.saveAll(updateList);
 	}
-
+//
 	public void calculateWeeklyIndexStatsData() {
 		List<Date> tdList = tradingDateDAO.findAllTradingDate();
 		// weeklySpMap: key is the dateString , value is a StockPrice (store weekly
@@ -381,7 +464,8 @@ public class StockService {
 				weeklyTv.setHigh(tv.getHigh());
 				weeklyTv.setLow(tv.getLow());
 			}
-			if (tv.getTradingDate().getTime()==lastTradingDateOfWeek.getTime()) { 
+			//compare equalness using time value instead of using Date object directly, because Date object shows unequalness.
+			if (tv.getTradingDate().getTime() == lastTradingDateOfWeek.getTime()) {
 				// set close price
 				weeklyTv.setClose(tv.getClose());
 			}
@@ -447,13 +531,13 @@ public class StockService {
 		});
 		List<WeeklyTradingValue> existingWtvList = weeklyTradingValueDAO.findAll();
 		Iterator<WeeklyTradingValue> itr = existingWtvList.iterator();
-		while(itr.hasNext()) {
-			WeeklyTradingValue wtv2= itr.next();
+		while (itr.hasNext()) {
+			WeeklyTradingValue wtv2 = itr.next();
 			String key = StockUtils.dateToSimpleString(wtv2.getTradingDate());
-			if(weeklyTvMap.containsKey(key)) {
+			if (weeklyTvMap.containsKey(key)) {
 				weeklyTvMap.remove(key);
-				//itr.remove() will remove the current iterated item from existingWtvList
-				itr.remove(); 
+				// itr.remove() will remove the current iterated item from existingWtvList
+				itr.remove();
 			}
 		}
 		// first remove the last item that is not the final 'week' stats data.
@@ -486,6 +570,18 @@ public class StockService {
 		weeklyTv.setTrustBuy(weeklyTv.getTrustBuy() + tv.getTrustBuy());
 		weeklyTv.setTrustSell(weeklyTv.getTrustSell() + tv.getTrustSell());
 		weeklyTv.setTrustDiff(weeklyTv.getTrustDiff() + tv.getTrustDiff());
+		
+		weeklyTv.setMarginBuy(weeklyTv.getMarginBuy() + tv.getMarginBuy());
+		weeklyTv.setMarginRedemp(weeklyTv.getMarginRedemp() + tv.getMarginRedemp());
+		weeklyTv.setMarginAcc(tv.getMarginAcc());
+		
+		weeklyTv.setMarginBuyValue(weeklyTv.getMarginBuyValue() + tv.getMarginBuyValue());
+		weeklyTv.setMarginRedempValue(weeklyTv.getMarginRedempValue() + tv.getMarginRedempValue());
+		weeklyTv.setMarginAccValue(tv.getMarginAccValue());
+
+		weeklyTv.setShortSell(weeklyTv.getShortSell() + tv.getShortSell());
+		weeklyTv.setShortRedemp(weeklyTv.getShortRedemp() + tv.getShortRedemp());
+		weeklyTv.setShortAcc(tv.getShortAcc());
 	}
 
 	public List<Date> getLatestNTradingDateDesc(int dateLength) {
