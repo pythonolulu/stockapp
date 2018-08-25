@@ -27,9 +27,10 @@ public class RoutineJob {
 				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
 				"extractMarginData", "calculateIndexStatsData"));
 		final String STOCK_GET_URL = "http://localhost:8080/stock/%s";
-		String strUrl = String.format(STOCK_GET_URL, "updateData");
-		//
-		ResponseMessage rm = doWork(strUrl);
+		String strUrl = null;
+		ResponseMessage rm = null;
+		strUrl = String.format(STOCK_GET_URL, "updateData");
+		rm = doWork(strUrl);
 		if (rm == null) {
 			System.out.println("Error running 'updateData' job.");
 			return;
@@ -37,6 +38,7 @@ public class RoutineJob {
 			System.out.println(rm);
 			return;
 		} else {
+
 			String text = rm.getText();
 			String latestTradingDate = text.substring(text.indexOf("***") + 3);
 			if (StockUtils.isFriday(StockUtils.stringSimpleToDate(latestTradingDate).get())) {

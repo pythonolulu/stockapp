@@ -81,25 +81,25 @@ public class TradingValue {
 	@Column(name = "foreign_diff", nullable = false)
 	private Double foreignDiff = 0.0;
 
-	@Column(name = "margin_buy", nullable = true)
+	@Column(name = "margin_buy", nullable = false)
 	private Double marginBuy = 0.0;
-	@Column(name = "margin_redemp", nullable = true)
+	@Column(name = "margin_redemp", nullable = false)
 	private Double marginRedemp = 0.0;
-	@Column(name = "margin_acc", nullable = true)
+	@Column(name = "margin_acc", nullable = false)
 	private Double marginAcc = 0.0;
 
-	@Column(name = "margin_buy_value", nullable = true)
+	@Column(name = "margin_buy_value", nullable = false)
 	private Double marginBuyValue = 0.0;
-	@Column(name = "margin_redemp_value", nullable = true)
+	@Column(name = "margin_redemp_value", nullable = false)
 	private Double marginRedempValue = 0.0;
-	@Column(name = "margin_acc_value", nullable = true)
+	@Column(name = "margin_acc_value", nullable = false)
 	private Double marginAccValue = 0.0;
 
-	@Column(name = "short_redemp", nullable = true)
+	@Column(name = "short_redemp", nullable = false)
 	private Double shortRedemp = 0.0;
-	@Column(name = "short_sell", nullable = true)
+	@Column(name = "short_sell", nullable = false)
 	private Double shortSell = 0.0;
-	@Column(name = "short_acc", nullable = true)
+	@Column(name = "short_acc", nullable = false)
 	private Double shortAcc = 0.0;
 
 	public TradingValue() {

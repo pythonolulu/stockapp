@@ -17,8 +17,7 @@ import java.util.Optional;
 
 import org.javatuples.Pair;
 import org.jsoup.nodes.Document;
-
-import com.javatican.stock.model.PortfolioItem;
+ 
 
 public class StockUtils {
 
@@ -33,7 +32,14 @@ public class StockUtils {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(theDate);
 		// dayOfWeek starts from 1(Sunday)
-		return cal.get(Calendar.DAY_OF_WEEK)==Calendar.FRIDAY;
+		return cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY;
+	}
+
+	public static int[] getYearMonthDay(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// dayOfWeek starts from 1(Sunday)
+		return new int[] { cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH) };
 	}
 
 	/**

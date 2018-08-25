@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.javatican.stock.service.CallWarrantTradeSummaryService;
 import com.javatican.stock.service.DealerTradeSummaryService;
 import com.javatican.stock.service.FinancialService;
+import com.javatican.stock.service.FutureService;
 import com.javatican.stock.service.MarginService;
 import com.javatican.stock.service.PutWarrantTradeSummaryService;
 import com.javatican.stock.service.StockItemService;
@@ -48,6 +49,8 @@ public class StockController {
 	private MarginService marginService;
 	@Autowired
 	private FinancialService financialService;
+	@Autowired
+	private FutureService futureService;
 
 	// @Autowired
 	// private ServletContext servletContext;

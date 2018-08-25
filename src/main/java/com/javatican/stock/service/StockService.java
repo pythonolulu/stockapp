@@ -266,7 +266,10 @@ public class StockService {
 	// throw new StockException(ex);
 	// }
 	// }
-	public void downloadAndSaveMargin() throws StockException {
+	/*
+	 * below are called once.
+	 */
+	private void downloadAndSaveMargin() throws StockException {
 		try {
 			List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
 			for (Date date : tradingDateList) {
