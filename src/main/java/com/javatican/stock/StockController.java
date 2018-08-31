@@ -48,10 +48,7 @@ public class StockController {
 	@Autowired
 	private MarginService marginService;
 	@Autowired
-	private FinancialService financialService;
-	@Autowired
-	private FutureService futureService;
-
+	private FinancialService financialService; 
 	// @Autowired
 	// private ServletContext servletContext;
 

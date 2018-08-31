@@ -1,24 +1,11 @@
 package com.javatican.stock.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.math3.stat.StatUtils;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -32,26 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockConfig;
 import com.javatican.stock.StockException;
-import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
 import com.javatican.stock.dao.FutureDataDAO;
-import com.javatican.stock.dao.PutWarrantTradeSummaryDAO;
-import com.javatican.stock.dao.StockItemDAO;
-import com.javatican.stock.dao.StockItemDataDAO;
-import com.javatican.stock.dao.StockPriceChangeDAO;
-import com.javatican.stock.dao.StockTradeByForeignDAO;
-import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.dao.TradingDateDAO;
-import com.javatican.stock.dao.TradingValueDAO;
-import com.javatican.stock.dao.WeeklyTradingValueDAO;
 import com.javatican.stock.model.FutureData;
-import com.javatican.stock.model.StockItem;
-import com.javatican.stock.model.StockItemData;
-import com.javatican.stock.model.StockPriceChange;
-import com.javatican.stock.model.StockTradeByForeign;
-import com.javatican.stock.model.StockTradeByTrust;
 import com.javatican.stock.model.TradingDate;
-import com.javatican.stock.model.TradingValue;
-import com.javatican.stock.model.WeeklyTradingValue;
 import com.javatican.stock.util.StockUtils;
 
 /* this service deals with downloading and saving trading date and total trading values
@@ -72,9 +43,22 @@ public class FutureService {
 	@Autowired
 	FutureDataDAO futureDataDAO;
 
-	public void downloadAndSaveFutureData() throws StockException {
+	public void updateData() throws StockException {
+		Date latest = futureDataDAO.getLatestTradingDate();
+		List<TradingDate> tdList = tradingDateDAO.findAfter(latest);
+		List<Date> dList = new ArrayList<>();
+		tdList.stream().forEach(item -> dList.add(item.getDate()));
+		downloadAndSaveFutureData(dList);
+	}
+
+	// below only call once
+	private void downloadAndSaveFutureData() throws StockException {
 		List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
-		for (Date date : tradingDateList) {
+		downloadAndSaveFutureData(tradingDateList);
+	}
+
+	private void downloadAndSaveFutureData(List<Date> tdList) throws StockException {
+		for (Date date : tdList) {
 			String dateString = StockUtils.dateToSimpleString(date);
 			int[] yearMonthDay = StockUtils.getYearMonthDay(date);
 			//
@@ -126,14 +110,14 @@ public class FutureService {
 				fd.setVolumeRegular2(Double.valueOf(tds.get(9).text()));
 				fd.setVolumeTotal2(Double.valueOf(tds.get(10).text()));
 				fd.setOpenInterest2(Double.valueOf(tds.get(12).text()));
-				//download other fields
+				// download other fields
 				downloadFutureData2(yearMonthDay, fd);
 				downloadFutureData3(yearMonthDay, fd);
 				futureDataDAO.save(fd);
 				try {
 					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
-				} 
+				}
 			} catch (Exception ex) {
 				throw new StockException(ex);
 			}
@@ -162,27 +146,27 @@ public class FutureService {
 				throw new StockException("no trs in dealer/trust/foreign html for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
-			//4th row : dealer
+			// 4th row : dealer
 			Element tr = trs.get(3);
-			Elements tds = tr.select("td"); 
+			Elements tds = tr.select("td");
 			fd.setDealerTradingLong(parse1(tds.get(3)));
 			fd.setDealerTradingShort(parse1(tds.get(5)));
 			fd.setDealerTradingNet(parse1(tds.get(7)));
 			fd.setDealerOpenLong(parse1(tds.get(9)));
 			fd.setDealerOpenShort(parse1(tds.get(11)));
 			fd.setDealerOpenNet(parse1(tds.get(13)));
-			//5th row: trust
+			// 5th row: trust
 			tr = trs.get(4);
-			tds = tr.select("td"); 
+			tds = tr.select("td");
 			fd.setTrustTradingLong(parse1(tds.get(1)));
 			fd.setTrustTradingShort(parse1(tds.get(3)));
 			fd.setTrustTradingNet(parse1(tds.get(5)));
 			fd.setTrustOpenLong(parse1(tds.get(7)));
 			fd.setTrustOpenShort(parse1(tds.get(9)));
 			fd.setTrustOpenNet(parse1(tds.get(11)));
-			//6th row: foreign
+			// 6th row: foreign
 			tr = trs.get(5);
-			tds = tr.select("td"); 
+			tds = tr.select("td");
 			fd.setForeignTradingLong(parse1(tds.get(1)));
 			fd.setForeignTradingShort(parse1(tds.get(3)));
 			fd.setForeignTradingNet(parse1(tds.get(5)));
@@ -201,12 +185,12 @@ public class FutureService {
 		reqParams.put("yytemp", String.valueOf(yearMonthDay[0]));
 		reqParams.put("mmtemp", String.valueOf(yearMonthDay[1]));
 		reqParams.put("ddtemp", String.valueOf(yearMonthDay[2]));
-		reqParams.put("chooseitemtemp","ALL");
+		reqParams.put("chooseitemtemp", "ALL");
 		reqParams.put("choose_yy", String.valueOf(yearMonthDay[0]));
 		reqParams.put("choose_mm", String.valueOf(yearMonthDay[1]));
 		reqParams.put("choose_dd", String.valueOf(yearMonthDay[2]));
 		reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
-		reqParams.put("choose_item","ALL");
+		reqParams.put("choose_item", "ALL");
 		//
 		Document doc;
 		try {
@@ -218,57 +202,61 @@ public class FutureService {
 				throw new StockException("no trs in html of top5/10 traders for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
-			//5th row : current month
+			// 5th row : current month
 			Element tr = trs.get(4);
-			Elements tds = tr.select("td"); 
-			fd.setBuyOiTop5(parse2(tds.get(1))); 
-			fd.setBuyRatioTop5(parse3(tds.get(2))); 
-			fd.setBuyOiTop10(parse2(tds.get(3))); 
-			fd.setBuyRatioTop10(parse3(tds.get(4)));  
-			fd.setSellOiTop5(parse2(tds.get(5))); 
-			fd.setSellRatioTop5(parse3(tds.get(6))); 
-			fd.setSellOiTop10(parse2(tds.get(7))); 
-			fd.setSellRatioTop10(parse3(tds.get(8)));  
-			fd.setTotalOi(parse4(tds.get(9)));  
-			//6th row: all contract
+			Elements tds = tr.select("td");
+			fd.setBuyOiTop5(parse2(tds.get(1)));
+			fd.setBuyRatioTop5(parse3(tds.get(2)));
+			fd.setBuyOiTop10(parse2(tds.get(3)));
+			fd.setBuyRatioTop10(parse3(tds.get(4)));
+			fd.setSellOiTop5(parse2(tds.get(5)));
+			fd.setSellRatioTop5(parse3(tds.get(6)));
+			fd.setSellOiTop10(parse2(tds.get(7)));
+			fd.setSellRatioTop10(parse3(tds.get(8)));
+			fd.setTotalOi(parse4(tds.get(9)));
+			// 6th row: all contract
 			tr = trs.get(5);
-			tds = tr.select("td"); 
-			fd.setBuyOiTop5All(parse2(tds.get(1))); 
-			fd.setBuyRatioTop5All(parse3(tds.get(2))); 
-			fd.setBuyOiTop10All(parse2(tds.get(3))); 
-			fd.setBuyRatioTop10All(parse3(tds.get(4)));  
-			fd.setSellOiTop5All(parse2(tds.get(5))); 
-			fd.setSellRatioTop5All(parse3(tds.get(6))); 
-			fd.setSellOiTop10All(parse2(tds.get(7))); 
-			fd.setSellRatioTop10All(parse3(tds.get(8)));  
-			fd.setTotalOiAll(parse4(tds.get(9)));  
-			 
+			tds = tr.select("td");
+			fd.setBuyOiTop5All(parse2(tds.get(1)));
+			fd.setBuyRatioTop5All(parse3(tds.get(2)));
+			fd.setBuyOiTop10All(parse2(tds.get(3)));
+			fd.setBuyRatioTop10All(parse3(tds.get(4)));
+			fd.setSellOiTop5All(parse2(tds.get(5)));
+			fd.setSellRatioTop5All(parse3(tds.get(6)));
+			fd.setSellOiTop10All(parse2(tds.get(7)));
+			fd.setSellRatioTop10All(parse3(tds.get(8)));
+			fd.setTotalOiAll(parse4(tds.get(9)));
+
 		} catch (Exception ex) {
 			throw new StockException(ex);
 		}
 
 	}
+
 	private Double parse1(Element e) {
 		String text = e.select("div > font").text();
 		Double d = Double.valueOf(StockUtils.removeCommaInNumber(text));
 		return d;
-		
+
 	}
+
 	private Double parse2(Element e) {
 		String text = e.select("div").text();
 		String data = text.substring(0, text.indexOf("("));
 		Double d = Double.valueOf(StockUtils.removeCommaInNumber(data));
 		return d;
 	}
+
 	private Double parse3(Element e) {
 		String text = e.select("div").text();
 		String data = text.substring(0, text.indexOf("%"));
 		Double d = Double.valueOf(StockUtils.removeCommaInNumber(data));
-		return d;	
+		return d;
 	}
+
 	private Double parse4(Element e) {
-		String text = e.select("div").text(); 
+		String text = e.select("div").text();
 		Double d = Double.valueOf(StockUtils.removeCommaInNumber(text));
-		return d;	
+		return d;
 	}
 }

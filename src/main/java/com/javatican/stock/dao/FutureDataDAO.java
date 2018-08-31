@@ -37,4 +37,7 @@ public class FutureDataDAO {
 		futureDataRepository.saveAll(fdList);
 	}
 
+	public Date getLatestTradingDate() {
+		return futureDataRepository.getLatestTradingDate();
+	}
 }
