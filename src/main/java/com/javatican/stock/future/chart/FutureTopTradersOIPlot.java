@@ -38,39 +38,40 @@ public class FutureTopTradersOIPlot {
 	}
 
 	private XYPlot createPlot() {
-		TimeSeriesCollection foDataset = createOIDataset();
+		TimeSeriesCollection dataset1 = createOIDataset();
 		// foreign OI axis
-		NumberAxis foAxis = new NumberAxis("未平仓(口)");
-		foAxis.setAutoRangeIncludesZero(true);
+		NumberAxis axis1 = new NumberAxis("未平仓(口)");
+		axis1.setAutoRangeIncludesZero(true);
 		// Set to no decimal
-		foAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
+		axis1.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// OI renderer
-		XYLineAndShapeRenderer foRenderer = new XYLineAndShapeRenderer();
-		foRenderer.setDefaultShapesVisible(true);
-		foRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(0, Color.MAGENTA);
-		foRenderer.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
-		foRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(1, Color.GREEN);
-		foRenderer.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
-		foRenderer.setSeriesStroke(2, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(2, Color.BLACK);
-		foRenderer.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+		renderer1.setDefaultShapesVisible(true);
+		renderer1.setSeriesStroke(0, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(0, Color.MAGENTA);
+		renderer1.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesStroke(1, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(1, Color.GREEN);
+		renderer1.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesStroke(2, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(2, Color.BLACK);
+		renderer1.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
 		//
-		foRenderer.setSeriesStroke(3, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(3, Color.RED);
-		foRenderer.setSeriesShape(3, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
-		foRenderer.setSeriesStroke(4, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(4, Color.ORANGE);
-		foRenderer.setSeriesShape(4, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
-		foRenderer.setSeriesStroke(5, new BasicStroke(1.0f));
-		foRenderer.setSeriesPaint(5, Color.BLUE);
-		foRenderer.setSeriesShape(5, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesStroke(3, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(3, Color.RED);
+		renderer1.setSeriesShape(3, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesStroke(4, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(4, Color.ORANGE);
+		renderer1.setSeriesShape(4, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesStroke(5, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(5, Color.BLUE);
+		renderer1.setSeriesShape(5, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setDefaultSeriesVisibleInLegend(false); 
 		// Create foreign Subplot
-		XYPlot foSubplot = new XYPlot(foDataset, null, foAxis, foRenderer);
-		foSubplot.setRangeAxisLocation(0, AxisLocation.BOTTOM_OR_RIGHT);
-		foSubplot.setBackgroundPaint(Color.WHITE);
-		return foSubplot;
+		XYPlot subplot = new XYPlot(dataset1, null, axis1, renderer1);
+		subplot.setRangeAxisLocation(0, AxisLocation.BOTTOM_OR_RIGHT);
+		subplot.setBackgroundPaint(Color.WHITE);
+		return subplot;
 	}
 
 	private TimeSeriesCollection createOIDataset() {

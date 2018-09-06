@@ -17,7 +17,6 @@ import java.util.Optional;
 
 import org.javatuples.Pair;
 import org.jsoup.nodes.Document;
- 
 
 public class StockUtils {
 
@@ -38,8 +37,41 @@ public class StockUtils {
 	public static int[] getYearMonthDay(Date theDate) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(theDate);
-		// dayOfWeek starts from 1(Sunday)
+		// month start from 0(for January)
 		return new int[] { cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH) };
+	}
+
+	public static int getWeekOfMonth(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// weekOfMonth starts from 1
+		return cal.get(Calendar.WEEK_OF_MONTH);
+	}
+
+	public static int getDayOfWeek(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// dayOfWeek starts from 0(for Sunday)
+		return cal.get(Calendar.DAY_OF_WEEK);
+	}
+
+	/*
+	 * below function is to return the next coming Wednesday. For example, if current
+	 * day is Sunday to Tuesday, it will return the Wednesday of the current week.
+	 * If current day is Wednesday to Saturday, it will return the Wednesday of next
+	 * week.
+	 */
+	public static Date getNextComingWednesday(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// dayOfWeek starts from 0(for Sunday)
+		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		if (dayOfWeek < 3) {
+			cal.add(Calendar.DAY_OF_MONTH, 3 - dayOfWeek);
+		} else {
+			cal.add(Calendar.DAY_OF_MONTH, 10 - dayOfWeek);
+		}
+		return cal.getTime();
 	}
 
 	/**

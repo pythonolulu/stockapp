@@ -82,8 +82,8 @@ public class FutureService {
 				doc = Jsoup.connect(FUTURE_TRADING_POST_URL).data(reqParams).timeout(0).post();
 				Elements tables = doc.select("table.table_f");
 				if (tables == null || tables.isEmpty()) {
-					logger.warn("no table_f in html for date:" + date);
-					throw new StockException("no table_f in html for date:" + date);
+					logger.warn("no table_f in future html for date:" + date);
+					throw new StockException("no table_f in future html for date:" + date);
 				}
 				//
 				Elements trs = tables.get(0).select("tbody > tr");
@@ -141,9 +141,9 @@ public class FutureService {
 			doc = Jsoup.connect(FUTURE_TRADING2_POST_URL).data(reqParams).timeout(0).post();
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
-				logger.warn("no trs in dealer/trust/foreign html for date:"
+				logger.warn("no trs in dealer/trust/foreign future html for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
-				throw new StockException("no trs in dealer/trust/foreign html for date:"
+				throw new StockException("no trs in dealer/trust/foreign future html for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// 4th row : dealer
@@ -197,9 +197,9 @@ public class FutureService {
 			doc = Jsoup.connect(FUTURE_TRADING3_POST_URL).data(reqParams).timeout(0).post();
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
-				logger.warn("no trs in html of top5/10 traders for date:"
+				logger.warn("no trs in future html of top5/10 traders for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
-				throw new StockException("no trs in html of top5/10 traders for date:"
+				throw new StockException("no trs in future html of top5/10 traders for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// 5th row : current month
