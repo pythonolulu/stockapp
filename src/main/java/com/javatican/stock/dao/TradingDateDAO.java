@@ -42,6 +42,10 @@ public class TradingDateDAO {
 	public List<TradingDate> findBetween(Date begin, Date end) {
 		return tradingDateRepository.findByDateBetween(begin, end);
 	}
+	public List<Date> findDateByDateBetween(Date begin, Date end){
+		return tradingDateRepository.findDateByDateBetween(begin, end);
+	}
+
 
 	public List<TradingDate> findAfter(Date date) {
 		return tradingDateRepository.findByDateAfter(date);

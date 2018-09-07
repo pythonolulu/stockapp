@@ -181,7 +181,7 @@ public class OptionData {
 	private Double putForeignOpenNet;
 	@Column(name = "put_foreign_open_value_net", nullable = true)
 	private Double putForeignOpenValueNet;
-	//
+	// current week data may be empty(the trading days within the 3rd week)
 	// call option : current week contract
 	// call option ： top5
 	@Column(name = "call_buy_oi_top5_week", nullable = true)

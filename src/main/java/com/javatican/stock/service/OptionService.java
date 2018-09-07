@@ -58,7 +58,9 @@ public class OptionService {
 
 	// below only call once
 	public void downloadAndSaveOptionData() throws StockException {
-		List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
+		// List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
+		List<Date> tradingDateList = tradingDateDAO.findDateByDateBetween(
+				StockUtils.stringSimpleToDate("20180401").get(), StockUtils.stringSimpleToDate("20180831").get());
 		downloadAndSaveOptionData(tradingDateList);
 	}
 
@@ -91,7 +93,7 @@ public class OptionService {
 					throw new StockException("no table_c tr element in option html for date:" + date);
 				}
 				String[] contractNames = this.getContractName(trs);
-				String weekContract = contractNames[0];
+				String weekContract = contractNames[0]; // maybe null
 				String currentMonthContract = contractNames[1];
 				String nextMonthContract = contractNames[2];
 				//
@@ -123,9 +125,9 @@ public class OptionService {
 					String contractName = parseSimple3(tds.get(1));
 					//
 					OptionSeriesData osd = new OptionSeriesData(date, strikePrice, isCallOption,
-							weekContract.equals(contractName), currentMonthContract.equals(contractName),
+							contractName.equals(weekContract), currentMonthContract.equals(contractName),
 							nextMonthContract.equals(contractName));
-					osdList.add(osd); 
+					osdList.add(osd);
 					osd.setOpen(parseSimple1(tds.get(4)));
 					osd.setHigh(parseSimple1(tds.get(5)));
 					osd.setLow(parseSimple1(tds.get(6)));
@@ -150,7 +152,6 @@ public class OptionService {
 					Thread.sleep(stockConfig.getSleepTime());
 				} catch (InterruptedException ex) {
 				}
-				break;
 			} catch (Exception ex) {
 				ex.printStackTrace();
 				throw new StockException(ex);
@@ -298,14 +299,17 @@ public class OptionService {
 				throw new StockException("no trs in option html of top5/10 traders for date:"
 						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
+			// current week data may be empty(the trading days within the 3rd week)
 			// 4th row : call option, current week
 			Element tr = trs.get(3);
 			Elements tds = tr.select("td");
-			od.setCallBuyOiTop5Week(parse3(tds.get(2)));
-			od.setCallBuyOiTop10Week(parse3(tds.get(4)));
-			od.setCallSellOiTop5Week(parse3(tds.get(6)));
-			od.setCallSellOiTop10Week(parse3(tds.get(8)));
-			od.setCallTotalOiWeek(parse4(tds.get(10)));
+			if (!parseSimple3(tds.get(1)).contains("-")) {
+				od.setCallBuyOiTop5Week(parse3(tds.get(2)));
+				od.setCallBuyOiTop10Week(parse3(tds.get(4)));
+				od.setCallSellOiTop5Week(parse3(tds.get(6)));
+				od.setCallSellOiTop10Week(parse3(tds.get(8)));
+				od.setCallTotalOiWeek(parse4(tds.get(10)));
+			}
 			// 5th row : call option, current month
 			tr = trs.get(4);
 			tds = tr.select("td");
@@ -322,14 +326,17 @@ public class OptionService {
 			od.setCallSellOiTop5All(parse3(tds.get(5)));
 			od.setCallSellOiTop10All(parse3(tds.get(7)));
 			od.setCallTotalOiAll(parse4(tds.get(9)));
+			// current week data may be empty(the trading days within the 3rd week)
 			// 7th row : put option, current week
 			tr = trs.get(6);
 			tds = tr.select("td");
-			od.setPutBuyOiTop5Week(parse3(tds.get(2)));
-			od.setPutBuyOiTop10Week(parse3(tds.get(4)));
-			od.setPutSellOiTop5Week(parse3(tds.get(6)));
-			od.setPutSellOiTop10Week(parse3(tds.get(8)));
-			od.setPutTotalOiWeek(parse4(tds.get(10)));
+			if (!parseSimple3(tds.get(1)).contains("-")) {
+				od.setPutBuyOiTop5Week(parse3(tds.get(2)));
+				od.setPutBuyOiTop10Week(parse3(tds.get(4)));
+				od.setPutSellOiTop5Week(parse3(tds.get(6)));
+				od.setPutSellOiTop10Week(parse3(tds.get(8)));
+				od.setPutTotalOiWeek(parse4(tds.get(10)));
+			}
 			// 8th row : put option, current month
 			tr = trs.get(7);
 			tds = tr.select("td");
@@ -416,10 +423,11 @@ public class OptionService {
 		TreeSet<String> uniqueContractNames = new TreeSet<>();
 		for (int i = 1; i < trs.size() - 2; i++) {
 			Element tr = trs.get(i);
-			Elements tds = tr.select("td"); 
+			Elements tds = tr.select("td");
 			uniqueContractNames.add(tds.get(1).text());
 		}
-		String weekContract = null;
+		String weekContract = null; // note that weekContract can be null, for example, when the trading days are
+									// within the 3rd week period.
 		String currentMonthContract = null;
 		String nextMonthContract = null;
 		for (String contract : uniqueContractNames) {
@@ -439,9 +447,10 @@ public class OptionService {
 		return new String[] { weekContract, currentMonthContract, nextMonthContract };
 	}
 
+	// weekContract maybe null
 	private boolean toSaveItem(String weekContract, String currentMonthContract, String nextMonthContract,
 			String contractMonthOrWeek, Double volumeRegular) {
-		if (weekContract.equals(contractMonthOrWeek) || currentMonthContract.equals(contractMonthOrWeek)
+		if (contractMonthOrWeek.equals(weekContract) || currentMonthContract.equals(contractMonthOrWeek)
 				|| nextMonthContract.equals(contractMonthOrWeek)) {
 			if (volumeRegular == 0) {
 				return false;

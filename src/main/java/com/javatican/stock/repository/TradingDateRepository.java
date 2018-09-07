@@ -14,13 +14,16 @@ public interface TradingDateRepository extends JpaRepository<TradingDate, Long> 
 
 	@Query("select t.date from TradingDate t order by t.date desc ")
 	List<Date> findLatestNTradingDateDesc(Pageable pageable);
-	
+
 	@Query("select t.date from TradingDate t order by t.date asc ")
 	List<Date> findAllTradingDate();
 
 	boolean existsByDate(Date date);
 
 	List<TradingDate> findByDateBetween(Date begin, Date end);
+
+	@Query("select t.date from TradingDate t where t.date>=?1 and t.date<=?2 order by t.date asc")
+	List<Date> findDateByDateBetween(Date begin, Date end);
 
 	List<TradingDate> findByDateAfter(Date date);
 }
