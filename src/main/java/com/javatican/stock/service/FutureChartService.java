@@ -28,9 +28,12 @@ import com.javatican.stock.future.chart.FutureOINextMonthPlot;
 import com.javatican.stock.future.chart.FutureOIPlot;
 import com.javatican.stock.future.chart.FutureOthersOIPlot;
 import com.javatican.stock.future.chart.FuturePricePlot;
+import com.javatican.stock.future.chart.FutureTopTradersCurrentMonthOINetPlot;
 import com.javatican.stock.future.chart.FutureTopTradersCurrentMonthOIPlot;
+import com.javatican.stock.future.chart.FutureTopTradersOINetPlot;
 import com.javatican.stock.future.chart.FutureTopTradersOIPlot;
 import com.javatican.stock.future.chart.FutureTrustOIPlot;
+import com.javatican.stock.util.StockChartUtils;
 
 @Service("futureChartService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
@@ -59,6 +62,11 @@ public class FutureChartService {
 	private FutureTopTradersCurrentMonthOIPlot futureTopTradersCurrentMonthOIPlot;
 	@Autowired
 	private FutureTopTradersOIPlot futureTopTradersOIPlot;
+
+	@Autowired
+	private FutureTopTradersOINetPlot futureTopTradersOINetPlot;
+	@Autowired
+	private FutureTopTradersCurrentMonthOINetPlot futureTopTradersCurrentMonthOINetPlot;
 
 	public boolean createGraph(boolean force, String dateString) {
 		StockChartUtil sc = new StockChartUtil(dateString);
@@ -135,8 +143,10 @@ public class FutureChartService {
 			XYPlot trustSubplot = (XYPlot) futureTrustOIPlot.getPlot();
 			XYPlot dealerSubplot = (XYPlot) futureDealerOIPlot.getPlot();
 			XYPlot othersSubplot = (XYPlot) futureOthersOIPlot.getPlot();
-			XYPlot topTradersCurrentMonthSubplot = (XYPlot) futureTopTradersCurrentMonthOIPlot.getPlot();
-			XYPlot topTradersSubplot = (XYPlot) futureTopTradersOIPlot.getPlot();
+			XYPlot topTradersCurrentMonthOiSubplot = (XYPlot) futureTopTradersCurrentMonthOIPlot.getPlot();
+			XYPlot topTradersCurrentMonthOiNetSubplot = (XYPlot) futureTopTradersCurrentMonthOINetPlot.getPlot();
+			XYPlot topTradersOiSubplot = (XYPlot) futureTopTradersOIPlot.getPlot();
+			XYPlot topTradersOiNetSubplot = (XYPlot) futureTopTradersOINetPlot.getPlot();
 
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
@@ -154,17 +164,21 @@ public class FutureChartService {
 			mainPlot.add(trustSubplot, 2);
 			mainPlot.add(dealerSubplot, 2);
 			mainPlot.add(othersSubplot, 2);
-			mainPlot.add(topTradersCurrentMonthSubplot, 2);
-			mainPlot.add(topTradersSubplot, 2);
+			mainPlot.add(topTradersCurrentMonthOiSubplot, 2);
+			mainPlot.add(topTradersCurrentMonthOiNetSubplot, 2);
+			mainPlot.add(topTradersOiSubplot, 2);
+			mainPlot.add(topTradersOiNetSubplot, 2);
 			//
-			showAnnotation(oiSubplot, x, "本月份");
-			showAnnotation(oiNextMonthSubplot, x, "下一月份");
-			showAnnotation(foreignSubplot, x, "外资买卖");
-			showAnnotation(trustSubplot, x, "投信买卖");
-			showAnnotation(dealerSubplot, x, "自营商买卖");
-			showAnnotation(othersSubplot, x, "其它买卖");
-			showAnnotation(topTradersCurrentMonthSubplot, x, "大额交易人买卖(本月)");
-			showAnnotation(topTradersSubplot, x, "大额交易人买卖(全)");
+			StockChartUtils.showAnnotation(oiSubplot, x, "本月份");
+			StockChartUtils.showAnnotation(oiNextMonthSubplot, x, "下一月份");
+			StockChartUtils.showAnnotation(foreignSubplot, x, "外资买卖");
+			StockChartUtils.showAnnotation(trustSubplot, x, "投信买卖");
+			StockChartUtils.showAnnotation(dealerSubplot, x, "自营商买卖");
+			StockChartUtils.showAnnotation(othersSubplot, x, "其它买卖");
+			StockChartUtils.showAnnotation(topTradersCurrentMonthOiSubplot, x, "大额交易人买卖(本月)");
+			StockChartUtils.showAnnotation(topTradersCurrentMonthOiNetSubplot, x, "大额交易人买卖差(本月)");
+			StockChartUtils.showAnnotation(topTradersOiSubplot, x, "大额交易人买卖(全)");
+			StockChartUtils.showAnnotation(topTradersOiNetSubplot, x, "大额交易人买卖差(全)");
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("Future chart : %s", dateString),
@@ -173,13 +187,6 @@ public class FutureChartService {
 			return chart;
 		}
 
-		private void showAnnotation(XYPlot p, double x, String text) {
-			Range r = p.getRangeAxis(0).getRange();
-			double y = (r.getLowerBound() + r.getUpperBound()) / 2;
-			final XYTextAnnotation annotation = new XYTextAnnotation(text, x, y);
-			annotation.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 24));
-			p.addAnnotation(annotation);
-		}
 
 	}
 }

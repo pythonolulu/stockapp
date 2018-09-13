@@ -5,12 +5,10 @@ import java.text.SimpleDateFormat;
 
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +30,7 @@ import com.javatican.stock.index.chart.IndexPricePlot;
 import com.javatican.stock.index.chart.IndexTrustTradeVolumePlot;
 import com.javatican.stock.index.chart.IndexVolumePlot;
 import com.javatican.stock.index.chart.SmaStatsPlot;
+import com.javatican.stock.util.StockChartUtils;
 
 @Service("indexChartService")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
@@ -163,14 +162,14 @@ public class IndexChartService {
 			mainPlot.add(marginShortSubplot, 2);
 			mainPlot.add(smaStatsSubplot, 2);
 //
-			showAnnotation(foreignSubplot, x, "外资买卖"); 
-			showAnnotation(trustSubplot, x, "投信买卖");
-			showAnnotation(dealerSubplot, x, "自营商买卖");
-			showAnnotation(dealerHedgeSubplot, x, "自营商避险买卖");
-			showAnnotation(marginBuyValueSubplot, x, "融资买卖金额");
-			showAnnotation(marginBuySubplot, x, "融资买卖");
-			showAnnotation(marginShortSubplot, x, "融券买卖");
-			showAnnotation(smaStatsSubplot, x, "均线统计");
+			StockChartUtils.showAnnotation(foreignSubplot, x, "外资买卖"); 
+			StockChartUtils.showAnnotation(trustSubplot, x, "投信买卖");
+			StockChartUtils.showAnnotation(dealerSubplot, x, "自营商买卖");
+			StockChartUtils.showAnnotation(dealerHedgeSubplot, x, "自营商避险买卖");
+			StockChartUtils.showAnnotation(marginBuyValueSubplot, x, "融资买卖金额");
+			StockChartUtils.showAnnotation(marginBuySubplot, x, "融资买卖");
+			StockChartUtils.showAnnotation(marginShortSubplot, x, "融券买卖");
+			StockChartUtils.showAnnotation(smaStatsSubplot, x, "均线统计");
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("Index chart : %s", dateString),
@@ -179,13 +178,6 @@ public class IndexChartService {
 			return chart;
 		}
 
-		private void showAnnotation(XYPlot p, double x, String text) {
-			Range r = p.getRangeAxis(0).getRange();
-			double y = (r.getLowerBound() + r.getUpperBound()) / 2;
-			final XYTextAnnotation annotation = new XYTextAnnotation(text, x, y);
-			annotation.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 24));
-			p.addAnnotation(annotation);
-		}
 
 	}
 }

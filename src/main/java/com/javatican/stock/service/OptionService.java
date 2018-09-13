@@ -57,10 +57,10 @@ public class OptionService {
 	}
 
 	// below only call once
-	public void downloadAndSaveOptionData() throws StockException {
+	private void downloadAndSaveOptionData() throws StockException {
 		// List<Date> tradingDateList = tradingDateDAO.findAllTradingDate();
 		List<Date> tradingDateList = tradingDateDAO.findDateByDateBetween(
-				StockUtils.stringSimpleToDate("20180401").get(), StockUtils.stringSimpleToDate("20180831").get());
+				StockUtils.stringSimpleToDate("20180901").get(), StockUtils.stringSimpleToDate("20180906").get());
 		downloadAndSaveOptionData(tradingDateList);
 	}
 
@@ -101,28 +101,24 @@ public class OptionService {
 				//
 				double callTradingVolume = 0.0;
 				double putTradingVolume = 0.0;
-				double callOi = 0.0;
-				double putOi = 0.0;
 				boolean isCallOption = false;
 				//
 				for (int i = 1; i < trs.size() - 2; i++) {
 					Element tr = trs.get(i);
 					Elements tds = tr.select("td");
 					isCallOption = parseCallOption(tds.get(3));
+					String contractName = parseSimple3(tds.get(1));
 					// accumulate volume and OI value
 					if (isCallOption) {
 						callTradingVolume += parseSimple1(tds.get(13));
-						callOi += parseSimple1(tds.get(14));
 					} else {
 						putTradingVolume += parseSimple1(tds.get(13));
-						putOi += parseSimple1(tds.get(14));
 					}
 					if (!toSaveItem(weekContract, currentMonthContract, nextMonthContract, parseSimple3(tds.get(1)),
 							parseSimple1(tds.get(12)))) {
 						continue;
 					}
 					int strikePrice = parseSimple2(tds.get(2));
-					String contractName = parseSimple3(tds.get(1));
 					//
 					OptionSeriesData osd = new OptionSeriesData(date, strikePrice, isCallOption,
 							contractName.equals(weekContract), currentMonthContract.equals(contractName),
@@ -142,11 +138,11 @@ public class OptionService {
 				OptionData od = new OptionData(date);
 				od.setCallTradingVolume(callTradingVolume);
 				od.setPutTradingVolume(putTradingVolume);
-				od.setCallOi(callOi);
-				od.setPutOi(putOi);
 				// download other fields
 				downloadOptionData2(yearMonthDay, od);
 				downloadOptionData3(yearMonthDay, od);
+				od.setCallOi(od.getCallTotalOiAll());
+				od.setPutOi(od.getPutTotalOiAll());
 				optionDataDAO.save(od);
 				try {
 					Thread.sleep(stockConfig.getSleepTime());
@@ -360,6 +356,7 @@ public class OptionService {
 
 	}
 
+
 	private Double parse1(Element e) {
 		String text = e.select("font").text();
 		Double d = Double.valueOf(StockUtils.removeCommaInNumber(text));
@@ -449,9 +446,9 @@ public class OptionService {
 
 	// weekContract maybe null
 	private boolean toSaveItem(String weekContract, String currentMonthContract, String nextMonthContract,
-			String contractMonthOrWeek, Double volumeRegular) {
-		if (contractMonthOrWeek.equals(weekContract) || currentMonthContract.equals(contractMonthOrWeek)
-				|| nextMonthContract.equals(contractMonthOrWeek)) {
+			String contractName, Double volumeRegular) {
+		if (contractName.equals(weekContract) || currentMonthContract.equals(contractName)
+				|| nextMonthContract.equals(contractName)) {
 			if (volumeRegular == 0) {
 				return false;
 			} else {

@@ -20,12 +20,14 @@ public class RoutineJob {
 
 	public static void main(String[] args) {
 		boolean toUpdateData = true;
+		boolean isFriday = false;
 		List<String> commandList = new ArrayList<>(Arrays.asList("updateTrustData", "updateForeignData",
 				"updatePerformers", "createStockPrices", "updateMissingPriceField", "updatePriceDataForAll",
 				"calculateAndSaveKDForAll", "updateCallWarrantData", "updatePutWarrantData", "updateDealerData",
 				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1", "prepareSmaSelectStrategy2",
 				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
-				"extractMarginData", "calculateIndexStatsData", "prepareSmaStatsData", "updateFutureData"));
+				"extractMarginData", "calculateIndexStatsData", "prepareSmaStatsData", "updateFutureData",
+				"updateOptionData"));
 		final String STOCK_GET_URL = "http://localhost:8080/stock/%s";
 		String strUrl = null;
 		ResponseMessage rm = null;
@@ -39,18 +41,16 @@ public class RoutineJob {
 				System.out.println(rm);
 				return;
 			} else {
-
 				String text = rm.getText();
 				String latestTradingDate = text.substring(text.indexOf("***") + 3);
-				if (StockUtils.isFriday(StockUtils.stringSimpleToDate(latestTradingDate).get())) {
-					//
-					System.out.println("Adding extra jobs on Friday");
-					commandList.add("calculateWeeklyIndexStatsData");
-					commandList.add("prepareWeeklyStockPriceForAll");
-					commandList.add("calculateAndSaveWeeklyKDForAll");
-				}
-
+				isFriday = StockUtils.isFriday(StockUtils.stringSimpleToDate(latestTradingDate).get());
 			}
+		}
+		if (isFriday) {//
+			System.out.println("Adding extra jobs on Friday");
+			commandList.add("calculateWeeklyIndexStatsData");
+			commandList.add("prepareWeeklyStockPriceForAll");
+			commandList.add("calculateAndSaveWeeklyKDForAll");
 		}
 		Set<String> finishedSet = new HashSet<>();
 		for (int i = 0; i < 3; i++) {

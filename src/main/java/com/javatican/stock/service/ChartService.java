@@ -45,6 +45,7 @@ import com.javatican.stock.model.StockItemData;
 import com.javatican.stock.model.StockItemLog;
 import com.javatican.stock.model.StockTradeByForeign;
 import com.javatican.stock.model.StockTradeByTrust;
+import com.javatican.stock.util.StockChartUtils;
 import com.javatican.stock.util.StockUtils;
 
 @Service("chartService")
@@ -236,28 +237,28 @@ public class ChartService {
 
 			if (cwss1Hp1Subplot != null) {
 				mainPlot.add(cwss1Hp1Subplot, 2);
-				showAnnotation(cwss1Hp1Subplot, x, "購權1日");
+				StockChartUtils.showAnnotation(cwss1Hp1Subplot, x, "購權1日");
 			}
 			if (cwss1Hp3Subplot != null) {
 				mainPlot.add(cwss1Hp3Subplot, 2);
-				showAnnotation(cwss1Hp3Subplot, x, "購權3日");
+				StockChartUtils.showAnnotation(cwss1Hp3Subplot, x, "購權3日");
 			}
 			if (cwss1Hp5Subplot != null) {
 				mainPlot.add(cwss1Hp5Subplot, 2);
-				showAnnotation(cwss1Hp5Subplot, x, "購權5日");
+				StockChartUtils.showAnnotation(cwss1Hp5Subplot, x, "購權5日");
 			}
 			//
 			if (pwss1Hp1Subplot != null) {
 				mainPlot.add(pwss1Hp1Subplot, 2);
-				showAnnotation(pwss1Hp1Subplot, x, "售權1日");
+				StockChartUtils.showAnnotation(pwss1Hp1Subplot, x, "售權1日");
 			}
 			if (pwss1Hp3Subplot != null) {
 				mainPlot.add(pwss1Hp3Subplot, 2);
-				showAnnotation(pwss1Hp3Subplot, x, "售權3日");
+				StockChartUtils.showAnnotation(pwss1Hp3Subplot, x, "售權3日");
 			}
 			if (pwss1Hp5Subplot != null) {
 				mainPlot.add(pwss1Hp5Subplot, 2);
-				showAnnotation(pwss1Hp5Subplot, x, "售權5日");
+				StockChartUtils.showAnnotation(pwss1Hp5Subplot, x, "售權5日");
 			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
@@ -305,40 +306,40 @@ public class ChartService {
 			mainPlot.add(volumeSubplot, 2);
 			if (ftvSubplot != null) {
 				mainPlot.add(ftvSubplot, 2);
-				showAnnotation(ftvSubplot, x, "外资买卖");
+				StockChartUtils.showAnnotation(ftvSubplot, x, "外资买卖");
 			}
 			if (ttvSubplot != null) {
 				mainPlot.add(ttvSubplot, 2);
-				showAnnotation(ttvSubplot, x, "投信买卖");
+				StockChartUtils.showAnnotation(ttvSubplot, x, "投信买卖");
 			}
 			if (mbSubplot != null) {
 				mainPlot.add(mbSubplot, 2);
-				showAnnotation(mbSubplot, x, "融资馀额");
+				StockChartUtils.showAnnotation(mbSubplot, x, "融资馀额");
 			}
 			if (mssSubplot != null) {
 				mainPlot.add(mssSubplot, 2);
-				showAnnotation(mssSubplot, x, "融券馀额");
+				StockChartUtils.showAnnotation(mssSubplot, x, "融券馀额");
 			}
 			if (sblSubplot != null) {
 				mainPlot.add(sblSubplot, 2);
-				showAnnotation(sblSubplot, x, "借券馀额");
+				StockChartUtils.showAnnotation(sblSubplot, x, "借券馀额");
 			}
 			if (cwtvSubplot != null) {
 				mainPlot.add(cwtvSubplot, 2);
-				showAnnotation(cwtvSubplot, x, "認購交易");
+				StockChartUtils.showAnnotation(cwtvSubplot, x, "認購交易");
 			}
 			if (ictvSubplot != null) {
 				mainPlot.add(ictvSubplot, 2);
-				showAnnotation(ictvSubplot, x, "認購买卖");
+				StockChartUtils.showAnnotation(ictvSubplot, x, "認購买卖");
 			}
 			//
 			if (pwtvSubplot != null) {
 				mainPlot.add(pwtvSubplot, 2);
-				showAnnotation(pwtvSubplot, x, "認售交易");
+				StockChartUtils.showAnnotation(pwtvSubplot, x, "認售交易");
 			}
 			if (iptvSubplot != null) {
 				mainPlot.add(iptvSubplot, 2);
-				showAnnotation(iptvSubplot, x, "認售买卖");
+				StockChartUtils.showAnnotation(iptvSubplot, x, "認售买卖");
 			}
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
@@ -347,15 +348,7 @@ public class ChartService {
 			// chart.removeLegend();
 			return chart;
 		}
-
-		private void showAnnotation(XYPlot p, double x, String text) {
-			Range r = p.getRangeAxis(0).getRange();
-			double y = (r.getLowerBound() + r.getUpperBound()) / 2;
-			final XYTextAnnotation annotation = new XYTextAnnotation(text, x, y);
-			annotation.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 24));
-
-			p.addAnnotation(annotation);
-		}
+ 
 
 	}
 }
