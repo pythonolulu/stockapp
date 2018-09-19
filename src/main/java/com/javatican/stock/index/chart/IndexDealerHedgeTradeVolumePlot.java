@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("idhtvPlot")
 public class IndexDealerHedgeTradeVolumePlot {
@@ -52,6 +53,7 @@ public class IndexDealerHedgeTradeVolumePlot {
 		dtvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// Create trust trade volume chart renderer
 		XYBarRenderer dtvRenderer = new XYBarRenderer();
+		dtvRenderer.setDefaultSeriesVisibleInLegend(false);
 		dtvRenderer.setShadowVisible(false);
 		dtvRenderer.setSeriesPaint(0, Color.ORANGE);
 		dtvRenderer.setSeriesPaint(1, Color.LIGHT_GRAY);
@@ -62,16 +64,16 @@ public class IndexDealerHedgeTradeVolumePlot {
 		dtvSubplot.setDataset(1, dtnvDataset);
 		//
 		XYLineAndShapeRenderer dtnvRenderer = new XYLineAndShapeRenderer();
+		dtnvRenderer.setDefaultSeriesVisibleInLegend(false);
 		dtnvRenderer.setSeriesPaint(0, Color.RED);
 		dtnvRenderer.setSeriesLinesVisible(0, false);
 		dtnvRenderer.setSeriesShapesVisible(0, true);
-		dtnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		dtnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		dtnvRenderer.setSeriesPaint(1, Color.BLUE);
 		dtnvRenderer.setSeriesLinesVisible(1, false);
-		dtnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		dtnvRenderer.setSeriesShape(1, tri);
+		dtnvRenderer.setSeriesShapesVisible(1, true); 
+		dtnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		dtvSubplot.setRenderer(1, dtnvRenderer);
 		// 2nd axis
 		NumberAxis dabvAxis = new NumberAxis("自营商避险累积净买(10亿)");
@@ -84,9 +86,10 @@ public class IndexDealerHedgeTradeVolumePlot {
 		dtvSubplot.mapDatasetToRangeAxis(2, 1);
 		// 3rd renderer
 		XYLineAndShapeRenderer dabvRenderer = new XYLineAndShapeRenderer();
+		dabvRenderer.setDefaultSeriesVisibleInLegend(false);
 		dabvRenderer.setDefaultShapesVisible(false);
 		dabvRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		dabvRenderer.setSeriesPaint(0, Color.MAGENTA);
+		dabvRenderer.setSeriesPaint(0, Color.BLACK);
 		dtvSubplot.setRenderer(2, dabvRenderer);
 		dtvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return dtvSubplot;
@@ -94,8 +97,8 @@ public class IndexDealerHedgeTradeVolumePlot {
 
 	private TimeSeriesCollection createDealerTradeVolumeDataset() {
 		TimeSeriesCollection dtvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("自营商避险买");
-		TimeSeries series2 = new TimeSeries("自营商避险卖");
+		TimeSeries series1 = new TimeSeries("买");
+		TimeSeries series2 = new TimeSeries("卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getDealerHedgeBuy() / 1000000000);
@@ -109,8 +112,8 @@ public class IndexDealerHedgeTradeVolumePlot {
 
 	private TimeSeriesCollection createDealerTradeNetVolumeDataset() {
 		TimeSeriesCollection dtnvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("自营商避险净买");
-		TimeSeries series2 = new TimeSeries("自营商避险净卖");
+		TimeSeries series1 = new TimeSeries("净买");
+		TimeSeries series2 = new TimeSeries("净卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			double amount = tv.getDealerHedgeDiff();
@@ -128,7 +131,7 @@ public class IndexDealerHedgeTradeVolumePlot {
 
 	private TimeSeriesCollection createDealerAccumulateBuyVolumeDataset() {
 		TimeSeriesCollection dabvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("自营商避险累积净买");
+		TimeSeries series1 = new TimeSeries("累积净买");
 		// add data
 		double prevSum = 0.0;
 		for (TradingValue tv : tvList) {

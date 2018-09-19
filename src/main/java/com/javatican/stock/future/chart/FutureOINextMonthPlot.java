@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.FutureDataDAO;
 import com.javatican.stock.model.FutureData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("futureOINextMonthPlot")
 public class FutureOINextMonthPlot {
@@ -55,7 +56,7 @@ public class FutureOINextMonthPlot {
 		oiRenderer.setSeriesPaint(0, Color.BLUE);
 		oiRenderer.setSeriesLinesVisible(0, true);
 		oiRenderer.setSeriesShapesVisible(0, true);
-		oiRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		oiRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		oiRenderer.setDefaultSeriesVisibleInLegend(false);  
 		// Create volume chart renderer
 		StackedXYBarRenderer volumeRenderer = new StackedXYBarRenderer(0.15);

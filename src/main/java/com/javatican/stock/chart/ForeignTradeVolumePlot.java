@@ -27,6 +27,7 @@ import com.javatican.stock.dao.StockTradeByForeignDAO;
 import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByForeign;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ftvPlot")
 public class ForeignTradeVolumePlot implements JPlot {
@@ -70,13 +71,12 @@ public class ForeignTradeVolumePlot implements JPlot {
 		ftnvRenderer.setSeriesPaint(0, Color.RED);
 		ftnvRenderer.setSeriesLinesVisible(0, false);
 		ftnvRenderer.setSeriesShapesVisible(0, true);
-		ftnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		ftnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		ftnvRenderer.setSeriesPaint(1, Color.BLUE);
 		ftnvRenderer.setSeriesLinesVisible(1, false);
 		ftnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		ftnvRenderer.setSeriesShape(1, tri);
+		ftnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		ftvSubplot.setRenderer(1, ftnvRenderer);
 		// 2nd axis
 		NumberAxis fabvAxis = new NumberAxis("外资累积净买(千股)");

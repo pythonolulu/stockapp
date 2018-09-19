@@ -29,6 +29,7 @@ import com.javatican.stock.dao.MarginSblWithDateDAO;
 import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.MarginSblWithDate;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("sblPlot")
 public class SblPlot implements JPlot {
@@ -71,14 +72,12 @@ public class SblPlot implements JPlot {
 		sblnRenderer.setSeriesPaint(0, Color.RED);
 		sblnRenderer.setSeriesLinesVisible(0, false);
 		sblnRenderer.setSeriesShapesVisible(0, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		sblnRenderer.setSeriesShape(0, tri);
+		sblnRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
 		sblnRenderer.setSeriesPaint(1, Color.GRAY);
 		sblnRenderer.setSeriesLinesVisible(1, false);
 		sblnRenderer.setSeriesShapesVisible(1, true);
-		tri = ShapeUtils.createDownTriangle(1.5F);
-		sblnRenderer.setSeriesShape(1, tri);
+		sblnRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		sblSubplot.setRenderer(1, sblnRenderer);
 		// 2nd axis
 		NumberAxis sblaAxis = new NumberAxis("借券馀额(千股)");

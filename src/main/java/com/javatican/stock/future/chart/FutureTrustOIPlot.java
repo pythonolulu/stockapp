@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.FutureDataDAO;
 import com.javatican.stock.model.FutureData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ftoiPlot")
 public class FutureTrustOIPlot {
@@ -45,12 +46,12 @@ public class FutureTrustOIPlot {
 		TimeSeriesCollection toDataset = createTrustOiDataset();
 		TimeSeriesCollection tnvDataset = createTrustNetVolumeDataset();
 		TimeSeriesCollection tvDataset = createTrustVolumeDataset();
-		//trust OI axis
+		// trust OI axis
 		NumberAxis toAxis = new NumberAxis("投信未平仓(口)");
 		toAxis.setAutoRangeIncludesZero(true);
 		// Set to no decimal
 		toAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
-		//trust trade volume fvAxis
+		// trust trade volume fvAxis
 		NumberAxis tvAxis = new NumberAxis("投信交易量(口)");
 		tvAxis.setAutoRangeIncludesZero(true);
 		// Set to no decimal
@@ -60,43 +61,42 @@ public class FutureTrustOIPlot {
 		toRenderer.setDefaultShapesVisible(true);
 		toRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
 		toRenderer.setSeriesPaint(0, Color.MAGENTA);
-		toRenderer.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		toRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
 		toRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
 		toRenderer.setSeriesPaint(1, Color.GREEN);
-		toRenderer.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		toRenderer.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
 		toRenderer.setSeriesStroke(2, new BasicStroke(1.0f));
 		toRenderer.setSeriesPaint(2, Color.BLACK);
-		toRenderer.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
-		toRenderer.setDefaultSeriesVisibleInLegend(false); 
-		//net volume renderer
+		toRenderer.setSeriesShape(2, StockChartUtils.getSolidSphereShape());
+		toRenderer.setDefaultSeriesVisibleInLegend(false);
+		// net volume renderer
 		XYLineAndShapeRenderer tnvRenderer = new XYLineAndShapeRenderer();
 		tnvRenderer.setSeriesPaint(0, Color.RED);
 		tnvRenderer.setSeriesLinesVisible(0, false);
 		tnvRenderer.setSeriesShapesVisible(0, true);
-		tnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		tnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		tnvRenderer.setSeriesPaint(1, Color.BLUE);
 		tnvRenderer.setSeriesLinesVisible(1, false);
 		tnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		tnvRenderer.setSeriesShape(1, tri);
-		tnvRenderer.setDefaultSeriesVisibleInLegend(false); 
-		//volume renderer
+		tnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
+		tnvRenderer.setDefaultSeriesVisibleInLegend(false);
+		// volume renderer
 		XYBarRenderer tvRenderer = new XYBarRenderer();
 		tvRenderer.setShadowVisible(false);
 		tvRenderer.setSeriesPaint(0, Color.ORANGE);
 		tvRenderer.setSeriesPaint(1, Color.LIGHT_GRAY);
-		tvRenderer.setDefaultSeriesVisibleInLegend(false); 
+		tvRenderer.setDefaultSeriesVisibleInLegend(false);
 		// Create trust Subplot
 		XYPlot toSubplot = new XYPlot(toDataset, null, toAxis, toRenderer);
 		// 2nd dataset
 		toSubplot.setDataset(1, tnvDataset);
 		// 3rd dataset
 		toSubplot.setDataset(2, tvDataset);
-		//renderers: dataset 1 uses fnvRenderer, dataset 2 uses fvRenderer
+		// renderers: dataset 1 uses fnvRenderer, dataset 2 uses fvRenderer
 		toSubplot.setRenderer(1, tnvRenderer);
 		toSubplot.setRenderer(2, tvRenderer);
-		//2nd axis
+		// 2nd axis
 		toSubplot.setRangeAxis(1, tvAxis);
 		// map the 2nd dataset to 2nd axis
 		toSubplot.mapDatasetToRangeAxis(1, 1);

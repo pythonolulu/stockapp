@@ -1,5 +1,7 @@
 package com.javatican.stock;
 
+import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -21,7 +23,7 @@ import com.javatican.stock.util.StockUtils;
 @RequestMapping("stock/*")
 public class OptionController {
 
-	private final Logger logger = LoggerFactory.getLogger(this.getClass()); 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private StockService stockService;
 	@Autowired
@@ -46,10 +48,19 @@ public class OptionController {
 	}
 
 	@GetMapping("/getOptionChart")
-	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force) {
-		String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
-		optionChartService.createGraph(force, latestTradingDateString);
-		return new ModelAndView("redirect:" + "/stock/imgs/option_" + latestTradingDateString + ".png");
+	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
+		try {
+			Date dateSince = null;
+			if (dateSinceString != null) {
+				dateSince = StockUtils.stringSimpleToDate(dateSinceString).get();
+			}
+			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
+			optionChartService.createGraph(force, latestTradingDateString, dateSince);
+			return new ModelAndView("redirect:" + "/stock/imgs/option_" + latestTradingDateString + ".png");
+		} catch (Exception e) {
+			return new ModelAndView("stock/error");
+		}
 	}
 
 }

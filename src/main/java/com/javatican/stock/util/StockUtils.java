@@ -51,15 +51,45 @@ public class StockUtils {
 	public static int getDayOfWeek(Date theDate) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(theDate);
-		// dayOfWeek starts from 0(for Sunday)
+		// dayOfWeek starts from 1(for Sunday)
 		return cal.get(Calendar.DAY_OF_WEEK);
 	}
 
+	public static String getYearMonth(Date theDate) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(theDate);
+		// month start from 0(for January)
+		return Integer.toString(cal.get(Calendar.YEAR)) + (cal.get(Calendar.MONTH) + 1);
+	}
+
+	public static boolean isThirdWednesdayOfTheMonth(Date d) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(d);
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		int actualWeekOfMonth = (cal.get(Calendar.DAY_OF_WEEK) > Calendar.WEDNESDAY) ? 4 : 3;
+		return getWeekOfMonth(d) == actualWeekOfMonth && getDayOfWeek(d) == Calendar.WEDNESDAY;
+	}
+
+	public static boolean isThirdWednesdayOfTheMonthOrAfter(Date d) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(d);
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		int actualWeekOfMonth = (cal.get(Calendar.DAY_OF_WEEK) > Calendar.WEDNESDAY) ? 4 : 3;
+
+		if (getWeekOfMonth(d) > actualWeekOfMonth) {
+			return true;
+		} else if (getWeekOfMonth(d) == actualWeekOfMonth && getDayOfWeek(d) >= Calendar.WEDNESDAY) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/*
-	 * below function is to return the next coming Wednesday. For example, if current
-	 * day is Sunday to Tuesday, it will return the Wednesday of the current week.
-	 * If current day is Wednesday to Saturday, it will return the Wednesday of next
-	 * week.
+	 * below function is to return the next coming Wednesday. For example, if
+	 * current day is Sunday to Tuesday, it will return the Wednesday of the current
+	 * week. If current day is Wednesday to Saturday, it will return the Wednesday
+	 * of next week.
 	 */
 	public static Date getNextComingWednesday(Date theDate) {
 		Calendar cal = Calendar.getInstance();

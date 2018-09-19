@@ -24,6 +24,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.MarginSblWithDateDAO;
 import com.javatican.stock.model.MarginSblWithDate;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("mssPlot")
 public class MarginShortSellPlot implements JPlot {
@@ -66,14 +67,12 @@ public class MarginShortSellPlot implements JPlot {
 		mssnRenderer.setSeriesPaint(0, Color.RED);
 		mssnRenderer.setSeriesLinesVisible(0, false);
 		mssnRenderer.setSeriesShapesVisible(0, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		mssnRenderer.setSeriesShape(0, tri);
+		mssnRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
 		mssnRenderer.setSeriesPaint(1, Color.GRAY);
 		mssnRenderer.setSeriesLinesVisible(1, false);
 		mssnRenderer.setSeriesShapesVisible(1, true);
-		tri = ShapeUtils.createDownTriangle(1.5F);
-		mssnRenderer.setSeriesShape(1, tri);
+		mssnRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		mssSubplot.setRenderer(1, mssnRenderer);
 		// 2nd axis
 		NumberAxis mssaAxis = new NumberAxis("融券馀额(千股)");

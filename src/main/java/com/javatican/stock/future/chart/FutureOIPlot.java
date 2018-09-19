@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.FutureDataDAO;
 import com.javatican.stock.model.FutureData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("futureOIPlot")
 public class FutureOIPlot {
@@ -56,13 +57,13 @@ public class FutureOIPlot {
 		oiRenderer.setSeriesPaint(0, Color.BLUE);
 		oiRenderer.setSeriesLinesVisible(0, true);
 		oiRenderer.setSeriesShapesVisible(0, true);
-		oiRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
-		oiRenderer.setDefaultSeriesVisibleInLegend(true);  
+		oiRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
+		oiRenderer.setDefaultSeriesVisibleInLegend(true);
 		// Create volume chart renderer
 		StackedXYBarRenderer volumeRenderer = new StackedXYBarRenderer(0.15);
 		volumeRenderer.setDrawBarOutline(false);
 		volumeRenderer.setShadowVisible(false);
-		volumeRenderer.setDefaultSeriesVisibleInLegend(true);  
+		volumeRenderer.setDefaultSeriesVisibleInLegend(true);
 		volumeRenderer.setSeriesPaint(0, Color.RED);
 		volumeRenderer.setSeriesPaint(1, Color.GREEN);
 
@@ -79,7 +80,7 @@ public class FutureOIPlot {
 		volumeSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
 		return volumeSubplot;
 	}
- 
+
 	private TableXYDataset createVolumeDataset() {
 		TimeTableXYDataset volumeDataset = new TimeTableXYDataset();
 		for (FutureData fd : fdList) {
@@ -88,7 +89,6 @@ public class FutureOIPlot {
 		}
 		return volumeDataset;
 	}
- 
 
 	private TableXYDataset createOpenInterestDataset() {
 		TimeTableXYDataset oiDataset = new TimeTableXYDataset();

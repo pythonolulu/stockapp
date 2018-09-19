@@ -29,6 +29,10 @@ public class OptionDataDAO {
 		return optionDataRepository.findAllByOrderByTradingDate();
 	}
 
+	public List<OptionData> findAfter(Date d) {
+		return optionDataRepository.findAfterTradingDate(d);
+	}
+
 	public void save(OptionData optionData) {
 		optionDataRepository.save(optionData);
 	}

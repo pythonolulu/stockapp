@@ -25,13 +25,14 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("indexVolumePlot")
-public class IndexVolumePlot  {
+public class IndexVolumePlot {
 
 	@Autowired
 	TradingValueDAO tradingValueDAO;
- 
+
 	private List<TradingValue> tvList;
 
 	public Plot getPlot() throws StockException {
@@ -83,14 +84,13 @@ public class IndexVolumePlot  {
 		kdRenderer.setSeriesPaint(1, Color.PINK);
 		kdRenderer.setSeriesPaint(2, Color.BLACK);
 		kdRenderer.setSeriesLinesVisible(2, false);
-		kdRenderer.setSeriesShapesVisible(2, true); 
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		kdRenderer.setSeriesShape(2, tri);
+		kdRenderer.setSeriesShapesVisible(2, true);
+		kdRenderer.setSeriesShape(2, StockChartUtils.getUpTriangleShape());
 		kdRenderer.setSeriesVisibleInLegend(2, false);
 		kdRenderer.setSeriesPaint(3, Color.BLACK);
 		kdRenderer.setSeriesLinesVisible(3, false);
 		kdRenderer.setSeriesShapesVisible(3, true);
-		kdRenderer.setSeriesShape(3, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		kdRenderer.setSeriesShape(3, StockChartUtils.getSolidSphereShapeLarge());
 		kdRenderer.setSeriesVisibleInLegend(3, false);
 		volumeSubplot.setRenderer(1, kdRenderer);
 		volumeSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);

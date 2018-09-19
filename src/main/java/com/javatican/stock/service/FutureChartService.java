@@ -2,6 +2,8 @@ package com.javatican.stock.service;
 
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockException;
+import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.future.chart.FutureDealerOIPlot;
 import com.javatican.stock.future.chart.FutureForeignOIPlot;
 import com.javatican.stock.future.chart.FutureOINextMonthPlot;
@@ -44,6 +47,8 @@ public class FutureChartService {
 
 	@Autowired
 	private ResourceLoader resourceLoader;
+	@Autowired
+	private TradingDateDAO tradingDateDAO;
 	@Autowired
 	private FuturePricePlot futurePricePlot;
 	@Autowired
@@ -179,6 +184,21 @@ public class FutureChartService {
 			StockChartUtils.showAnnotation(topTradersCurrentMonthOiNetSubplot, x, "大额交易人买卖差(本月)");
 			StockChartUtils.showAnnotation(topTradersOiSubplot, x, "大额交易人买卖(全)");
 			StockChartUtils.showAnnotation(topTradersOiNetSubplot, x, "大额交易人买卖差(全)");
+
+			//
+			List<Date> futureClosingDateList = tradingDateDAO.getAllFutureClosingDates();
+			StockChartUtils.drawVerticalValueMarkersForDateList(candlestickSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(oiSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(oiNextMonthSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(foreignSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(trustSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(dealerSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(othersSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersCurrentMonthOiSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersCurrentMonthOiNetSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersOiSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersOiNetSubplot, futureClosingDateList);
+
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("Future chart : %s", dateString),
@@ -186,7 +206,6 @@ public class FutureChartService {
 			// chart.removeLegend();
 			return chart;
 		}
-
 
 	}
 }

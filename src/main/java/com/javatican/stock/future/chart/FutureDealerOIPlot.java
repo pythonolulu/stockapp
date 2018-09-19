@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.FutureDataDAO;
 import com.javatican.stock.model.FutureData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("fdoiPlot")
 public class FutureDealerOIPlot {
@@ -60,26 +61,25 @@ public class FutureDealerOIPlot {
 		doRenderer.setDefaultShapesVisible(true);
 		doRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
 		doRenderer.setSeriesPaint(0, Color.MAGENTA);
-		doRenderer.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		doRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
 		doRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
 		doRenderer.setSeriesPaint(1, Color.GREEN);
-		doRenderer.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		doRenderer.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
 		doRenderer.setSeriesStroke(2, new BasicStroke(1.0f));
 		doRenderer.setSeriesPaint(2, Color.BLACK);
-		doRenderer.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		doRenderer.setSeriesShape(2, StockChartUtils.getSolidSphereShape());
 		doRenderer.setDefaultSeriesVisibleInLegend(false); 
 		//net volume renderer
 		XYLineAndShapeRenderer dnvRenderer = new XYLineAndShapeRenderer();
 		dnvRenderer.setSeriesPaint(0, Color.RED);
 		dnvRenderer.setSeriesLinesVisible(0, false);
 		dnvRenderer.setSeriesShapesVisible(0, true);
-		dnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		dnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		dnvRenderer.setSeriesPaint(1, Color.BLUE);
 		dnvRenderer.setSeriesLinesVisible(1, false);
 		dnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		dnvRenderer.setSeriesShape(1, tri);
+		dnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		dnvRenderer.setDefaultSeriesVisibleInLegend(false); 
 		//volume renderer
 		XYBarRenderer dvRenderer = new XYBarRenderer();

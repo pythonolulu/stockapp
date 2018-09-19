@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("iftvPlot")
 public class IndexForeignTradeVolumePlot {
@@ -53,6 +54,7 @@ public class IndexForeignTradeVolumePlot {
 		ftvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// Create foreign trade volume chart renderer
 		XYBarRenderer ftvRenderer = new XYBarRenderer();
+		ftvRenderer.setDefaultSeriesVisibleInLegend(true);
 		ftvRenderer.setShadowVisible(false);
 		ftvRenderer.setSeriesPaint(0, Color.ORANGE);
 		ftvRenderer.setSeriesPaint(1, Color.LIGHT_GRAY);
@@ -63,16 +65,16 @@ public class IndexForeignTradeVolumePlot {
 		ftvSubplot.setDataset(1, ftnvDataset);
 		//
 		XYLineAndShapeRenderer ftnvRenderer = new XYLineAndShapeRenderer();
+		ftnvRenderer.setDefaultSeriesVisibleInLegend(true);
 		ftnvRenderer.setSeriesPaint(0, Color.RED);
 		ftnvRenderer.setSeriesLinesVisible(0, false);
 		ftnvRenderer.setSeriesShapesVisible(0, true);
-		ftnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		ftnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		ftnvRenderer.setSeriesPaint(1, Color.BLUE);
 		ftnvRenderer.setSeriesLinesVisible(1, false);
 		ftnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		ftnvRenderer.setSeriesShape(1, tri);
+		ftnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		ftvSubplot.setRenderer(1, ftnvRenderer);
 		// 2nd axis
 		NumberAxis fabvAxis = new NumberAxis("外资累积净买(10亿)");
@@ -85,9 +87,10 @@ public class IndexForeignTradeVolumePlot {
 		ftvSubplot.mapDatasetToRangeAxis(2, 1);
 		//3rd renderer
 		XYLineAndShapeRenderer fabvRenderer = new XYLineAndShapeRenderer();
+		fabvRenderer.setDefaultSeriesVisibleInLegend(true);
 		fabvRenderer.setDefaultShapesVisible(false);
 		fabvRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		fabvRenderer.setSeriesPaint(0, Color.MAGENTA);
+		fabvRenderer.setSeriesPaint(0, Color.BLACK);
 		ftvSubplot.setRenderer(2, fabvRenderer);
 		ftvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return ftvSubplot;
@@ -95,8 +98,8 @@ public class IndexForeignTradeVolumePlot {
 
 	private TimeSeriesCollection createForeignTradeVolumeDataset() {
 		TimeSeriesCollection ftvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("外资买");
-		TimeSeries series2 = new TimeSeries("外资卖");
+		TimeSeries series1 = new TimeSeries("买");
+		TimeSeries series2 = new TimeSeries("卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getForeignBuy() / 1000000000);
@@ -110,8 +113,8 @@ public class IndexForeignTradeVolumePlot {
 
 	private TimeSeriesCollection createForeignTradeNetVolumeDataset() {
 		TimeSeriesCollection ftnvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("外资净买");
-		TimeSeries series2 = new TimeSeries("外资净卖");
+		TimeSeries series1 = new TimeSeries("净买");
+		TimeSeries series2 = new TimeSeries("净卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			double amount = tv.getForeignDiff();
@@ -129,7 +132,7 @@ public class IndexForeignTradeVolumePlot {
 
 	private TimeSeriesCollection createForeignAccumulateBuyVolumeDataset() {
 		TimeSeriesCollection fabvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("外资累积净买");
+		TimeSeries series1 = new TimeSeries("累积净买");
 		// add data
 		double prevSum = 0.0;
 		for (TradingValue tv : tvList) {

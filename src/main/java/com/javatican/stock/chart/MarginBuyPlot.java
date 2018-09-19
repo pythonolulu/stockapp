@@ -27,6 +27,7 @@ import com.javatican.stock.dao.MarginSblWithDateDAO;
 import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.MarginSblWithDate;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("mbPlot")
 public class MarginBuyPlot implements JPlot {
@@ -69,14 +70,12 @@ public class MarginBuyPlot implements JPlot {
 		mbnRenderer.setSeriesPaint(0, Color.RED);
 		mbnRenderer.setSeriesLinesVisible(0, false);
 		mbnRenderer.setSeriesShapesVisible(0, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		mbnRenderer.setSeriesShape(0, tri);
+		mbnRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
 		mbnRenderer.setSeriesPaint(1, Color.GRAY);
 		mbnRenderer.setSeriesLinesVisible(1, false);
 		mbnRenderer.setSeriesShapesVisible(1, true);
-		tri = ShapeUtils.createDownTriangle(1.5F);
-		mbnRenderer.setSeriesShape(1, tri);
+		mbnRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		mbSubplot.setRenderer(1, mbnRenderer);
 		// 2nd axis
 		NumberAxis mbaAxis = new NumberAxis("融资馀额(千股)");

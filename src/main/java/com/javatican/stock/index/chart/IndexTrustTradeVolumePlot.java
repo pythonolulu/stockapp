@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ittvPlot")
 public class IndexTrustTradeVolumePlot {
@@ -52,6 +53,7 @@ public class IndexTrustTradeVolumePlot {
 		ttvAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// Create trust trade volume chart renderer
 		XYBarRenderer ttvRenderer = new XYBarRenderer();
+		ttvRenderer.setDefaultSeriesVisibleInLegend(false);
 		ttvRenderer.setShadowVisible(false);
 		ttvRenderer.setSeriesPaint(0, Color.ORANGE);
 		ttvRenderer.setSeriesPaint(1, Color.LIGHT_GRAY);
@@ -62,16 +64,16 @@ public class IndexTrustTradeVolumePlot {
 		ttvSubplot.setDataset(1, ttnvDataset);
 		//
 		XYLineAndShapeRenderer ttnvRenderer = new XYLineAndShapeRenderer();
+		ttnvRenderer.setDefaultSeriesVisibleInLegend(false);
 		ttnvRenderer.setSeriesPaint(0, Color.RED);
 		ttnvRenderer.setSeriesLinesVisible(0, false);
 		ttnvRenderer.setSeriesShapesVisible(0, true);
-		ttnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		ttnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		ttnvRenderer.setSeriesPaint(1, Color.BLUE);
 		ttnvRenderer.setSeriesLinesVisible(1, false);
 		ttnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		ttnvRenderer.setSeriesShape(1, tri);
+		ttnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		ttvSubplot.setRenderer(1, ttnvRenderer);
 		// 2nd axis
 		NumberAxis tabvAxis = new NumberAxis("投信累积净买(10亿)");
@@ -84,9 +86,10 @@ public class IndexTrustTradeVolumePlot {
 		ttvSubplot.mapDatasetToRangeAxis(2, 1);
 		// 3rd renderer
 		XYLineAndShapeRenderer tabvRenderer = new XYLineAndShapeRenderer();
+		tabvRenderer.setDefaultSeriesVisibleInLegend(false);
 		tabvRenderer.setDefaultShapesVisible(false);
 		tabvRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		tabvRenderer.setSeriesPaint(0, Color.MAGENTA);
+		tabvRenderer.setSeriesPaint(0, Color.BLACK);
 		ttvSubplot.setRenderer(2, tabvRenderer);
 		ttvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return ttvSubplot;
@@ -94,8 +97,8 @@ public class IndexTrustTradeVolumePlot {
 
 	private TimeSeriesCollection createTrustTradeVolumeDataset() {
 		TimeSeriesCollection ttvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("投信买");
-		TimeSeries series2 = new TimeSeries("投信卖");
+		TimeSeries series1 = new TimeSeries("买");
+		TimeSeries series2 = new TimeSeries("卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getTrustBuy() / 1000000000);
@@ -109,8 +112,8 @@ public class IndexTrustTradeVolumePlot {
 
 	private TimeSeriesCollection createTrustTradeNetVolumeDataset() {
 		TimeSeriesCollection ttnvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("投信净买");
-		TimeSeries series2 = new TimeSeries("投信净卖");
+		TimeSeries series1 = new TimeSeries("净买");
+		TimeSeries series2 = new TimeSeries("净卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			double amount = tv.getTrustDiff();
@@ -128,7 +131,7 @@ public class IndexTrustTradeVolumePlot {
 
 	private TimeSeriesCollection createTrustAccumulateBuyVolumeDataset() {
 		TimeSeriesCollection tabvDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("投信累积净买");
+		TimeSeries series1 = new TimeSeries("累积净买");
 		// add data
 		double prevSum = 0.0;
 		for (TradingValue tv : tvList) {

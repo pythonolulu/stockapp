@@ -48,7 +48,7 @@ public class StockController {
 	@Autowired
 	private MarginService marginService;
 	@Autowired
-	private FinancialService financialService; 
+	private FinancialService financialService;
 	// @Autowired
 	// private ServletContext servletContext;
 
@@ -57,10 +57,12 @@ public class StockController {
 	 * data
 	 */
 	@GetMapping("/updateData")
-	public ResponseMessage updateData(HttpServletRequest request) {
+	public ResponseMessage updateData(
+			@RequestParam(value = "single", required = false, defaultValue = "true") boolean single,
+			HttpServletRequest request) {
 		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
-			Date latestTradingDate = stockService.updateTradingDateAndValue();
+			Date latestTradingDate = stockService.updateTradingDateAndValue(single);
 			if (latestTradingDate == null) {
 				mes.setCategory("Fail");
 				mes.setText(String.format("No new data available."));

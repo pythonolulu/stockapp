@@ -31,6 +31,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockItemData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("volumePlot")
 public class VolumePlot implements JPlot {
@@ -92,13 +93,12 @@ public class VolumePlot implements JPlot {
 		kdRenderer.setSeriesPaint(2, Color.BLACK);
 		kdRenderer.setSeriesLinesVisible(2, false);
 		kdRenderer.setSeriesShapesVisible(2, true); 
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		kdRenderer.setSeriesShape(2, tri);
+		kdRenderer.setSeriesShape(2, StockChartUtils.getUpTriangleShape());
 		kdRenderer.setSeriesVisibleInLegend(2, false);
 		kdRenderer.setSeriesPaint(3, Color.BLACK);
 		kdRenderer.setSeriesLinesVisible(3, false);
 		kdRenderer.setSeriesShapesVisible(3, true);
-		kdRenderer.setSeriesShape(3, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		kdRenderer.setSeriesShape(3, StockChartUtils.getSolidSphereShapeLarge());
 		kdRenderer.setSeriesVisibleInLegend(3, false);
 		volumeSubplot.setRenderer(1, kdRenderer);
 		volumeSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);

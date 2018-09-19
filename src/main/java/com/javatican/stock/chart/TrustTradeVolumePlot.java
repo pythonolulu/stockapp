@@ -25,6 +25,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.StockTradeByTrustDAO;
 import com.javatican.stock.model.StockItem;
 import com.javatican.stock.model.StockTradeByTrust;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ttvPlot")
 public class TrustTradeVolumePlot implements JPlot {
@@ -68,13 +69,12 @@ public class TrustTradeVolumePlot implements JPlot {
 		ttnvRenderer.setSeriesPaint(0, Color.RED);
 		ttnvRenderer.setSeriesLinesVisible(0, false);
 		ttnvRenderer.setSeriesShapesVisible(0, true);
-		ttnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		ttnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		ttnvRenderer.setSeriesPaint(1, Color.BLUE);
 		ttnvRenderer.setSeriesLinesVisible(1, false);
 		ttnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		ttnvRenderer.setSeriesShape(1, tri);
+		ttnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		ttvSubplot.setRenderer(1, ttnvRenderer);
 		// 2nd axis
 		NumberAxis tabvAxis = new NumberAxis("投信累积净买(千股)");

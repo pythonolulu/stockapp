@@ -1,7 +1,10 @@
 package com.javatican.stock.service;
 
+import java.awt.Color;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
@@ -20,11 +23,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.javatican.stock.StockException;
+import com.javatican.stock.dao.TradingDateDAO;
 import com.javatican.stock.future.chart.FuturePricePlot;
 import com.javatican.stock.option.chart.OptionForeignOIUnitPlot;
 import com.javatican.stock.option.chart.OptionForeignOIValuePlot;
 import com.javatican.stock.option.chart.OptionOIPlot;
 import com.javatican.stock.util.StockChartUtils;
+
 //import com.javatican.stock.option.chart.OptionDealerOIPlot;
 //import com.javatican.stock.option.chart.OptionForeignOIPlot;
 //import com.javatican.stock.option.chart.OptionOthersOIPlot;
@@ -43,28 +48,31 @@ public class OptionChartService {
 	@Autowired
 	private ResourceLoader resourceLoader;
 	@Autowired
+	private TradingDateDAO tradingDateDAO;
+	@Autowired
 	private FuturePricePlot futurePricePlot;
 	@Autowired
-	private OptionOIPlot optionOIPlot; 
+	private OptionOIPlot optionOIPlot;
 	@Autowired
 	private OptionForeignOIValuePlot optionForeignOIValuePlot;
 	@Autowired
 	private OptionForeignOIUnitPlot optionForeignOIUnitPlot;
-//	@Autowired
-//	private OptionTrustOIPlot optionTrustOIPlot;
-//	@Autowired
-//	private OptionDealerOIPlot optionDealerOIPlot;
-//	@Autowired
-//	private OptionOthersOIPlot optionOthersOIPlot;
-//	@Autowired
-//	private OptionTopTradersCurrentMonthOIPlot optionTopTradersCurrentMonthOIPlot;
-//	@Autowired
-//	private OptionTopTradersOIPlot optionTopTradersOIPlot;
+	// @Autowired
+	// private OptionTrustOIPlot optionTrustOIPlot;
+	// @Autowired
+	// private OptionDealerOIPlot optionDealerOIPlot;
+	// @Autowired
+	// private OptionOthersOIPlot optionOthersOIPlot;
+	// @Autowired
+	// private OptionTopTradersCurrentMonthOIPlot
+	// optionTopTradersCurrentMonthOIPlot;
+	// @Autowired
+	// private OptionTopTradersOIPlot optionTopTradersOIPlot;
 
-	public boolean createGraph(boolean force, String dateString) {
+	public boolean createGraph(boolean force, String dateString, Date dateSince) {
 		StockChartUtil sc = new StockChartUtil(dateString);
 		try {
-			sc.create(force);
+			sc.create(force, dateSince);
 			return true;
 		} catch (StockException e) {
 			logger.info("Cannot create chart for option");
@@ -94,16 +102,16 @@ public class OptionChartService {
 			return resource.exists();
 		}
 
-		public void create(boolean force) throws StockException {
+		public void create(boolean force, Date dateSince) throws StockException {
 			if (force || !existsForLatestOptionChart()) {
-				outputToPNG();
+				outputToPNG(dateSince);
 			} else {
 				logger.info("Latest stock chart exists for option ");
 			}
 		}
 
-		private void outputToPNG() throws StockException {
-			JFreeChart chart = createChart();
+		private void outputToPNG(Date dateSince) throws StockException {
+			JFreeChart chart = createChart(dateSince);
 			Resource resource = resourceLoader
 					.getResource(String.format(OPTION_CHART_MAIN_RESOURCE_FILE_PATH, dateString));
 			try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
@@ -128,16 +136,17 @@ public class OptionChartService {
 			// }
 		}
 
-		private JFreeChart createChart() throws StockException {
+		private JFreeChart createChart(Date dateSince) throws StockException {
 			XYPlot candlestickSubplot = (XYPlot) futurePricePlot.getPlot();
-			XYPlot oiSubplot = (XYPlot) optionOIPlot.getPlot(); 
-			XYPlot foreignOIValueSubplot = (XYPlot) optionForeignOIValuePlot.getPlot();
+			XYPlot oiSubplot = (XYPlot) optionOIPlot.getPlot();
+			XYPlot foreignOIValueSubplot = (XYPlot) optionForeignOIValuePlot.getPlot(dateSince);
 			XYPlot foreignOIUnitSubplot = (XYPlot) optionForeignOIUnitPlot.getPlot();
-//			XYPlot trustSubplot = (XYPlot) optionTrustOIPlot.getPlot();
-//			XYPlot dealerSubplot = (XYPlot) optionDealerOIPlot.getPlot();
-//			XYPlot othersSubplot = (XYPlot) optionOthersOIPlot.getPlot();
-//			XYPlot topTradersCurrentMonthSubplot = (XYPlot) optionTopTradersCurrentMonthOIPlot.getPlot();
-//			XYPlot topTradersSubplot = (XYPlot) optionTopTradersOIPlot.getPlot();
+			// XYPlot trustSubplot = (XYPlot) optionTrustOIPlot.getPlot();
+			// XYPlot dealerSubplot = (XYPlot) optionDealerOIPlot.getPlot();
+			// XYPlot othersSubplot = (XYPlot) optionOthersOIPlot.getPlot();
+			// XYPlot topTradersCurrentMonthSubplot = (XYPlot)
+			// optionTopTradersCurrentMonthOIPlot.getPlot();
+			// XYPlot topTradersSubplot = (XYPlot) optionTopTradersOIPlot.getPlot();
 
 			DateAxis dateAxis = new DateAxis("Date");
 			dateAxis.setDateFormatOverride(new SimpleDateFormat("yy/MM/dd"));
@@ -149,31 +158,37 @@ public class OptionChartService {
 			double x = candlestickSubplot.getDataset(0).getX(0, 0).doubleValue();
 			//
 			mainPlot.add(candlestickSubplot, 6);
-			mainPlot.add(oiSubplot, 2); 
+			mainPlot.add(oiSubplot, 2);
 			mainPlot.add(foreignOIValueSubplot, 2);
 			mainPlot.add(foreignOIUnitSubplot, 2);
-//			mainPlot.add(trustSubplot, 2);
-//			mainPlot.add(dealerSubplot, 2);
-//			mainPlot.add(othersSubplot, 2);
-//			mainPlot.add(topTradersCurrentMonthSubplot, 2);
-//			mainPlot.add(topTradersSubplot, 2);
-//			//
-			StockChartUtils.showAnnotation(oiSubplot, x, "OI"); 
+			// mainPlot.add(trustSubplot, 2);
+			// mainPlot.add(dealerSubplot, 2);
+			// mainPlot.add(othersSubplot, 2);
+			// mainPlot.add(topTradersCurrentMonthSubplot, 2);
+			// mainPlot.add(topTradersSubplot, 2);
+			//
+			StockChartUtils.showAnnotation(oiSubplot, x, "OI");
 			StockChartUtils.showAnnotation(foreignOIValueSubplot, x, "外资OI契约金额");
 			StockChartUtils.showAnnotation(foreignOIUnitSubplot, x, "外资OI口数");
-//			StockChartUtils.showAnnotation(trustSubplot, x, "投信买卖");
-//			StockChartUtils.showAnnotation(dealerSubplot, x, "自营商买卖");
-//			StockChartUtils.showAnnotation(othersSubplot, x, "其它买卖");
-//			StockChartUtils.showAnnotation(topTradersCurrentMonthSubplot, x, "大额交易人买卖(本月)");
-//			StockChartUtils.showAnnotation(topTradersSubplot, x, "大额交易人买卖(全)");
-//			//
+			// StockChartUtils.showAnnotation(trustSubplot, x, "投信买卖");
+			// StockChartUtils.showAnnotation(dealerSubplot, x, "自营商买卖");
+			// StockChartUtils.showAnnotation(othersSubplot, x, "其它买卖");
+			// StockChartUtils.showAnnotation(topTradersCurrentMonthSubplot, x,
+			// "大额交易人买卖(本月)");
+			// StockChartUtils.showAnnotation(topTradersSubplot, x, "大额交易人买卖(全)");
+			// 
+			List<Date> futureClosingDateList = tradingDateDAO.getAllFutureClosingDates();
+			StockChartUtils.drawVerticalValueMarkersForDateList(candlestickSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(oiSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(foreignOIValueSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(foreignOIUnitSubplot, futureClosingDateList);
+			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
 			JFreeChart chart = new JFreeChart(String.format("Option chart : %s", dateString),
 					JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
 			// chart.removeLegend();
 			return chart;
 		}
- 
 
 	}
 }

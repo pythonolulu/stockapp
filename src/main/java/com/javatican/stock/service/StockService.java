@@ -101,9 +101,9 @@ public class StockService {
 	 * 
 	 * This shall be run after every trading date.
 	 */
-	public Date updateTradingDateAndValue() throws StockException {
+	public Date updateTradingDateAndValue(boolean single) throws StockException {
 		String dateString = StockUtils.todayDateString();
-		return downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
+		return downloadAndSaveTradingDateAndValueForTheMonth(dateString, true, single);
 	}
 
 	/*
@@ -115,7 +115,7 @@ public class StockService {
 	private void prepareData() throws StockException {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		for (String dateString : dateList) {
-			downloadAndSaveTradingDateAndValueForTheMonth(dateString, false);
+			downloadAndSaveTradingDateAndValueForTheMonth(dateString, false, true);
 		}
 	}
 
@@ -126,7 +126,7 @@ public class StockService {
 	public void checkData() throws StockException {
 		List<String> dateList = StockUtils.calculateDateStringPastSixMonth();
 		for (String dateString : dateList) {
-			downloadAndSaveTradingDateAndValueForTheMonth(dateString, true);
+			downloadAndSaveTradingDateAndValueForTheMonth(dateString, true, true);
 		}
 	}
 
@@ -135,8 +135,8 @@ public class StockService {
 	 * month. It calls setForeignAndOtherInvestorsTradingValue() return the latest
 	 * trading date.
 	 */
-	private Date downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate)
-			throws StockException {
+	private Date downloadAndSaveTradingDateAndValueForTheMonth(String dateString, boolean checkDuplicate,
+			boolean single) throws StockException {
 		try {
 			Date latestTradingDate = null;
 			Document doc = Jsoup.connect(String.format(TWSE_DAILY_TRADING_GET_URL, dateString)).get();
@@ -165,6 +165,8 @@ public class StockService {
 					downloadAndSaveIndexOhlcData(dString, tValue);
 					downloadAndSaveMargin(dString, tValue);
 					tradingValueDAO.save(tValue);
+					if (single)
+						break;
 					try {
 						Thread.sleep(stockConfig.getSleepTime());
 					} catch (InterruptedException ex) {
@@ -443,7 +445,8 @@ public class StockService {
 		});
 		tradingValueDAO.saveAll(updateList);
 	}
-//
+
+	//
 	public void calculateWeeklyIndexStatsData() {
 		List<Date> tdList = tradingDateDAO.findAllTradingDate();
 		// weeklySpMap: key is the dateString , value is a StockPrice (store weekly
@@ -467,7 +470,8 @@ public class StockService {
 				weeklyTv.setHigh(tv.getHigh());
 				weeklyTv.setLow(tv.getLow());
 			}
-			//compare equalness using time value instead of using Date object directly, because Date object shows unequalness.
+			// compare equalness using time value instead of using Date object directly,
+			// because Date object shows unequalness.
 			if (tv.getTradingDate().getTime() == lastTradingDateOfWeek.getTime()) {
 				// set close price
 				weeklyTv.setClose(tv.getClose());
@@ -573,11 +577,11 @@ public class StockService {
 		weeklyTv.setTrustBuy(weeklyTv.getTrustBuy() + tv.getTrustBuy());
 		weeklyTv.setTrustSell(weeklyTv.getTrustSell() + tv.getTrustSell());
 		weeklyTv.setTrustDiff(weeklyTv.getTrustDiff() + tv.getTrustDiff());
-		
+
 		weeklyTv.setMarginBuy(weeklyTv.getMarginBuy() + tv.getMarginBuy());
 		weeklyTv.setMarginRedemp(weeklyTv.getMarginRedemp() + tv.getMarginRedemp());
 		weeklyTv.setMarginAcc(tv.getMarginAcc());
-		
+
 		weeklyTv.setMarginBuyValue(weeklyTv.getMarginBuyValue() + tv.getMarginBuyValue());
 		weeklyTv.setMarginRedempValue(weeklyTv.getMarginRedempValue() + tv.getMarginRedempValue());
 		weeklyTv.setMarginAccValue(tv.getMarginAccValue());

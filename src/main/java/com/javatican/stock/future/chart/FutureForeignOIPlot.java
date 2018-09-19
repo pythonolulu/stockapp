@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.FutureDataDAO;
 import com.javatican.stock.model.FutureData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ffoiPlot")
 public class FutureForeignOIPlot {
@@ -60,25 +61,24 @@ public class FutureForeignOIPlot {
 		foRenderer.setDefaultShapesVisible(true);
 		foRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
 		foRenderer.setSeriesPaint(0, Color.MAGENTA);
-		foRenderer.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		foRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
 		foRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
 		foRenderer.setSeriesPaint(1, Color.GREEN);
-		foRenderer.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		foRenderer.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
 		foRenderer.setSeriesStroke(2, new BasicStroke(1.0f));
 		foRenderer.setSeriesPaint(2, Color.BLACK);
-		foRenderer.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		foRenderer.setSeriesShape(2, StockChartUtils.getSolidSphereShape());
 		//net volume renderer
 		XYLineAndShapeRenderer fnvRenderer = new XYLineAndShapeRenderer();
 		fnvRenderer.setSeriesPaint(0, Color.RED);
 		fnvRenderer.setSeriesLinesVisible(0, false);
 		fnvRenderer.setSeriesShapesVisible(0, true);
-		fnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		fnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		fnvRenderer.setSeriesPaint(1, Color.BLUE);
 		fnvRenderer.setSeriesLinesVisible(1, false);
 		fnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		fnvRenderer.setSeriesShape(1, tri);
+		fnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		//volume renderer
 		XYBarRenderer fvRenderer = new XYBarRenderer();
 		fvRenderer.setShadowVisible(false);

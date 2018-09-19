@@ -17,4 +17,7 @@ public interface OptionDataRepository extends JpaRepository<OptionData, Long> {
 
 	@Query("select max(s.tradingDate) from OptionData s")
 	Date getLatestTradingDate();
+
+	@Query("select s from OptionData s where s.tradingDate >= ?1")
+	List<OptionData> findAfterTradingDate(Date d);
 }

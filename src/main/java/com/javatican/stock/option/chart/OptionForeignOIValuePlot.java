@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.jfree.chart.axis.AxisLocation;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.OptionDataDAO;
 import com.javatican.stock.model.OptionData;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ofoivPlot")
 public class OptionForeignOIValuePlot {
@@ -38,6 +40,15 @@ public class OptionForeignOIValuePlot {
 		return createPlot();
 	}
 
+	public Plot getPlot(Date dateSince) throws StockException {
+		if (dateSince != null) {
+			odList = optionDataDAO.findAfter(dateSince);
+		} else {
+			odList = optionDataDAO.findAll();
+		}
+		return createPlot();
+	}
+
 	public OptionForeignOIValuePlot() {
 	}
 
@@ -45,11 +56,6 @@ public class OptionForeignOIValuePlot {
 		TableXYDataset dataset1 = createNetOIDataset();
 		TableXYDataset dataset2 = createLongPositionOIDataset();
 		TableXYDataset dataset3 = createShortPositionOIDataset();
-		// net OI axis
-		NumberAxis axis1 = new NumberAxis("差额(千元)");
-		axis1.setAutoRangeIncludesZero(true);
-		// Set to no decimal
-		axis1.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// OI Axis
 		NumberAxis axis2 = new NumberAxis("契约金额(千元)");
 		axis2.setAutoRangeIncludesZero(true);
@@ -60,30 +66,30 @@ public class OptionForeignOIValuePlot {
 		renderer1.setDefaultShapesVisible(true);
 		renderer1.setDefaultSeriesVisibleInLegend(true);
 		renderer1.setSeriesStroke(0, new BasicStroke(1.0f));
-		renderer1.setSeriesPaint(0, Color.MAGENTA);
-		renderer1.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesPaint(0, Color.BLUE);
+		renderer1.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
 		renderer1.setSeriesStroke(1, new BasicStroke(1.0f));
-		renderer1.setSeriesPaint(1, Color.GREEN);
-		renderer1.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesPaint(1, Color.RED);
+		renderer1.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
 		renderer1.setSeriesStroke(2, new BasicStroke(1.0f));
 		renderer1.setSeriesPaint(2, Color.BLACK);
-		renderer1.setSeriesShape(2, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		renderer1.setSeriesShape(2, StockChartUtils.getSolidSphereShape());
 		// long OI renderer
 		StackedXYBarRenderer renderer2 = new StackedXYBarRenderer(0.15);
 		renderer2.setDrawBarOutline(false);
 		renderer2.setShadowVisible(false);
 		renderer2.setDefaultSeriesVisibleInLegend(true);
-		renderer2.setSeriesPaint(0, Color.RED);
-		renderer2.setSeriesPaint(1, Color.ORANGE);
+		renderer2.setSeriesPaint(0, Color.ORANGE);
+		renderer2.setSeriesPaint(1, Color.GREEN);
 		// long OI renderer
 		StackedXYBarRenderer renderer3 = new StackedXYBarRenderer(0.15);
 		renderer3.setDrawBarOutline(false);
 		renderer3.setShadowVisible(false);
 		renderer3.setDefaultSeriesVisibleInLegend(true);
-		renderer3.setSeriesPaint(0, Color.BLUE);
-		renderer3.setSeriesPaint(1, Color.CYAN);
+		renderer3.setSeriesPaint(0, Color.CYAN);
+		renderer3.setSeriesPaint(1, Color.MAGENTA);
 		// Create subplot
-		XYPlot subplot = new XYPlot(dataset1, null, axis1, renderer1);
+		XYPlot subplot = new XYPlot(dataset1, null, axis2, renderer1);
 		// 2nd dataset
 		subplot.setDataset(1, dataset2);
 		// 3rd dataset
@@ -91,17 +97,14 @@ public class OptionForeignOIValuePlot {
 		// renderers: dataset2 uses renderer2, dataset3 uses renderer3
 		subplot.setRenderer(1, renderer2);
 		subplot.setRenderer(2, renderer3);
-		// 2nd axis
-		subplot.setRangeAxis(1, axis2);
-		// map the 2nd dataset to 2nd axis
-		subplot.mapDatasetToRangeAxis(1, 1);
-		// map the 3rd dataset to 2nd axis
-		subplot.mapDatasetToRangeAxis(2, 1);
+		//
+		subplot.mapDatasetToRangeAxis(1, 0);
+		subplot.mapDatasetToRangeAxis(2, 0);
 		//
 		subplot.setRangeAxisLocation(0, AxisLocation.BOTTOM_OR_RIGHT);
-		subplot.setRangeAxisLocation(1, AxisLocation.TOP_OR_LEFT);
 		subplot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
 		subplot.setBackgroundPaint(Color.WHITE);
+		StockChartUtils.drawHorizontalValueMarker(subplot, 0, 0);
 		return subplot;
 	}
 
@@ -141,6 +144,70 @@ public class OptionForeignOIValuePlot {
 					"买卖權净差额");
 		});
 		return dataset;
+	}
+
+	private XYPlot createPlot1() {
+		TableXYDataset dataset1 = createNetOIDataset();
+		TableXYDataset dataset2 = createLongPositionOIDataset();
+		TableXYDataset dataset3 = createShortPositionOIDataset();
+		// net OI axis
+		NumberAxis axis1 = new NumberAxis("差额(千元)");
+		axis1.setAutoRangeIncludesZero(true);
+		// Set to no decimal
+		axis1.setNumberFormatOverride(new DecimalFormat("###,###"));
+		// OI Axis
+		NumberAxis axis2 = new NumberAxis("契约金额(千元)");
+		axis2.setAutoRangeIncludesZero(true);
+		// Set to no decimal
+		axis2.setNumberFormatOverride(new DecimalFormat("###,###"));
+		// net OI renderer
+		XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+		renderer1.setDefaultShapesVisible(true);
+		renderer1.setDefaultSeriesVisibleInLegend(true);
+		renderer1.setSeriesStroke(0, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(0, Color.MAGENTA);
+		renderer1.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
+		renderer1.setSeriesStroke(1, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(1, Color.GREEN);
+		renderer1.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
+		renderer1.setSeriesStroke(2, new BasicStroke(1.0f));
+		renderer1.setSeriesPaint(2, Color.BLACK);
+		renderer1.setSeriesShape(2, StockChartUtils.getSolidSphereShape());
+		// long OI renderer
+		StackedXYBarRenderer renderer2 = new StackedXYBarRenderer(0.15);
+		renderer2.setDrawBarOutline(false);
+		renderer2.setShadowVisible(false);
+		renderer2.setDefaultSeriesVisibleInLegend(true);
+		renderer2.setSeriesPaint(0, Color.RED);
+		renderer2.setSeriesPaint(1, Color.ORANGE);
+		// long OI renderer
+		StackedXYBarRenderer renderer3 = new StackedXYBarRenderer(0.15);
+		renderer3.setDrawBarOutline(false);
+		renderer3.setShadowVisible(false);
+		renderer3.setDefaultSeriesVisibleInLegend(true);
+		renderer3.setSeriesPaint(0, Color.BLUE);
+		renderer3.setSeriesPaint(1, Color.CYAN);
+		// Create subplot
+		XYPlot subplot = new XYPlot(dataset1, null, axis1, renderer1);
+		// 2nd dataset
+		subplot.setDataset(1, dataset2);
+		// 3rd dataset
+		subplot.setDataset(2, dataset3);
+		// renderers: dataset2 uses renderer2, dataset3 uses renderer3
+		subplot.setRenderer(1, renderer2);
+		subplot.setRenderer(2, renderer3);
+		// 2nd axis
+		subplot.setRangeAxis(1, axis2);
+		// map the 2nd dataset to 2nd axis
+		subplot.mapDatasetToRangeAxis(1, 1);
+		// map the 3rd dataset to 2nd axis
+		subplot.mapDatasetToRangeAxis(2, 1);
+		//
+		subplot.setRangeAxisLocation(0, AxisLocation.BOTTOM_OR_RIGHT);
+		subplot.setRangeAxisLocation(1, AxisLocation.TOP_OR_LEFT);
+		subplot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
+		subplot.setBackgroundPaint(Color.WHITE);
+		return subplot;
 	}
 
 }

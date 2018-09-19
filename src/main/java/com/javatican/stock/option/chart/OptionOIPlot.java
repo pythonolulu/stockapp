@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.OptionDataDAO;
 import com.javatican.stock.model.OptionData;
+import com.javatican.stock.util.StockChartUtils;
 import com.javatican.stock.util.StockUtils;
 
 @Component("optionOIPlot")
@@ -59,19 +60,19 @@ public class OptionOIPlot {
 		ooiRenderer.setDefaultShapesVisible(true);
 		ooiRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
 		ooiRenderer.setSeriesPaint(0, Color.MAGENTA);
-		ooiRenderer.setSeriesShape(0, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		ooiRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
 		ooiRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
 		ooiRenderer.setSeriesPaint(1, Color.BLUE);
-		ooiRenderer.setSeriesShape(1, new Ellipse2D.Double(-1d, -1d, 2d, 2d));
+		ooiRenderer.setSeriesShape(1, StockChartUtils.getSolidSphereShape());
 		// Put/Call ratio renderer
 		XYLineAndShapeRenderer pcrRenderer = new XYLineAndShapeRenderer();
 		pcrRenderer.setDefaultShapesVisible(true);
 		pcrRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
 		pcrRenderer.setSeriesPaint(0, Color.BLACK);
-		pcrRenderer.setSeriesShape(0, new Rectangle2D.Double(-2d, -2d, 4d, 4d));
+		pcrRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		pcrRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
 		pcrRenderer.setSeriesPaint(1, Color.RED);
-		pcrRenderer.setSeriesShape(1, new Rectangle2D.Double(-2d, -2d, 4d, 4d));
+		pcrRenderer.setSeriesShape(1, StockChartUtils.getUpTriangleShape());
 		// volume renderer
 		XYBarRenderer ovRenderer = new XYBarRenderer();
 		ovRenderer.setShadowVisible(false);
@@ -101,6 +102,7 @@ public class OptionOIPlot {
 		ooiSubplot.setRangeAxisLocation(2, AxisLocation.TOP_OR_LEFT);
 		ooiSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.REVERSE);
 		ooiSubplot.setBackgroundPaint(Color.WHITE);
+		StockChartUtils.drawHorizontalValueMarker(ooiSubplot, 1, 1.0);
 		return ooiSubplot;
 	}
 

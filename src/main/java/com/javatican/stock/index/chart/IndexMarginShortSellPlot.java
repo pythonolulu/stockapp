@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("imssPlot")
 public class IndexMarginShortSellPlot {
@@ -51,9 +52,10 @@ public class IndexMarginShortSellPlot {
 		mssAxis.setNumberFormatOverride(new DecimalFormat("###,###"));
 		//
 		XYBarRenderer mssRenderer = new XYBarRenderer();
+		mssRenderer.setDefaultSeriesVisibleInLegend(false);
 		mssRenderer.setShadowVisible(false);
-		mssRenderer.setSeriesPaint(0, Color.BLUE);
-		mssRenderer.setSeriesPaint(1, Color.YELLOW);
+		mssRenderer.setSeriesPaint(0, Color.CYAN);
+		mssRenderer.setSeriesPaint(1, Color.MAGENTA);
 		//
 		XYPlot mssSubplot = new XYPlot(mssDataset, null, mssAxis, mssRenderer);
 		mssSubplot.setBackgroundPaint(Color.WHITE);
@@ -61,17 +63,16 @@ public class IndexMarginShortSellPlot {
 		mssSubplot.setDataset(1, mssnDataset);
 		//
 		XYLineAndShapeRenderer mssnRenderer = new XYLineAndShapeRenderer();
+		mssnRenderer.setDefaultSeriesVisibleInLegend(false);
 		mssnRenderer.setSeriesPaint(0, Color.RED);
 		mssnRenderer.setSeriesLinesVisible(0, false);
 		mssnRenderer.setSeriesShapesVisible(0, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		mssnRenderer.setSeriesShape(0, tri);
+		mssnRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
-		mssnRenderer.setSeriesPaint(1, Color.GRAY);
+		mssnRenderer.setSeriesPaint(1, Color.BLACK);
 		mssnRenderer.setSeriesLinesVisible(1, false);
 		mssnRenderer.setSeriesShapesVisible(1, true);
-		tri = ShapeUtils.createDownTriangle(1.5F);
-		mssnRenderer.setSeriesShape(1, tri);
+		mssnRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		mssSubplot.setRenderer(1, mssnRenderer);
 		// 2nd axis
 		NumberAxis mssaAxis = new NumberAxis("融券馀额(千股)");
@@ -84,9 +85,10 @@ public class IndexMarginShortSellPlot {
 		mssSubplot.mapDatasetToRangeAxis(2, 1);
 		//
 		XYLineAndShapeRenderer mssaRenderer = new XYLineAndShapeRenderer();
+		mssaRenderer.setDefaultSeriesVisibleInLegend(false);
 		mssaRenderer.setDefaultShapesVisible(false);
 		mssaRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		mssaRenderer.setSeriesPaint(0, Color.GREEN);
+		mssaRenderer.setSeriesPaint(0, Color.BLUE);
 		mssSubplot.setRenderer(2, mssaRenderer);
 		mssSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return mssSubplot;
@@ -95,8 +97,8 @@ public class IndexMarginShortSellPlot {
 
 	private TimeSeriesCollection createMarginShortSellDataset() {
 		TimeSeriesCollection mssDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融券卖");
-		TimeSeries series2 = new TimeSeries("融券买");
+		TimeSeries series1 = new TimeSeries("卖");
+		TimeSeries series2 = new TimeSeries("买");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getShortSell());
@@ -110,8 +112,8 @@ public class IndexMarginShortSellPlot {
 
 	private TimeSeriesCollection createMarginShortSellNetDataset() {
 		TimeSeriesCollection mssnDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融资净卖");
-		TimeSeries series2 = new TimeSeries("融资净买");
+		TimeSeries series1 = new TimeSeries("净卖");
+		TimeSeries series2 = new TimeSeries("净买");
 		// add data
 		tvList.stream().forEach(tv -> {
 			double amount = tv.getShortSell() - tv.getShortRedemp();
@@ -129,7 +131,7 @@ public class IndexMarginShortSellPlot {
 
 	private TimeSeriesCollection createMaringShortSellAccuDataset() {
 		TimeSeriesCollection mssaDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融券馀额");
+		TimeSeries series1 = new TimeSeries("馀额");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getShortAcc());

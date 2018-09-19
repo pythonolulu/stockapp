@@ -25,6 +25,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.CallWarrantTradeSummaryDAO;
 import com.javatican.stock.model.CallWarrantTradeSummary;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("cwtvPlot")
 public class CallWarrantTradeValuePlot implements JPlot {
@@ -70,11 +71,10 @@ public class CallWarrantTradeValuePlot implements JPlot {
 		cwtvSubplot.mapDatasetToRangeAxis(1, 1);
 		// renderer for average transaction value
 		XYLineAndShapeRenderer cwatvRenderer = new XYLineAndShapeRenderer();
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
 		cwatvRenderer.setSeriesPaint(0, Color.BLUE);
 		cwatvRenderer.setSeriesLinesVisible(0, false);
 		cwatvRenderer.setSeriesShapesVisible(0, true);
-		cwatvRenderer.setSeriesShape(0, tri);
+		cwatvRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
 		cwtvSubplot.setRenderer(1, cwatvRenderer);
 		// 3rd axis for call warrant transaction

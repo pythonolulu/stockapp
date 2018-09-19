@@ -23,6 +23,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.DealerTradeSummaryDAO;
 import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("iptvPlot")
 public class InvestorPutTradeValuePlot implements JPlot {
@@ -64,13 +65,12 @@ public class InvestorPutTradeValuePlot implements JPlot {
 		ipnvRenderer.setSeriesPaint(0, Color.RED);
 		ipnvRenderer.setSeriesLinesVisible(0, false);
 		ipnvRenderer.setSeriesShapesVisible(0, true);
-		ipnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		ipnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		ipnvRenderer.setSeriesPaint(1, Color.BLACK);
 		ipnvRenderer.setSeriesLinesVisible(1, false);
 		ipnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		ipnvRenderer.setSeriesShape(1, tri);
+		ipnvRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		iptvSubplot.setRenderer(1, ipnvRenderer);
 		iptvSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return iptvSubplot;

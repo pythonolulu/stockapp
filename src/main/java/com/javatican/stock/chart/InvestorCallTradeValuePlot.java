@@ -25,6 +25,7 @@ import com.javatican.stock.StockException;
 import com.javatican.stock.dao.DealerTradeSummaryDAO; 
 import com.javatican.stock.model.DealerTradeSummary;
 import com.javatican.stock.model.StockItem;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("ictvPlot")
 public class InvestorCallTradeValuePlot implements JPlot {
@@ -67,13 +68,12 @@ public class InvestorCallTradeValuePlot implements JPlot {
 		icnvRenderer.setSeriesPaint(0, Color.RED);
 		icnvRenderer.setSeriesLinesVisible(0, false);
 		icnvRenderer.setSeriesShapesVisible(0, true);
-		icnvRenderer.setSeriesShape(0, new Ellipse2D.Double(-2d, -2d, 4d, 4d));
+		icnvRenderer.setSeriesShape(0, StockChartUtils.getSolidSphereShapeLarge());
 		//
 		icnvRenderer.setSeriesPaint(1, Color.BLACK);
 		icnvRenderer.setSeriesLinesVisible(1, false);
 		icnvRenderer.setSeriesShapesVisible(1, true);
-		Shape tri = ShapeUtils.createDownTriangle(1.5F);
-		icnvRenderer.setSeriesShape(1, tri);
+		icnvRenderer.setSeriesShape(1, StockChartUtils.getSolidSphereShapeLarge());
 		ictvSubplot.setRenderer(1, icnvRenderer);
 		// 3rd dataset
 		NumberAxis dsnbAxis = new NumberAxis("自营商标的累积净买(百万)");

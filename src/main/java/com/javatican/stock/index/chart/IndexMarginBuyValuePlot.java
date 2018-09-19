@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.TradingValueDAO;
 import com.javatican.stock.model.TradingValue;
+import com.javatican.stock.util.StockChartUtils;
 
 @Component("imbvPlot")
 public class IndexMarginBuyValuePlot {
@@ -53,8 +54,8 @@ public class IndexMarginBuyValuePlot {
 		//
 		XYBarRenderer mbRenderer = new XYBarRenderer();
 		mbRenderer.setShadowVisible(false);
-		mbRenderer.setSeriesPaint(0, Color.BLUE);
-		mbRenderer.setSeriesPaint(1, Color.YELLOW);
+		mbRenderer.setSeriesPaint(0, Color.CYAN);
+		mbRenderer.setSeriesPaint(1, Color.MAGENTA);
 		//
 		XYPlot mbSubplot = new XYPlot(mbDataset, null, mbAxis, mbRenderer);
 		mbSubplot.setBackgroundPaint(Color.WHITE);
@@ -65,14 +66,12 @@ public class IndexMarginBuyValuePlot {
 		mbnRenderer.setSeriesPaint(0, Color.RED);
 		mbnRenderer.setSeriesLinesVisible(0, false);
 		mbnRenderer.setSeriesShapesVisible(0, true);
-		Shape tri = ShapeUtils.createUpTriangle(1.5F);
-		mbnRenderer.setSeriesShape(0, tri);
+		mbnRenderer.setSeriesShape(0, StockChartUtils.getUpTriangleShape());
 		//
-		mbnRenderer.setSeriesPaint(1, Color.GRAY);
+		mbnRenderer.setSeriesPaint(1, Color.BLACK);
 		mbnRenderer.setSeriesLinesVisible(1, false);
 		mbnRenderer.setSeriesShapesVisible(1, true);
-		tri = ShapeUtils.createDownTriangle(1.5F);
-		mbnRenderer.setSeriesShape(1, tri);
+		mbnRenderer.setSeriesShape(1, StockChartUtils.getDownTriangleShape());
 		mbSubplot.setRenderer(1, mbnRenderer);
 		// 2nd axis
 		NumberAxis mbaAxis = new NumberAxis("融资馀额(10亿)");
@@ -87,7 +86,7 @@ public class IndexMarginBuyValuePlot {
 		XYLineAndShapeRenderer mbaRenderer = new XYLineAndShapeRenderer();
 		mbaRenderer.setDefaultShapesVisible(false);
 		mbaRenderer.setSeriesStroke(0, new BasicStroke(1.0f));
-		mbaRenderer.setSeriesPaint(0, Color.GREEN);
+		mbaRenderer.setSeriesPaint(0, Color.BLUE);
 		mbSubplot.setRenderer(2, mbaRenderer);
 		mbSubplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
 		return mbSubplot;
@@ -96,8 +95,8 @@ public class IndexMarginBuyValuePlot {
 
 	private TimeSeriesCollection createMarginBuyDataset() {
 		TimeSeriesCollection mbDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融资买");
-		TimeSeries series2 = new TimeSeries("融资卖");
+		TimeSeries series1 = new TimeSeries("买");
+		TimeSeries series2 = new TimeSeries("卖");
 		// add data
 		// marginBuyValue are in 1000s unit, so divide it by 1000000, the final unit is 10 billion
 		tvList.stream().forEach(tv -> {
@@ -112,8 +111,8 @@ public class IndexMarginBuyValuePlot {
 
 	private TimeSeriesCollection createMarginBuyNetDataset() {
 		TimeSeriesCollection mbnDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融资净买");
-		TimeSeries series2 = new TimeSeries("融资净卖");
+		TimeSeries series1 = new TimeSeries("净买");
+		TimeSeries series2 = new TimeSeries("净卖");
 		// add data
 		tvList.stream().forEach(tv -> {
 			double amount = tv.getMarginBuyValue() - tv.getMarginRedempValue();
@@ -131,7 +130,7 @@ public class IndexMarginBuyValuePlot {
 
 	private TimeSeriesCollection createMaringBuyAccuDataset() {
 		TimeSeriesCollection mbaDataset = new TimeSeriesCollection();
-		TimeSeries series1 = new TimeSeries("融资馀额");
+		TimeSeries series1 = new TimeSeries("馀额");
 		// add data
 		tvList.stream().forEach(tv -> {
 			series1.add(new Day(tv.getTradingDate()), tv.getMarginAccValue()/1000000);
