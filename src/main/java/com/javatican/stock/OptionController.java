@@ -48,7 +48,7 @@ public class OptionController {
 	}
 
 	@GetMapping("/getOptionChart")
-	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
+	public ModelAndView getOptionChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
 		try {
 			Date dateSince = null;
@@ -57,10 +57,39 @@ public class OptionController {
 			}
 			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 			optionChartService.createGraph(force, latestTradingDateString, dateSince);
-			return new ModelAndView("redirect:" + "/stock/imgs/option_" + latestTradingDateString + ".png");
+			return new ModelAndView("redirect:" + "/stock/imgs/option/option_" + latestTradingDateString + ".png");
 		} catch (Exception e) {
 			return new ModelAndView("stock/error");
 		}
 	}
-
+	@GetMapping("/getOptionStrategyChart")
+	public ModelAndView getOptionStrategyChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
+		try {
+			Date dateSince = null;
+			if (dateSinceString != null) {
+				dateSince = StockUtils.stringSimpleToDate(dateSinceString).get();
+			}
+			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
+			optionChartService.createGraph(force, latestTradingDateString, dateSince);
+			return new ModelAndView("redirect:" + "/stock/imgs/option/option_strategy_" + latestTradingDateString + ".png");
+		} catch (Exception e) {
+			return new ModelAndView("stock/error");
+		}
+	}
+	@GetMapping("/getOptionStrategy2Chart")
+	public ModelAndView getOptionStrategy2Chart(@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
+		try {
+			Date dateSince = null;
+			if (dateSinceString != null) {
+				dateSince = StockUtils.stringSimpleToDate(dateSinceString).get();
+			}
+			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
+			optionChartService.createGraph(force, latestTradingDateString, dateSince);
+			return new ModelAndView("redirect:" + "/stock/imgs/option/option_strategy2_" + latestTradingDateString + ".png");
+		} catch (Exception e) {
+			return new ModelAndView("stock/error");
+		}
+	}
 }

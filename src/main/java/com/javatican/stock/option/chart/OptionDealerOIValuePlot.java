@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 
 import com.javatican.stock.util.StockChartUtils;
 
-@Component("ofoivPlot")
-public class OptionForeignOIValuePlot extends OptionParentPlot {
+@Component("odoivPlot")
+public class OptionDealerOIValuePlot extends OptionParentPlot{
 
-	public OptionForeignOIValuePlot() {
+	public OptionDealerOIValuePlot() {
 	}
 
 	protected XYPlot createPlot() {
@@ -86,8 +86,8 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueLong(), "买權买方");
-			dataset.add(new Day(od.getTradingDate()), od.getPutForeignOpenValueShort(), "卖權卖方");
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenValueLong(), "买權买方");
+			dataset.add(new Day(od.getTradingDate()), od.getPutDealerOpenValueShort(), "卖權卖方");
 		});
 		return dataset;
 	}
@@ -99,8 +99,8 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutForeignOpenValueLong(), "卖權买方");
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getCallForeignOpenValueShort(), "买權卖方");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutDealerOpenValueLong(), "卖權买方");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getCallDealerOpenValueShort(), "买權卖方");
 		});
 		return dataset;
 	}
@@ -109,12 +109,13 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueNet(), "买權差额(买-卖)");
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutForeignOpenValueNet(), "卖權差额(卖-买)");
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueNet() - od.getPutForeignOpenValueNet(),
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenValueNet(), "买權差额(买-卖)");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutDealerOpenValueNet(), "卖權差额(卖-买)");
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenValueNet() - od.getPutDealerOpenValueNet(),
 					"买卖權净差额");
 		});
 		return dataset;
 	}
+ 
 
 }

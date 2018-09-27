@@ -1,5 +1,6 @@
 package com.javatican.stock.service;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +38,14 @@ import com.javatican.stock.util.StockChartUtils;
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class IndexChartService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String INDEX_CHART_MAIN_RESOURCE_FILE_PATH = "file:./charts/index_%s.png";
-	private static final String INDEX_CHART_STRATEGY_RESOURCE_FILE_PATH = "file:./charts/strategy/index_%s.png";
+	private static final String INDEX_CHART_RESOURCE = "file:./charts/index/*.png";
+	private static final String INDEX_CHART_MAIN_RESOURCE_FILE_PATH = "file:./charts/index/index_%s.png";
+	//private static final String INDEX_CHART_STRATEGY_RESOURCE_FILE_PATH = "file:./charts/strategy/index_%s.png";
 
 	@Autowired
 	private ResourceLoader resourceLoader;
-
+	@Autowired
+	private ResourcePatternResolver resourcePatternResolver;
 	@Autowired 
 	private IndexPricePlot indexPricePlot;
 	@Autowired 
@@ -104,7 +108,19 @@ public class IndexChartService {
 			}
 		}
 
+		private void deleteOldCharts() throws IOException {
+			Resource[] resources = resourcePatternResolver.getResources(INDEX_CHART_RESOURCE);
+			for (Resource r : resources) {
+				r.getFile().delete();
+			}
+		}
 		private void outputToPNG() throws StockException {
+			try {
+				deleteOldCharts();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				throw new StockException(ex);
+			}
 			JFreeChart chart = createChart();
 			Resource resource = resourceLoader
 					.getResource(String.format(INDEX_CHART_MAIN_RESOURCE_FILE_PATH, dateString));

@@ -1,5 +1,6 @@
 package com.javatican.stock.service;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.WritableResource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,11 +44,15 @@ import com.javatican.stock.util.StockChartUtils;
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class FutureChartService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String FUTURE_CHART_MAIN_RESOURCE_FILE_PATH = "file:./charts/future_%s.png";
-	private static final String FUTURE_CHART_STRATEGY_RESOURCE_FILE_PATH = "file:./charts/strategy/future_%s.png";
+	private static final String FUTURE_CHART_RESOURCE = "file:./charts/future/*.png";
+	private static final String FUTURE_CHART_MAIN_RESOURCE_FILE_PATH = "file:./charts/future/future_%s.png";
+	// private static final String FUTURE_CHART_STRATEGY_RESOURCE_FILE_PATH =
+	// "file:./charts/strategy/future_%s.png";
 
 	@Autowired
 	private ResourceLoader resourceLoader;
+	@Autowired
+	private ResourcePatternResolver resourcePatternResolver;
 	@Autowired
 	private TradingDateDAO tradingDateDAO;
 	@Autowired
@@ -114,7 +120,20 @@ public class FutureChartService {
 			}
 		}
 
+		private void deleteOldCharts() throws IOException {
+			Resource[] resources = resourcePatternResolver.getResources(FUTURE_CHART_RESOURCE);
+			for (Resource r : resources) {
+				r.getFile().delete();
+			}
+		}
+
 		private void outputToPNG() throws StockException {
+			try {
+				deleteOldCharts();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+				throw new StockException(ex);
+			}
 			JFreeChart chart = createChart();
 			Resource resource = resourceLoader
 					.getResource(String.format(FUTURE_CHART_MAIN_RESOURCE_FILE_PATH, dateString));
@@ -195,7 +214,8 @@ public class FutureChartService {
 			StockChartUtils.drawVerticalValueMarkersForDateList(dealerSubplot, futureClosingDateList);
 			StockChartUtils.drawVerticalValueMarkersForDateList(othersSubplot, futureClosingDateList);
 			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersCurrentMonthOiSubplot, futureClosingDateList);
-			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersCurrentMonthOiNetSubplot, futureClosingDateList);
+			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersCurrentMonthOiNetSubplot,
+					futureClosingDateList);
 			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersOiSubplot, futureClosingDateList);
 			StockChartUtils.drawVerticalValueMarkersForDateList(topTradersOiNetSubplot, futureClosingDateList);
 

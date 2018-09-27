@@ -48,9 +48,9 @@ public class SmaStatsPlot {
 		ssRenderer.setSeriesStroke(0, new BasicStroke(2.0f));
 //		ssRenderer.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f,
 //				new float[] { 2.0f, 6.0f }, 0.0f));
-		ssRenderer.setSeriesPaint(0, Color.MAGENTA);
+		ssRenderer.setSeriesPaint(0, Color.BLACK);
 		ssRenderer.setSeriesStroke(1, new BasicStroke(1.0f));
-		ssRenderer.setSeriesPaint(1, Color.RED);
+		ssRenderer.setSeriesPaint(1, Color.CYAN);
 		ssRenderer.setSeriesStroke(2, new BasicStroke(2.0f));
 //		ssRenderer.setSeriesStroke(2, new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f,
 //				new float[] { 2.0f, 6.0f }, 0.0f));

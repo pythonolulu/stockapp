@@ -292,7 +292,7 @@ public class StockStrategyController {
 	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 		indexChartService.createGraph(force, latestTradingDateString);
-		return new ModelAndView("redirect:" + "/stock/imgs/index_" + latestTradingDateString + ".png");
+		return new ModelAndView("redirect:" + "/stock/imgs/index/index_" + latestTradingDateString + ".png");
 	}
 
 	/*

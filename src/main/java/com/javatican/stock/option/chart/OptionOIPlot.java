@@ -2,44 +2,26 @@ package com.javatican.stock.option.chart;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
-import java.util.List;
 
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.DatasetRenderingOrder;
-import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.javatican.stock.StockException;
-import com.javatican.stock.dao.OptionDataDAO;
-import com.javatican.stock.model.OptionData;
 import com.javatican.stock.util.StockChartUtils;
 import com.javatican.stock.util.StockUtils;
 
 @Component("optionOIPlot")
-public class OptionOIPlot {
-
-	@Autowired
-	OptionDataDAO optionDataDAO;
-
-	private List<OptionData> odList;
-
-	public Plot getPlot() throws StockException {
-		odList = optionDataDAO.findAll();
-		return createPlot();
-	}
-
-	private XYPlot createPlot() {
+public class OptionOIPlot extends OptionParentPlot{
+ 
+	protected XYPlot createPlot() {
 		TimeSeriesCollection ooiDataset = createOptionOiDataset();
 		TimeSeriesCollection ovDataset = createOptionVolumeDataset(); 
 		TimeSeriesCollection pcrDataset = createPutCallRatioDataset();

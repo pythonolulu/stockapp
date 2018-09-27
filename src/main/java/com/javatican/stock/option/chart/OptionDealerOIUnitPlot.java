@@ -17,10 +17,10 @@ import org.springframework.stereotype.Component;
 
 import com.javatican.stock.util.StockChartUtils;
 
-@Component("ofoivPlot")
-public class OptionForeignOIValuePlot extends OptionParentPlot {
+@Component("odoiuPlot")
+public class OptionDealerOIUnitPlot extends OptionParentPlot{
 
-	public OptionForeignOIValuePlot() {
+	public OptionDealerOIUnitPlot() {
 	}
 
 	protected XYPlot createPlot() {
@@ -28,14 +28,14 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TableXYDataset dataset2 = createLongPositionOIDataset();
 		TableXYDataset dataset3 = createShortPositionOIDataset();
 		// OI Axis
-		NumberAxis axis2 = new NumberAxis("契约金额(千元)");
+		NumberAxis axis2 = new NumberAxis("未平仓口数");
 		axis2.setAutoRangeIncludesZero(true);
 		// Set to no decimal
 		axis2.setNumberFormatOverride(new DecimalFormat("###,###"));
 		// net OI renderer
 		XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+		renderer1.setDefaultSeriesVisibleInLegend(false);
 		renderer1.setDefaultShapesVisible(true);
-		renderer1.setDefaultSeriesVisibleInLegend(true);
 		renderer1.setSeriesStroke(0, new BasicStroke(1.0f));
 		renderer1.setSeriesPaint(0, Color.BLUE);
 		renderer1.setSeriesShape(0, StockChartUtils.getSolidSphereShape());
@@ -49,14 +49,14 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		StackedXYBarRenderer renderer2 = new StackedXYBarRenderer(0.15);
 		renderer2.setDrawBarOutline(false);
 		renderer2.setShadowVisible(false);
-		renderer2.setDefaultSeriesVisibleInLegend(true);
+		renderer2.setDefaultSeriesVisibleInLegend(false);
 		renderer2.setSeriesPaint(0, Color.ORANGE);
 		renderer2.setSeriesPaint(1, Color.GREEN);
 		// long OI renderer
 		StackedXYBarRenderer renderer3 = new StackedXYBarRenderer(0.15);
 		renderer3.setDrawBarOutline(false);
 		renderer3.setShadowVisible(false);
-		renderer3.setDefaultSeriesVisibleInLegend(true);
+		renderer3.setDefaultSeriesVisibleInLegend(false);
 		renderer3.setSeriesPaint(0, Color.CYAN);
 		renderer3.setSeriesPaint(1, Color.MAGENTA);
 		// Create subplot
@@ -68,7 +68,6 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		// renderers: dataset2 uses renderer2, dataset3 uses renderer3
 		subplot.setRenderer(1, renderer2);
 		subplot.setRenderer(2, renderer3);
-		//
 		subplot.mapDatasetToRangeAxis(1, 0);
 		subplot.mapDatasetToRangeAxis(2, 0);
 		//
@@ -77,7 +76,7 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		subplot.setBackgroundPaint(Color.WHITE);
 		StockChartUtils.drawHorizontalValueMarker(subplot, 0, 0);
 		return subplot;
-	}
+	} 
 
 	/*
 	 * long position includes 1) Call option Buy and 2) Put option Sell
@@ -86,8 +85,8 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueLong(), "买權买方");
-			dataset.add(new Day(od.getTradingDate()), od.getPutForeignOpenValueShort(), "卖權卖方");
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenLong(), "买權买方");
+			dataset.add(new Day(od.getTradingDate()), od.getPutDealerOpenShort(), "卖權卖方");
 		});
 		return dataset;
 	}
@@ -99,8 +98,8 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutForeignOpenValueLong(), "卖權买方");
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getCallForeignOpenValueShort(), "买權卖方");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutDealerOpenLong(), "卖權买方");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getCallDealerOpenShort(), "买權卖方");
 		});
 		return dataset;
 	}
@@ -109,10 +108,9 @@ public class OptionForeignOIValuePlot extends OptionParentPlot {
 		TimeTableXYDataset dataset = new TimeTableXYDataset();
 		// add data
 		odList.stream().forEach(od -> {
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueNet(), "买權差额(买-卖)");
-			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutForeignOpenValueNet(), "卖權差额(卖-买)");
-			dataset.add(new Day(od.getTradingDate()), od.getCallForeignOpenValueNet() - od.getPutForeignOpenValueNet(),
-					"买卖權净差额");
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenNet(), "买權差额(买-卖)");
+			dataset.add(new Day(od.getTradingDate()), -1 * od.getPutDealerOpenNet(), "卖權差额(卖-买)");
+			dataset.add(new Day(od.getTradingDate()), od.getCallDealerOpenNet() - od.getPutDealerOpenNet(), "买卖權净差额");
 		});
 		return dataset;
 	}

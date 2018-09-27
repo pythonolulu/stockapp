@@ -46,10 +46,10 @@ public class FutureController {
 	}
 
 	@GetMapping("/getFutureChart")
-	public ModelAndView getIndexChart(@RequestParam(value = "force", defaultValue = "false") boolean force) {
+	public ModelAndView getFutureChart(@RequestParam(value = "force", defaultValue = "false") boolean force) {
 		String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 		futureChartService.createGraph(force, latestTradingDateString);
-		return new ModelAndView("redirect:" + "/stock/imgs/future_" + latestTradingDateString + ".png");
+		return new ModelAndView("redirect:" + "/stock/imgs/future/future_" + latestTradingDateString + ".png");
 	}
 
 }
