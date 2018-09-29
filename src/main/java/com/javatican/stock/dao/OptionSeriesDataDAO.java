@@ -40,4 +40,62 @@ public class OptionSeriesDataDAO {
 	public Date getLatestTradingDate() {
 		return optionSeriesDataRepository.getLatestTradingDate();
 	}
+
+	public List<Integer> findCallOptionStrikePriceBetween(Integer low, Integer high) {
+		return optionSeriesDataRepository.findCallOptionStrikePriceBetween(low, high);
+	}
+
+	public List<Integer> findPutOptionStrikePriceBetween(Integer low, Integer high) {
+		return optionSeriesDataRepository.findPutOptionStrikePriceBetween(low, high);
+	}
+
+	public List<OptionSeriesData> findWeekCallOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(true, strikePrice, true, false, false);
+	}
+
+	public List<OptionSeriesData> findWeekPutOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(false, strikePrice, true, false, false);
+	}
+
+	public List<OptionSeriesData> findCurrentMonthCallOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(true, strikePrice, false, true, false);
+	}
+
+	public List<OptionSeriesData> findCurrentMonthPutOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(false, strikePrice, false, true, false);
+	}
+
+	public List<OptionSeriesData> findNextMonthCallOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(true, strikePrice, false, false, true);
+	}
+
+	public List<OptionSeriesData> findNextMonthPutOptionByStrikePrice(Integer strikePrice) {
+		return optionSeriesDataRepository.customQuery(false, strikePrice, false, false, true);
+	}
+	//
+
+	public List<OptionSeriesData> findWeekCallOptionByStrikePriceDateSince(Integer strikePrice, Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(true, strikePrice, true, false, false, dateSince);
+	}
+
+	public List<OptionSeriesData> findWeekPutOptionByStrikePriceDateSince(Integer strikePrice, Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(false, strikePrice, true, false, false, dateSince);
+	}
+
+	public List<OptionSeriesData> findCurrentMonthCallOptionByStrikePriceDateSince(Integer strikePrice,
+			Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(true, strikePrice, false, true, false, dateSince);
+	}
+
+	public List<OptionSeriesData> findCurrentMonthPutOptionByStrikePriceDateSince(Integer strikePrice, Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(false, strikePrice, false, true, false, dateSince);
+	}
+
+	public List<OptionSeriesData> findNextMonthCallOptionByStrikePriceDateSince(Integer strikePrice, Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(true, strikePrice, false, false, true, dateSince);
+	}
+
+	public List<OptionSeriesData> findNextMonthPutOptionByStrikePriceDateSince(Integer strikePrice, Date dateSince) {
+		return optionSeriesDataRepository.customQueryDateSince(false, strikePrice, false, false, true, dateSince);
+	}
 }

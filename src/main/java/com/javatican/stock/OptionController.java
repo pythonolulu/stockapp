@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.javatican.stock.service.OptionChartService;
+import com.javatican.stock.service.OptionSeriesChartService;
 import com.javatican.stock.service.OptionService;
 import com.javatican.stock.service.StockService;
 import com.javatican.stock.util.ResponseMessage;
@@ -28,9 +29,10 @@ public class OptionController {
 	private StockService stockService;
 	@Autowired
 	private OptionService optionService;
-
 	@Autowired
 	private OptionChartService optionChartService;
+	@Autowired
+	private OptionSeriesChartService optionSeriesChartService;
 
 	@GetMapping("/updateOptionData")
 	public ResponseMessage updateOptionData(HttpServletRequest request) {
@@ -62,6 +64,7 @@ public class OptionController {
 			return new ModelAndView("stock/error");
 		}
 	}
+
 	@GetMapping("/getOptionStrategyChart")
 	public ModelAndView getOptionStrategyChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
@@ -72,11 +75,13 @@ public class OptionController {
 			}
 			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 			optionChartService.createGraph(force, latestTradingDateString, dateSince);
-			return new ModelAndView("redirect:" + "/stock/imgs/option/option_strategy_" + latestTradingDateString + ".png");
+			return new ModelAndView(
+					"redirect:" + "/stock/imgs/option/option_strategy_" + latestTradingDateString + ".png");
 		} catch (Exception e) {
 			return new ModelAndView("stock/error");
 		}
 	}
+
 	@GetMapping("/getOptionStrategy2Chart")
 	public ModelAndView getOptionStrategy2Chart(@RequestParam(value = "force", defaultValue = "false") boolean force,
 			@RequestParam(value = "dateSince", required = false) String dateSinceString) {
@@ -87,7 +92,26 @@ public class OptionController {
 			}
 			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 			optionChartService.createGraph(force, latestTradingDateString, dateSince);
-			return new ModelAndView("redirect:" + "/stock/imgs/option/option_strategy2_" + latestTradingDateString + ".png");
+			return new ModelAndView(
+					"redirect:" + "/stock/imgs/option/option_strategy2_" + latestTradingDateString + ".png");
+		} catch (Exception e) {
+			return new ModelAndView("stock/error");
+		}
+	}
+
+	@GetMapping("/getOptionSeriesChart")
+	public ModelAndView getOptionSeriesChart(@RequestParam(value = "force", defaultValue = "false") boolean force,
+			@RequestParam(value = "dateSince", required = false) String dateSinceString,
+			@RequestParam(value = "upRange", defaultValue = "1000") int upRange,
+			@RequestParam(value = "downRange", defaultValue = "500") int downRange) {
+		try {
+			Date dateSince = null;
+			if (dateSinceString != null) {
+				dateSince = StockUtils.stringSimpleToDate(dateSinceString).get();
+			}
+			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
+			optionSeriesChartService.createGraph(force, latestTradingDateString, dateSince, upRange, downRange);
+			return new ModelAndView("redirect:" + "/stock/imgs/option/series/option_" + latestTradingDateString + ".png");
 		} catch (Exception e) {
 			return new ModelAndView("stock/error");
 		}
