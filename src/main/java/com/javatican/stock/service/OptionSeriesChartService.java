@@ -1,6 +1,7 @@
 package com.javatican.stock.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javatican.stock.StockException;
 import com.javatican.stock.dao.OptionSeriesDataDAO;
 import com.javatican.stock.dao.TradingDateDAO;
@@ -39,6 +42,7 @@ import com.javatican.stock.util.StockUtils;
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class OptionSeriesChartService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static ObjectMapper objectMapper = new ObjectMapper();
 	private static final String OPTION_SERIES_CHART_RESOURCE = "file:./charts/option/series/*.png";
 	private static final String OPTION_SERIES_MAIN_CHART_RESOURCE_FILE_PATH = "file:./charts/option/series/option_%s.png";
 	// eg. option_call_11000_20180928.png for call option with strike price of 11000
@@ -80,6 +84,29 @@ public class OptionSeriesChartService {
 			return false;
 		}
 	}
+
+	public void save(boolean callOption, List<Integer> seriesList) throws StockException {
+		Resource resource = resourceLoader.getResource(
+				String.format("file:./charts/option/series/%s_option_series.json", callOption ? "call" : "put"));
+		try (OutputStream st = ((WritableResource) resource).getOutputStream()) {
+			objectMapper.writeValue(st, seriesList);
+			logger.info("Finish saving series data for :" + (callOption ? "call" : "put") + " option.");
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+	}
+
+	public List<Integer> load(boolean callOption) throws StockException {
+		Resource resource = resourceLoader.getResource(
+				String.format("file:./charts/option/series/%s_option_series.json", callOption ? "call" : "put"));
+		try (InputStream st = resource.getInputStream();) {
+			List<Integer> sList = objectMapper.readValue(st, new TypeReference<List<Integer>>() {
+			});
+			return sList;
+		} catch (Exception ex) {
+			throw new StockException(ex);
+		}
+	} 
 
 	public class StockChartUtil {
 		private String dateString;
@@ -174,6 +201,9 @@ public class OptionSeriesChartService {
 					throw new StockException(ex);
 				}
 			}
+			//write series data
+			save(true, callOptionStrikePriceRange);
+			save(false, putOptionStrikePriceRange);
 		}
 
 		private JFreeChart createChart(Date dateSince, boolean callOption, Integer strikePrice) throws StockException {
@@ -231,7 +261,8 @@ public class OptionSeriesChartService {
 
 			//
 			mainPlot.setOrientation(PlotOrientation.VERTICAL);
-			JFreeChart chart = new JFreeChart(String.format("%s选择權线图(%s,履约价%s)", dateString, callOption?"买權":"卖權", strikePrice),
+			JFreeChart chart = new JFreeChart(
+					String.format("%s选择權线图(%s,履约价%s)", dateString, callOption ? "买權" : "卖權", strikePrice),
 					JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
 			// chart.removeLegend();
 			return chart;

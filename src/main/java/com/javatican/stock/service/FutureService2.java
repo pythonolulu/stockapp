@@ -28,14 +28,14 @@ import com.javatican.stock.util.StockUtils;
 /* this service deals with downloading and saving trading date and total trading values
  * and trading values for three big investors
  */
-@Service("futureService")
+@Service("futureServiceOld")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
-public class FutureService {
+public class FutureService2 {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String FUTURE_TRADING_POST_URL = "http://www.taifex.com.tw/cht/3/futDailyMarketReport";
-	private static final String FUTURE_TRADING2_POST_URL = "http://www.taifex.com.tw/cht/3/futContractsDate";
-	private static final String FUTURE_TRADING3_POST_URL = "http://www.taifex.com.tw/cht/3/largeTraderFutQry";
+	private static final String FUTURE_TRADING_POST_URL = "http://www.taifex.com.tw/chinese/3/3_1_1.asp";
+	private static final String FUTURE_TRADING2_POST_URL = "http://www.taifex.com.tw/chinese/3/7_12_3.asp";
+	private static final String FUTURE_TRADING3_POST_URL = "http://www.taifex.com.tw/chinese/3/7_8.asp";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -59,13 +59,21 @@ public class FutureService {
 
 	private void downloadAndSaveFutureData(List<Date> tdList) throws StockException {
 		for (Date date : tdList) {
-			String dateString = StockUtils.dateToStringSeparatedBySlash(date);
+			String dateString = StockUtils.dateToSimpleString(date);
+			int[] yearMonthDay = StockUtils.getYearMonthDay(date);
 			//
 			Map<String, String> reqParams = new HashMap<>();
-			reqParams.put("queryType", "2");
-			reqParams.put("marketCode", "0");
+			reqParams.put("qtype", "2");
 			reqParams.put("commodity_id", "TX");
-			reqParams.put("queryDate", dateString);
+			reqParams.put("market_code", "0");
+			reqParams.put("dateaddcnt", "0");
+			reqParams.put("DATA_DATE_Y", String.valueOf(yearMonthDay[0]));
+			reqParams.put("DATA_DATE_M", String.valueOf(yearMonthDay[1]));
+			reqParams.put("DATA_DATE_D", String.valueOf(yearMonthDay[2]));
+			reqParams.put("syear", String.valueOf(yearMonthDay[0]));
+			reqParams.put("smonth", String.valueOf(yearMonthDay[1]));
+			reqParams.put("sday", String.valueOf(yearMonthDay[2]));
+			reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			reqParams.put("MarketCode", "0");
 			reqParams.put("commodity_idt", "TX");
 			//
@@ -103,8 +111,8 @@ public class FutureService {
 				fd.setVolumeTotal2(Double.valueOf(tds.get(10).text()));
 				fd.setOpenInterest2(Double.valueOf(tds.get(12).text()));
 				// download other fields
-				downloadFutureData2(dateString, fd);
-				downloadFutureData3(dateString, fd);
+				downloadFutureData2(yearMonthDay, fd);
+				downloadFutureData3(yearMonthDay, fd);
 				futureDataDAO.save(fd);
 				try {
 					Thread.sleep(stockConfig.getSleepTime());
@@ -117,12 +125,15 @@ public class FutureService {
 	}
 
 	//
-	private void downloadFutureData2(String dateString, FutureData fd) throws StockException {
+	private void downloadFutureData2(int[] yearMonthDay, FutureData fd) throws StockException {
 		Map<String, String> reqParams = new HashMap<>();
-		reqParams.put("queryType", "1");
-		reqParams.put("doQuery", "1");
-		reqParams.put("queryDate", dateString);
-		reqParams.put("commodityId", "TXF");
+		reqParams.put("DATA_DATE_Y", String.valueOf(yearMonthDay[0]));
+		reqParams.put("DATA_DATE_M", String.valueOf(yearMonthDay[1]));
+		reqParams.put("DATA_DATE_D", String.valueOf(yearMonthDay[2]));
+		reqParams.put("syear", String.valueOf(yearMonthDay[0]));
+		reqParams.put("smonth", String.valueOf(yearMonthDay[1]));
+		reqParams.put("sday", String.valueOf(yearMonthDay[2]));
+		reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 
 		//
 		Document doc;
@@ -130,8 +141,10 @@ public class FutureService {
 			doc = Jsoup.connect(FUTURE_TRADING2_POST_URL).data(reqParams).timeout(0).post();
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
-				logger.warn("no trs in dealer/trust/foreign future html for date:" + dateString);
-				throw new StockException("no trs in dealer/trust/foreign future html for date:" + dateString);
+				logger.warn("no trs in dealer/trust/foreign future html for date:"
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
+				throw new StockException("no trs in dealer/trust/foreign future html for date:"
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// 4th row : dealer
 			Element tr = trs.get(3);
@@ -167,18 +180,27 @@ public class FutureService {
 	}
 
 	//
-	private void downloadFutureData3(String dateString, FutureData fd) throws StockException {
+	private void downloadFutureData3(int[] yearMonthDay, FutureData fd) throws StockException {
 		Map<String, String> reqParams = new HashMap<>();
-		reqParams.put("queryDate", dateString);
-		reqParams.put("contractId", "TX");
+		reqParams.put("yytemp", String.valueOf(yearMonthDay[0]));
+		reqParams.put("mmtemp", String.valueOf(yearMonthDay[1]));
+		reqParams.put("ddtemp", String.valueOf(yearMonthDay[2]));
+		reqParams.put("chooseitemtemp", "ALL");
+		reqParams.put("choose_yy", String.valueOf(yearMonthDay[0]));
+		reqParams.put("choose_mm", String.valueOf(yearMonthDay[1]));
+		reqParams.put("choose_dd", String.valueOf(yearMonthDay[2]));
+		reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
+		reqParams.put("choose_item", "ALL");
 		//
 		Document doc;
 		try {
 			doc = Jsoup.connect(FUTURE_TRADING3_POST_URL).data(reqParams).timeout(0).post();
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
-				logger.warn("no trs in future html of top5/10 traders for date:" + dateString);
-				throw new StockException("no trs in future html of top5/10 traders for date:" + dateString);
+				logger.warn("no trs in future html of top5/10 traders for date:"
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
+				throw new StockException("no trs in future html of top5/10 traders for date:"
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// 5th row : current month
 			Element tr = trs.get(4);

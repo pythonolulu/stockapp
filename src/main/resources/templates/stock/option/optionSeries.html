@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{stock/header :: header}"></head>
+<body>
+	<div class="container">
+		<h2 th:text="${title}">2018/10/01选择權线图 - 买權契约价：11000</h2>
+		<div class="row">
+			<table class="table">
+				<tbody>
+					<tr>
+						<th scope="row">买權</th>
+					</tr>
+					<tr th:each="subList: ${callSeriesBreakupList}">
+						<td th:each="item : ${subList}">
+							<a th:unless="${callOption && item==defaultSeries}" target='_self'  th:href="@{/stock/optionSeries(type='call',series=${item})}" th:text="${item}">10900</a>
+							<span th:if="${callOption && item==defaultSeries}" th:text="${item}">11000</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<table class="table">
+				<tbody>
+					<tr>
+						<th scope="row">卖權</th>
+					</tr>
+					<tr th:each="subList: ${putSeriesBreakupList}">
+						<td th:each="item : ${subList}">
+						<a th:unless="${!callOption && item==defaultSeries}" target='_self'  th:href="@{/stock/optionSeries(type='put',series=${item})}" th:text="${item}">10900</a>
+						<span th:if="${!callOption && item==defaultSeries}" th:text="${item}">11000</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div> 
+		<div class="row">
+			<img th:src="@{/stock/imgs/option/series/{filename}(filename=${callOption?'option_call':'option_put'}+'_'+${defaultSeries}+'_'+${dateString}+'.png')}" th:alt="'option series chart'" height="1200" width="1100"/>
+		</div>
+	</div>
+</body>
+</html>
+
+

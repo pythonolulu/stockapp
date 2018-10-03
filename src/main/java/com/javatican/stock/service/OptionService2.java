@@ -31,14 +31,14 @@ import com.javatican.stock.util.StockUtils;
 /* this service deals with downloading and saving trading date and total trading values
  * and trading values for three big investors
  */
-@Service("optionService")
+@Service("optionServiceOld")
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
-public class OptionService {
+public class OptionService2 {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String OPTION_TRADING_POST_URL = "http://www.taifex.com.tw/cht/3/optDailyMarketReport";
-	private static final String OPTION_TRADING2_POST_URL = "http://www.taifex.com.tw/cht/3/callsAndPutsDate";
-	private static final String OPTION_TRADING3_POST_URL = "http://www.taifex.com.tw/cht/3/largeTraderOptQry";
+	private static final String OPTION_TRADING_POST_URL = "http://www.taifex.com.tw/chinese/3/3_2_2.asp";
+	private static final String OPTION_TRADING2_POST_URL = "http://www.taifex.com.tw/chinese/3/7_12_5.asp";
+	private static final String OPTION_TRADING3_POST_URL = "http://www.taifex.com.tw/chinese/3/7_9.asp";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -66,23 +66,31 @@ public class OptionService {
 
 	private void downloadAndSaveOptionData(List<Date> tdList) throws StockException {
 		for (Date date : tdList) {
-			String dateString = StockUtils.dateToStringSeparatedBySlash(date);
+			// String dateString = StockUtils.dateToSimpleString(date);
+			int[] yearMonthDay = StockUtils.getYearMonthDay(date);
 			//
 			Map<String, String> reqParams = new HashMap<>();
-			reqParams.put("queryType", "2");
-			reqParams.put("marketCode", "0");
-			reqParams.put("commodity_id", "TXO"); 
-			reqParams.put("queryDate", dateString);
+			reqParams.put("qtype", "2");
+			reqParams.put("commodity_id", "TXO");
+			reqParams.put("market_code", "0");
+			reqParams.put("dateaddcnt", "0");
+			reqParams.put("DATA_DATE_Y", String.valueOf(yearMonthDay[0]));
+			reqParams.put("DATA_DATE_M", String.valueOf(yearMonthDay[1]));
+			reqParams.put("DATA_DATE_D", String.valueOf(yearMonthDay[2]));
+			reqParams.put("syear", String.valueOf(yearMonthDay[0]));
+			reqParams.put("smonth", String.valueOf(yearMonthDay[1]));
+			reqParams.put("sday", String.valueOf(yearMonthDay[2]));
+			reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			reqParams.put("MarketCode", "0");
 			reqParams.put("commodity_idt", "TXO");
 			//
 			Document doc;
 			try {
 				doc = Jsoup.connect(OPTION_TRADING_POST_URL).data(reqParams).timeout(0).post();
-				Elements trs = doc.select("table.table_f > tbody > tr");
+				Elements trs = doc.select("table.table_c > tbody > tr");
 				if (trs == null || trs.isEmpty()) {
-					logger.warn("no table_f tr element in option html for date:" + date);
-					throw new StockException("no table_f tr element in option html for date:" + date);
+					logger.warn("no table_c tr element in option html for date:" + date);
+					throw new StockException("no table_c tr element in option html for date:" + date);
 				}
 				String[] contractNames = this.getContractName(trs);
 				String weekContract = contractNames[0]; // maybe null
@@ -131,8 +139,8 @@ public class OptionService {
 				od.setCallTradingVolume(callTradingVolume);
 				od.setPutTradingVolume(putTradingVolume);
 				// download other fields
-				downloadOptionData2(dateString, od);
-				downloadOptionData3(dateString, od);
+				downloadOptionData2(yearMonthDay, od);
+				downloadOptionData3(yearMonthDay, od);
 				od.setCallOi(od.getCallTotalOiAll());
 				od.setPutOi(od.getPutTotalOiAll());
 				optionDataDAO.save(od);
@@ -147,12 +155,16 @@ public class OptionService {
 		}
 	}
 
-	private void downloadOptionData2(String dateString, OptionData od) throws StockException {
-		Map<String, String> reqParams = new HashMap<>(); 
-		reqParams.put("queryType", "1");
-		reqParams.put("doQuery", "1");
-		reqParams.put("queryDate", dateString);
-		reqParams.put("commodityId", "TXO");
+	private void downloadOptionData2(int[] yearMonthDay, OptionData od) throws StockException {
+		Map<String, String> reqParams = new HashMap<>();
+		reqParams.put("DATA_DATE_Y", String.valueOf(yearMonthDay[0]));
+		reqParams.put("DATA_DATE_M", String.valueOf(yearMonthDay[1]));
+		reqParams.put("DATA_DATE_D", String.valueOf(yearMonthDay[2]));
+		reqParams.put("syear", String.valueOf(yearMonthDay[0]));
+		reqParams.put("smonth", String.valueOf(yearMonthDay[1]));
+		reqParams.put("sday", String.valueOf(yearMonthDay[2]));
+		reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
+		reqParams.put("COMMODITY_ID", "TXO");
 		//
 		Document doc;
 		try {
@@ -160,9 +172,9 @@ public class OptionService {
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
 				logger.warn("no trs in dealer/trust/foreign option html for date:"
-						+ dateString);
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 				throw new StockException("no trs in dealer/trust/foreign option html for date:"
-						+ dateString);
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// 4th row : call option dealer
 			Element tr = trs.get(3);
@@ -261,11 +273,17 @@ public class OptionService {
 	}
 
 	//
-	private void downloadOptionData3(String dateString, OptionData od) throws StockException {
+	private void downloadOptionData3(int[] yearMonthDay, OptionData od) throws StockException {
 		Map<String, String> reqParams = new HashMap<>();
-		reqParams.put("queryDate", dateString);
-		reqParams.put("contractId", "TXO");
-		//
+		reqParams.put("yytemp", String.valueOf(yearMonthDay[0]));
+		reqParams.put("mmtemp", String.valueOf(yearMonthDay[1]));
+		reqParams.put("ddtemp", String.valueOf(yearMonthDay[2]));
+		reqParams.put("chooseitemtemp", "ALL");
+		reqParams.put("choose_yy", String.valueOf(yearMonthDay[0]));
+		reqParams.put("choose_mm", String.valueOf(yearMonthDay[1]));
+		reqParams.put("choose_dd", String.valueOf(yearMonthDay[2]));
+		reqParams.put("datestart", String.format("%s/%s/%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
+		reqParams.put("choose_item", "TXO");
 		//
 		Document doc;
 		try {
@@ -273,9 +291,9 @@ public class OptionService {
 			Elements trs = doc.select("table.table_f > tbody > tr");
 			if (trs == null || trs.isEmpty()) {
 				logger.warn("no trs in option html of top5/10 traders for date:"
-						+ dateString);
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 				throw new StockException("no trs in option html of top5/10 traders for date:"
-						+ dateString);
+						+ String.format("%s%s%s", yearMonthDay[0], yearMonthDay[1], yearMonthDay[2]));
 			}
 			// current week data may be empty(the trading days within the 3rd week)
 			// 4th row : call option, current week

@@ -344,4 +344,19 @@ public class StockUtils {
 		return null;
 	}
 
+	public static List<List<Integer>> breakupOptionSeriesList(List<Integer> originalList) {
+		int max_items = 15;
+		// 31>4, 32->4, 33->5
+		int sections = (originalList.size() % max_items == 0) ? originalList.size() / max_items
+				: originalList.size() / max_items + 1;
+		List<List<Integer>> resultList = new ArrayList<>();
+		//
+		for (int i = 0; i < sections; i++) {
+			List<Integer> subList = originalList.subList(i * max_items,
+					Math.min(originalList.size(), (i + 1) * max_items));
+			resultList.add(subList);
+		}
+		return resultList;
+	}
+
 }

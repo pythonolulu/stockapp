@@ -27,7 +27,7 @@ public class RoutineJob {
 				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1", "prepareSmaSelectStrategy2",
 				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
 				"extractMarginData", "calculateIndexStatsData", "prepareSmaStatsData", "updateFutureData",
-				"updateOptionData"));
+				"updateOptionData","updateOptionSeriesChart"));
 		final String STOCK_GET_URL = "http://localhost:8080/stock/%s";
 		String strUrl = null;
 		ResponseMessage rm = null;

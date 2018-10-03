@@ -19,6 +19,8 @@ import com.javatican.stock.dao.SmaSelectStrategy2DAO;
 import com.javatican.stock.dao.StockItemDAO;
 import com.javatican.stock.dao.StockItemDataDAO;
 import com.javatican.stock.dao.TradingDateDAO;
+import com.javatican.stock.dao.TradingValueDAO;
+import com.javatican.stock.model.TradingValue;
 import com.javatican.stock.util.StockUtils;
 
 @Service("indexStrategyService")
@@ -29,6 +31,8 @@ public class IndexStrategyService {
 
 	@Autowired
 	TradingDateDAO tradingDateDAO;
+	@Autowired
+	private TradingValueDAO tradingValueDAO;
 	@Autowired
 	StockItemDAO stockItemDAO;
 	@Autowired
@@ -97,4 +101,8 @@ public class IndexStrategyService {
 		indexStrategyDAO.saveSmaStatsData(statsMap);
 	}
 
+	public TradingValue getByTradingDate(Date date) {
+		return tradingValueDAO.getByTradingDate(date);
+
+	}
 }
