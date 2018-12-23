@@ -117,6 +117,7 @@ public class StockTradeByForeignService {
 				} catch (InterruptedException ex) {
 				}
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				throw new StockException(ex);
 			}
 

@@ -157,6 +157,7 @@ public class StockItemService {
 			}
 			return spList;
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			throw new StockException(ex);
 		}
 	}
@@ -375,6 +376,7 @@ public class StockItemService {
 	}
 
 	public void updatePriceDataForAllImproved() throws StockException {
+		// String firstDayOfTheMonth = "20181101";
 		String firstDayOfTheMonth = StockUtils.getFirstDayOfCurrentMonth();
 		List<Date> tdList = tradingDateDAO.findLatestNTradingDateDesc(2);
 		Date latestTradingDate = tdList.get(0);
@@ -399,8 +401,14 @@ public class StockItemService {
 				stockItemHelper.updatePriceDateForItem(sil.getSymbol(), sp.getTradingDate());
 			} else {
 				List<StockPrice> spList = downloadStockPriceAndVolume(sil.getSymbol(), firstDayOfTheMonth);
-				if (spList.size() == 0)
+				if (spList.size() == 0) {
+					logger.info("no price data for symbol: " + sil.getSymbol());
+					try {
+						Thread.sleep(stockConfig.getSleepTime());
+					} catch (InterruptedException ex) {
+					}
 					continue;
+				}
 				stockPriceDAO.update(sil.getSymbol(), existingSpList, spList);
 				stockItemHelper.updatePriceDateForItem(sil.getSymbol(), spList.get(spList.size() - 1).getTradingDate());
 				try {
@@ -655,6 +663,8 @@ public class StockItemService {
 				// get its last day of the week(not necessarily Friday, because of holidays)
 				// logger.info(sp.toString());
 				Date lastTradingDateOfWeek = StockUtils.getLastTradingDateOfWeek(sp.getTradingDate(), tdList);
+				if (lastTradingDateOfWeek == null)
+					continue;
 				String dateString = StockUtils.dateToSimpleString(lastTradingDateOfWeek);
 				StockPrice weeklySp = weeklySpMap.get(dateString);
 				if (weeklySp == null) {
@@ -666,7 +676,7 @@ public class StockItemService {
 					weeklySp.setHigh(sp.getHigh());
 					weeklySp.setLow(sp.getLow());
 				}
-				if (sp.getTradingDate().getTime()==lastTradingDateOfWeek.getTime()) {
+				if (sp.getTradingDate().getTime() == lastTradingDateOfWeek.getTime()) {
 					// set close price
 					weeklySp.setClose(sp.getClose());
 				}
@@ -700,10 +710,10 @@ public class StockItemService {
 		weeklySp.setTradeValue(weeklySp.getTradeValue() + sp.getTradeValue());
 	}
 
-
 	public List<String> getAllSymbols() {
 		return stockItemDAO.getAllSymbols();
 	}
+
 	public List<StockItem> findAllStockItems() {
 		return stockItemDAO.findAll();
 	}
