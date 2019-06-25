@@ -33,7 +33,7 @@ import com.javatican.stock.util.StockUtils;
 public class StockTradeByTrustService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_STOCK_TRADE_BY_TRUST_GET_URL = "http://www.tse.com.tw/fund/TWT44U?response=html&date=%s";
+	private static final String TWSE_STOCK_TRADE_BY_TRUST_GET_URL = "https://www.twse.com.tw/fund/TWT44U?response=html&date=%s";
 
 	@Autowired
 	StockConfig stockConfig;
@@ -84,7 +84,7 @@ public class StockTradeByTrustService {
 			String strUrl = String.format(TWSE_STOCK_TRADE_BY_TRUST_GET_URL, dateString);
 			try (InputStream inStream = new URL(strUrl).openStream();) {
 				Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
-
+				//logger.info(doc.toString());
 				Elements trs = doc.select("table > tbody > tr");
 				StockTradeByTrust stbt;
 				StockItem si = null;
@@ -92,6 +92,7 @@ public class StockTradeByTrustService {
 					Elements tds = tr.select("td");
 					stbt = new StockTradeByTrust(td.getDate());
 					stbt.setStockSymbol(tds.get(1).text());
+					//logger.info("prepare trust data for symbol:"+stbt.getStockSymbol());
 					stbt.setBuy(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
 					stbt.setSell(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
 					stbt.setDiff(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));

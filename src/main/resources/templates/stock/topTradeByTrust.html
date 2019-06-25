@@ -12,9 +12,10 @@
 					<tr>
 						<td colspan="11"><input type="checkbox"
 							th:field="${command.symbols}" th:value="${item.key.symbol}" /> <span
-							th:text="${#ids.seq('#')}">#1</span> <a target='_blank'
-							href="http://tw.stock.yahoo.com/q/ta?s=2317"
-							th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key.symbol})}"
+							th:text="${#ids.seq('#')}">#1</span> 
+							<a target='_blank'
+							href="https://www.wantgoo.com/stock/astock/techchart?StockNo=2317"
+							th:href="@{https://www.wantgoo.com/stock/astock/techchart(StockNo=${item.key.symbol})}"
 							th:text="${item.key.symbol}">2317</a> <a target='_blank'
 							href="http://norway.twsthr.info/StockHolders.aspx?stock=2317"
 							th:href="@{http://norway.twsthr.info/StockHolders.aspx(stock=${item.key.symbol})}"

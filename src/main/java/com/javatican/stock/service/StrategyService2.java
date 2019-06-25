@@ -42,7 +42,10 @@ public class StrategyService2 {
 
 	public void prepareRawStatsData() throws StockException {
 		// get all symbols that have call warrants
-		List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+		// List<String> symbolList =
+		// callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+		// ryan note: select all symbols 2019/5/26
+		List<String> symbolList = stockItemDAO.getAllSymbols();
 		for (String stockSymbol : symbolList) {
 			if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
 				continue;
@@ -63,7 +66,9 @@ public class StrategyService2 {
 			}
 		} else {
 			Map<String, List<Number>> statsMap = new HashMap<>();
-			List<String> symbolList = callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
+			// ryan add 2019/5/26
+			List<String> symbolList = type.contains("_all") ? stockItemDAO.getAllSymbols()
+					: callWarrantTradeSummaryDAO.getStockSymbolsWithCallWarrant();
 			Date current = StockUtils.stringSimpleToDate(dateString).get();
 			for (String stockSymbol : symbolList) {
 				if (stockSymbol.startsWith("IX") || stockSymbol.startsWith("TXF"))
@@ -84,24 +89,28 @@ public class StrategyService2 {
 						switch (type) {
 						// Sma20_above
 						case "20A":
+						case "20A_all":
 							if (count_above_sma20 > 0) {
 								filterList = Arrays.asList(count_above_sma20, count_sma20_up, priceAboveSma20, k9, d9);
 							}
 							break;
 						// Sma60_above
 						case "60A":
+						case "60A_all":
 							if (count_above_sma60 > 0) {
 								filterList = Arrays.asList(count_above_sma60, count_sma60_up, priceAboveSma60, k9, d9);
 							}
 							break;
 						// Sma20_below
 						case "20B":
+						case "20B_all":
 							if (count_above_sma20 < 0) {
 								filterList = Arrays.asList(count_above_sma20, count_sma20_up, priceAboveSma20, k9, d9);
 							}
 							break;
 						// Sma60_below
 						case "60B":
+						case "60B_all":
 							if (count_above_sma60 < 0) {
 								filterList = Arrays.asList(count_above_sma60, count_sma60_up, priceAboveSma60, k9, d9);
 							}

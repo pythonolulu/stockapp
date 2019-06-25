@@ -36,7 +36,7 @@ import com.javatican.stock.util.StockUtils;
 public class CallWarrantTradeSummaryService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_CALL_WARRANT_TRADE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=0999";
+	private static final String TWSE_CALL_WARRANT_TRADE_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=0999";
 
 	@Autowired
 	StockConfig stockConfig;

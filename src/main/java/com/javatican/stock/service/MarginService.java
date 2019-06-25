@@ -38,8 +38,8 @@ import com.javatican.stock.util.StockUtils;
 public class MarginService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String MARGIN_TRADE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_MARGN?response=html&date=%s&selectType=ALL";
-	private static final String SBL_TRADE_GET_URL = "http://www.tse.com.tw/exchangeReport/TWT93U?response=html&date=%s";
+	private static final String MARGIN_TRADE_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_MARGN?response=html&date=%s&selectType=ALL";
+	private static final String SBL_TRADE_GET_URL = "https://www.twse.com.tw/exchangeReport/TWT93U?response=html&date=%s";
 
 	@Autowired
 	StockConfig stockConfig;

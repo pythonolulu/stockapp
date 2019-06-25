@@ -32,8 +32,8 @@
 							<td><input type="checkbox" th:field="${command.symbols}"
 								th:value="${item.key}" /></td>
 							<td><a target='_blank'
-								href="http://tw.stock.yahoo.com/q/ta?s=2317"
-								th:href="@{http://tw.stock.yahoo.com/q/ta(s=${item.key})}"
+								href="https://www.wantgoo.com/stock/astock/techchart?StockNo=2317"
+								th:href="@{https://www.wantgoo.com/stock/astock/techchart(StockNo=${item.key})}"
 								th:text="${item.key}">2317</a></td>
 							<td><a target='_blank'
 								href="http://norway.twsthr.info/StockHolders.aspx?stock=2317"
@@ -66,7 +66,7 @@
 									主图 </a><a target='_blank'
 								th:href="@{/stock/imgs/strategy/{chartFile}(chartFile=${item.key}+'.png')}">
 									副图 </a></td>
-							<td><a target='_blank'
+							<td><a th:if="${#lists.contains(swcwList, item.key)}" target='_blank'
 								th:href="@{http://www.warrantwin.com.tw/wtsearch.aspx(sid=${item.key})}">
 									<img th:src="@{/icons/call.jpeg}" th:alt="'認購權證'" height="16"
 									width="16" />

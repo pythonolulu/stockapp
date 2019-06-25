@@ -40,7 +40,7 @@ import com.javatican.stock.util.StockUtils;
 public class DealerTradeSummaryService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_DEALER_TRADE_GET_URL = "http://www.tse.com.tw/fund/TWT43U?response=html&date=%s";
+	private static final String TWSE_DEALER_TRADE_GET_URL = "https://www.twse.com.tw/fund/TWT43U?response=html&date=%s";
 	private static String CALL_WARRANT_RE = "0[1-9][\\d]{4}";
 	private static String PUT_WARRANT_RE = "0[\\d]{4}P";
 

@@ -58,11 +58,11 @@ import com.javatican.stock.util.StockUtils;
 public class StockService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
-	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "http://www.tse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
-	private static final String TWSE_TRADING_INDEX_GET_URL = "http://www.tse.com.tw/indicesReport/MI_5MINS_HIST?response=html&date=%s";
-	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
-	private static final String TWSE_TRADING_MARGIN_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_MARGN?response=html&date=%s&selectType=MS";
+	private static final String TWSE_DAILY_TRADING_GET_URL = "https://www.twse.com.tw/en/exchangeReport/FMTQIK?response=html&date=%s";
+	private static final String TWSE_TRADING_VALUE_FOREIGN_GET_URL = "https://www.twse.com.tw/en/fund/BFI82U?response=html&dayDate=%s&type=day";
+	private static final String TWSE_TRADING_INDEX_GET_URL = "https://www.twse.com.tw/indicesReport/MI_5MINS_HIST?response=html&date=%s";
+	private static final String TWSE_TRADING_PRICE_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
+	private static final String TWSE_TRADING_MARGIN_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_MARGN?response=html&date=%s&selectType=MS";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired
@@ -103,6 +103,7 @@ public class StockService {
 	 */
 	public Date updateTradingDateAndValue(boolean single) throws StockException {
 		String dateString = StockUtils.todayDateString();
+		//String dateString = "20190430";
 		return downloadAndSaveTradingDateAndValueForTheMonth(dateString, true, single);
 	}
 
@@ -704,64 +705,58 @@ public class StockService {
 
 	/*
 	 * download and store the trading price data (not including warrants) for the
-	 * specified trading date.
-	 */
-	// @SuppressWarnings("unused")
-	// public void downloadAndSavePriceData(String dateString) throws StockException
-	// {
-	// try {
-	// Document doc = Jsoup.connect(String.format(TWSE_TRADING_PRICE_GET_URL,
-	// dateString)).get();
-	//
-	// Elements tables = doc.select("body > div > table");
-	// Elements trs = tables.get(4).select("tbody > tr");
-	// StockPriceChange spc;
-	// Date tradingDate = StockUtils.stringSimpleToDate(dateString).get();
-	// for (Element tr : trs) {
-	// Elements tds = tr.select("td");
-	// logger.info("tds size="+tds.size());
-	// if(tds.size()!=15) {
-	// for(int i=0; i<tds.size(); i++) {
-	// logger.info("tds["+i+"]="+tds.get(i).text());
-	// }
-	// }
-	// spc = new StockPriceChange();
-	// spc.setSymbol(tds.get(0).text());
-	// spc.setTradingDate(tradingDate);
-	// //spc.setName(tds.get(1).text());
-	// double sign = 1.0;
-	// try {
-	// String signStr = tds.get(8).selectFirst("p").text();
-	// if (signStr.indexOf("-") >= 0)
-	// sign = -1.0;
-	// } catch (Exception ex) {
-	// }
-	// try {
-	// spc.setTradeVolume(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(1).text())));
-	// spc.setTransaction(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
-	// spc.setTradeValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
-	// spc.setOpen(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
-	// spc.setHigh(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
-	// spc.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(6).text())));
-	// spc.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(7).text())));
-	// spc.setChange(sign *
-	// Double.valueOf(StockUtils.removeCommaInNumber(tds.get(9).text())));
-	// } catch (Exception ex) {
-	// }
-	// logger.info(spc.toString());
-	// }
-	// } catch (Exception ex) {
-	// throw new StockException(ex);
-	// }
-	// }
-
-	/*
-	 * download and store the trading price data (not including warrants) for the
 	 * specified trading date. Note: while parsing the html document, there are some
-	 * bizarre problems with correctly selecting td elements. So here Jsoup.parse()
-	 * is used with an InputStream. I suspect it is the encoding problem.
+	 * bizarre problems with correctly selecting td elements. 
+	 * Ryan note: 2019/6/25: The problem is because jsoup has
+	 * a default maximum 1.0Mb text size limit, so use maxBodySize(0) to set it as unlimited.
 	 */
 	private List<StockPriceChange> downloadAndSavePriceData(String dateString) throws StockException {
+		List<StockPriceChange> spcList = new ArrayList<>();
+		try {
+			Document doc = Jsoup.connect(String.format(TWSE_TRADING_PRICE_GET_URL, dateString)).maxBodySize(0).get();
+			//logger.info(doc.toString());
+			Elements tables = doc.select("body > div > table");
+			Elements trs = tables.get(4).select("tbody > tr");
+			StockPriceChange spc;
+			Date tradingDate = StockUtils.stringSimpleToDate(dateString).get();
+			for (Element tr : trs) {
+				Elements tds = tr.select("td");
+				spc = new StockPriceChange();
+				spc.setSymbol(tds.get(0).text());
+				spc.setTradingDate(tradingDate);
+				spc.setName(tds.get(1).text());
+				double sign = 1.0;
+				try {
+					String signStr = tds.get(9).selectFirst("p").text();
+					if (signStr.indexOf("-") >= 0)
+						sign = -1.0;
+				} catch (Exception ex) {
+				}
+				try {
+					spc.setTradeVolume(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(2).text())));
+					spc.setTransaction(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(3).text())));
+					spc.setTradeValue(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(4).text())));
+					spc.setOpen(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(5).text())));
+					spc.setHigh(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(6).text())));
+					spc.setLow(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(7).text())));
+					spc.setClose(Double.valueOf(StockUtils.removeCommaInNumber(tds.get(8).text())));
+					spc.setChange(sign * Double.valueOf(StockUtils.removeCommaInNumber(tds.get(10).text())));
+					// spc.setChangePercent(spc.getChange() / spc.getClose());
+					spc.setChangePercent(
+							StockUtils.roundDoubleDp4(spc.getChange() / (spc.getClose() - spc.getChange())));
+					spcList.add(spc);
+				} catch (Exception ex) {
+					logger.warn("Problem parsing the price data for stock symbol: " + spc.getSymbol() + ". Igore it.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throw new StockException(ex);
+		}
+		return spcList;
+	}
+	/*
+	 private List<StockPriceChange> downloadAndSavePriceData(String dateString) throws StockException {
 		List<StockPriceChange> spcList = new ArrayList<>();
 		String strUrl = String.format(TWSE_TRADING_PRICE_GET_URL, dateString);
 		try (InputStream inStream = new URL(strUrl).openStream();) {
@@ -801,10 +796,12 @@ public class StockService {
 				}
 			}
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			throw new StockException(ex);
 		}
 		return spcList;
 	}
+	 */
 
 	public List<StockPriceChange> loadTop(Date tradingDate) throws StockException {
 		return stockPriceChangeDAO.loadTop(tradingDate);

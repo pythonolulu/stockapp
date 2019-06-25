@@ -36,7 +36,7 @@ import com.javatican.stock.util.StockUtils;
 public class PutWarrantTradeSummaryService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_PUT_WARRANT_TRADE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=0999P";
+	private static final String TWSE_PUT_WARRANT_TRADE_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=0999P";
 
 	@Autowired
 	StockConfig stockConfig;
@@ -150,6 +150,7 @@ public class PutWarrantTradeSummaryService {
 				putWarrantTradeSummaryDAO.saveAll(cwtsMap.values());
 				warrantTradeDAO.savePutWarrants(dateString, wtList);
 			} catch (Exception ex) {
+				ex.printStackTrace();
 				throw new StockException(ex);
 			}
 			try {

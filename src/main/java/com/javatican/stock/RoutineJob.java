@@ -19,7 +19,7 @@ public class RoutineJob {
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	public static void main(String[] args) {
-		boolean toUpdateData = true;
+		boolean toUpdateData = false;
 		boolean isFriday = false;
 		List<String> commandList = new ArrayList<>(Arrays.asList("updateTrustData", "updateForeignData",
 				"updatePerformers", "createStockPrices", "updateMissingPriceField", "updatePriceDataForAll",
@@ -27,7 +27,7 @@ public class RoutineJob {
 				"prepareCallWarrantSelectStrategy1", "preparePutWarrantSelectStrategy1", "prepareSmaSelectStrategy2",
 				"preparePriceBreakUpSelectStrategy3", "preparePriceBreakUpSelectStrategy4", "updateMarginData",
 				"extractMarginData", "calculateIndexStatsData", "prepareSmaStatsData", "updateFutureData",
-				"updateOptionData","updateOptionSeriesChart"));
+				"updateOptionData", "updateOptionSeriesChart"));
 		final String STOCK_GET_URL = "http://localhost:8080/stock/%s";
 		String strUrl = null;
 		ResponseMessage rm = null;
@@ -60,10 +60,16 @@ public class RoutineJob {
 				//
 				rm = doWork(strUrl);
 				if (rm == null || rm.getCategory().equals("Fail")) {
+					try {
+						Thread.sleep(10 * 1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 					break;
 				}
 				finishedSet.add(command);
 			}
+
 		}
 	}
 

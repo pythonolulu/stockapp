@@ -61,13 +61,13 @@ import com.javatican.stock.util.StockUtils;
 public class StockItemService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	// Url for downloading stock daily trading value/volume and prices(ohlc)
-	private static final String TWSE_INDIVIDUAL_STOCK_DAILY_TRADING_GET_URL = "http://www.tse.com.tw/en/exchangeReport/STOCK_DAY?response=html&date=%s&stockNo=%s";
+	private static final String TWSE_INDIVIDUAL_STOCK_DAILY_TRADING_GET_URL = "https://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=html&date=%s&stockNo=%s";
 
 	// Urls for downloading stock profile(name, capital)
-	private static final String TWSE_STOCK_PROFILE_GET_URL = "http://mops.twse.com.tw/mops/web/t05st03";
-	private static final String TWSE_STOCK_PROFILE_POST_URL = "http://mops.twse.com.tw/mops/web/ajax_t05st03";
+	private static final String TWSE_STOCK_PROFILE_GET_URL = "https://mops.twse.com.tw/mops/web/t05st03";
+	private static final String TWSE_STOCK_PROFILE_POST_URL = "https://mops.twse.com.tw/mops/web/ajax_t05st03";
 	// Url for download all stock price ohlc data for the specified date
-	private static final String TWSE_TRADING_PRICE_GET_URL = "http://www.tse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
+	private static final String TWSE_TRADING_PRICE_GET_URL = "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=html&date=%s&type=ALLBUT0999";
 
 	@Autowired
 	StockConfig stockConfig;
@@ -423,9 +423,8 @@ public class StockItemService {
 	private Map<String, StockPrice> downloadAllStockPricesForDate(Date tradingDate) throws StockException {
 		String dateString = StockUtils.dateToSimpleString(tradingDate);
 		Map<String, StockPrice> spMap = new TreeMap<>();
-		String strUrl = String.format(TWSE_TRADING_PRICE_GET_URL, dateString);
-		try (InputStream inStream = new URL(strUrl).openStream();) {
-			Document doc = Jsoup.parse(inStream, "UTF-8", strUrl);
+		try {
+			Document doc = Jsoup.connect(String.format(TWSE_TRADING_PRICE_GET_URL, dateString)).maxBodySize(0).get();
 			Elements tables = doc.select("body > div > table");
 			Elements trs = tables.get(4).select("tbody > tr");
 			StockPrice sp;

@@ -510,12 +510,18 @@ public class StockStrategyController {
 
 	@GetMapping("/aboveSma20SelectStrategy2")
 	public ModelAndView aboveSma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
-			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		String type = "20A";
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "allData", defaultValue = "false") boolean allData) {
+		// ryan add 2019/5/26
+		String type = allData ? "20A_all" : "20A";
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
-		// get all the stockItem with call warrants
-		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		// ryan add 2019/5/26
+		// if allData==true, select all symbols, otherwise, get all the stockItem with
+		// call warrants
+		Map<String, StockItem> siMap = allData ? stockItemService.findAllStockItemsAsMap()
+				: callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		//
 		ModelAndView mav = new ModelAndView("stock/aboveSma20SelectStrategy2");
 
 		Map<String, List<Number>> statsMap = strategyService2.getStatsData(dateString, type);
@@ -549,19 +555,26 @@ public class StockStrategyController {
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
-		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		return mav;
 	}
 
 	@GetMapping("/belowSma20SelectStrategy2")
 	public ModelAndView belowSma20SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
-			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		String type = "20B";
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "allData", defaultValue = "false") boolean allData) {
+		// ryan add 2019/5/26
+		String type = allData ? "20B_all" : "20B";
+
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
-		// get all the stockItem with call warrants
-		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		// ryan add 2019/5/26
+		// if allData==true, select all symbols, otherwise, get all the stockItem with
+		// call warrants
+		Map<String, StockItem> siMap = allData ? stockItemService.findAllStockItemsAsMap()
+				: callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		//
 		ModelAndView mav = new ModelAndView("stock/belowSma20SelectStrategy2");
 
 		Map<String, List<Number>> statsMap = strategyService2.getStatsData(dateString, type);
@@ -595,19 +608,25 @@ public class StockStrategyController {
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
-		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		return mav;
 	}
 
 	@GetMapping("/aboveSma60SelectStrategy2")
 	public ModelAndView aboveSma60SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
-			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		String type = "60A";
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "allData", defaultValue = "false") boolean allData) {
+		// ryan add 2019/5/26
+		String type = allData ? "60A_all" : "60A";
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
-		// get all the stockItem with call warrants
-		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		// ryan add 2019/5/26
+		// if allData==true, select all symbols, otherwise, get all the stockItem with
+		// call warrants
+		Map<String, StockItem> siMap = allData ? stockItemService.findAllStockItemsAsMap()
+				: callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		//
 		ModelAndView mav = new ModelAndView("stock/aboveSma60SelectStrategy2");
 
 		Map<String, List<Number>> statsMap = strategyService2.getStatsData(dateString, type);
@@ -641,19 +660,25 @@ public class StockStrategyController {
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
-		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		return mav;
 	}
 
 	@GetMapping("/belowSma60SelectStrategy2")
 	public ModelAndView belowSma60SelectStrategy2(@RequestParam(value = "force", defaultValue = "false") boolean force,
-			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote) {
-		String type = "60B";
+			@RequestParam(value = "realtimeQuote", defaultValue = "false") boolean realtimeQuote,
+			@RequestParam(value = "allData", defaultValue = "false") boolean allData) {
+		// ryan add 2019/5/26
+		String type = allData ? "60B_all" : "60B";
 		Date date = stockService.getLatestTradingDate();
 		String dateString = StockUtils.dateToSimpleString(date);
-		// get all the stockItem with call warrants
-		Map<String, StockItem> siMap = callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		// ryan add 2019/5/26
+		// if allData==true, select all symbols, otherwise, get all the stockItem with
+		// call warrants
+		Map<String, StockItem> siMap = allData ? stockItemService.findAllStockItemsAsMap()
+				: callWarrantTradeSummaryService.getStockItemsWithCallWarrant();
+		//
 		ModelAndView mav = new ModelAndView("stock/belowSma60SelectStrategy2");
 
 		Map<String, List<Number>> statsMap = strategyService2.getStatsData(dateString, type);
@@ -687,7 +712,7 @@ public class StockStrategyController {
 		mav.addObject("resultMap", resultMap);
 		mav.addObject("siMap", siMap);
 		// stockItems with call and put warrants
-		// mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
+		mav.addObject("swcwList", stockService.getStockSymbolsWithCallWarrant());
 		mav.addObject("swpwList", stockService.getStockSymbolsWithPutWarrant());
 		return mav;
 	}

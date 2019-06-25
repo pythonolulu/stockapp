@@ -107,7 +107,7 @@ public class OptionController {
 	public ResponseMessage updateOptionSeriesChart(HttpServletRequest request) {
 		ResponseMessage mes = new ResponseMessage(request.getServletPath());
 		try {
-			Date dateSince = StockUtils.stringSimpleToDate("20180215").get();
+			Date dateSince = StockUtils.stringSimpleToDate("20180101").get();
 			 
 			String latestTradingDateString = StockUtils.dateToSimpleString(stockService.getLatestTradingDate());
 			optionSeriesChartService.createGraph(true, latestTradingDateString, dateSince, 1000, 500);

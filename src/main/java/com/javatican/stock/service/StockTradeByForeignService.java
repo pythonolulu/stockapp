@@ -33,7 +33,7 @@ import com.javatican.stock.util.StockUtils;
 public class StockTradeByForeignService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String TWSE_STOCK_TRADE_BY_FOREIGN_GET_URL = "http://www.tse.com.tw/fund/TWT38U?response=html&date=%s";
+	private static final String TWSE_STOCK_TRADE_BY_FOREIGN_GET_URL = "https://www.twse.com.tw/fund/TWT38U?response=html&date=%s";
 	private static String CALL_WARRANT_RE = "0[1-9][\\d]{4}";
 	private static String PUT_WARRANT_RE = "0[\\d]{4}P";
 	private static String ANOTHER_WARRANT_RE = "03[\\d]{3}[A-Z]";
