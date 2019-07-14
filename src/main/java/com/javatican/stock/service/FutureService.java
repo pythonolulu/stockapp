@@ -33,9 +33,9 @@ import com.javatican.stock.util.StockUtils;
 public class FutureService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String FUTURE_TRADING_POST_URL = "http://www.taifex.com.tw/cht/3/futDailyMarketReport";
-	private static final String FUTURE_TRADING2_POST_URL = "http://www.taifex.com.tw/cht/3/futContractsDate";
-	private static final String FUTURE_TRADING3_POST_URL = "http://www.taifex.com.tw/cht/3/largeTraderFutQry";
+	private static final String FUTURE_TRADING_POST_URL = "https://www.taifex.com.tw/cht/3/futDailyMarketReport";
+	private static final String FUTURE_TRADING2_POST_URL = "https://www.taifex.com.tw/cht/3/futContractsDate";
+	private static final String FUTURE_TRADING3_POST_URL = "https://www.taifex.com.tw/cht/3/largeTraderFutQry";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired

@@ -36,9 +36,9 @@ import com.javatican.stock.util.StockUtils;
 public class OptionService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String OPTION_TRADING_POST_URL = "http://www.taifex.com.tw/cht/3/optDailyMarketReport";
-	private static final String OPTION_TRADING2_POST_URL = "http://www.taifex.com.tw/cht/3/callsAndPutsDate";
-	private static final String OPTION_TRADING3_POST_URL = "http://www.taifex.com.tw/cht/3/largeTraderOptQry";
+	private static final String OPTION_TRADING_POST_URL = "https://www.taifex.com.tw/cht/3/optDailyMarketReport";
+	private static final String OPTION_TRADING2_POST_URL = "https://www.taifex.com.tw/cht/3/callsAndPutsDate";
+	private static final String OPTION_TRADING3_POST_URL = "https://www.taifex.com.tw/cht/3/largeTraderOptQry";
 	@Autowired
 	StockConfig stockConfig;
 	@Autowired

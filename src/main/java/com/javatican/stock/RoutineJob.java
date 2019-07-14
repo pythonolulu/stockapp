@@ -19,7 +19,7 @@ public class RoutineJob {
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	public static void main(String[] args) {
-		boolean toUpdateData = false;
+		boolean toUpdateData = true;
 		boolean isFriday = false;
 		List<String> commandList = new ArrayList<>(Arrays.asList("updateTrustData", "updateForeignData",
 				"updatePerformers", "createStockPrices", "updateMissingPriceField", "updatePriceDataForAll",

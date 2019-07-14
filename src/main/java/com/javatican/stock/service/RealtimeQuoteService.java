@@ -34,7 +34,7 @@ public class RealtimeQuoteService {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private static ObjectMapper objectMapper = new ObjectMapper();
 	// private static DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-	final String TWSE_REALTIME_QUOTE_GET_URL = "http://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s&json=1&delay=0&_=%s";
+	final String TWSE_REALTIME_QUOTE_GET_URL = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s&json=1&delay=0&_=%s";
 	@Autowired
 	StockConfig stockConfig;
 

@@ -31,7 +31,7 @@ import com.javatican.stock.util.StockUtils;
 public class FinancialService {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private static final String FINANCIAL_REPORT_POST_URL = "http://mops.twse.com.tw/server-java/t164sb01";
+	private static final String FINANCIAL_REPORT_POST_URL = "https://mops.twse.com.tw/server-java/t164sb01";
 
 	@Autowired
 	StockConfig stockConfig;
